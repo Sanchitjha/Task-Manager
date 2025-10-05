@@ -1,0 +1,11 @@
+/* stylelint-disable at-rule-no-unknown */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+
+body { @apply bg-brand-50 text-gray-900; }
+
+.btn-primary { @apply inline-flex items-center gap-2 rounded-md bg-brand-600 text-white px-4 py-2 hover:bg-blue-600 transition; }
+.card { @apply bg-white shadow-sm rounded-xl p-5 border border-gray-100; }
