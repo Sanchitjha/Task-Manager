@@ -9,7 +9,7 @@ export default function Login() {
 		name: '',
 		role: 'client'
 	});
-	const [isLogin, setIsLogin] = useState(true);
+	const [isLogin, setIsLogin] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 
