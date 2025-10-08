@@ -26,8 +26,6 @@ router.get('/:id', async (req, res, next) => {
     }
 });
 
-
-
 router.patch('/:id', async (req, res, next) => {
     try {
         
@@ -47,5 +45,18 @@ router.patch('/:id', async (req, res, next) => {
     }
 });
 
+router.delete('/:id', async (req, res, next) => {
+    try {
+        const user = await User.findByIdAndDelete(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        res.json({ msg: 'User removed successfully' });
+    } catch (e) {
+        next(e);
+    }
+});
 
 module.exports = router;
