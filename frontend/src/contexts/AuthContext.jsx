@@ -3,6 +3,21 @@ import { authAPI } from '../lib/api';
 
 const AuthContext = createContext();
 
+// Helper function to decode JWT token
+const decodeToken = (token) => {
+	try {
+		const base64Url = token.split('.')[1];
+		const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+		const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+			return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+		}).join(''));
+		return JSON.parse(jsonPayload);
+	} catch (error) {
+		console.error('Failed to decode token:', error);
+		return null;
+	}
+};
+
 export const useAuth = () => {
 	const context = useContext(AuthContext);
 	if (!context) {
@@ -18,9 +33,14 @@ export const AuthProvider = ({ children }) => {
 	useEffect(() => {
 		const token = localStorage.getItem('token');
 		if (token) {
-			// In a real app, you'd verify the token with the backend
-			// For now, we'll just set a mock user
-			setUser({ name: 'John Doe', email: 'john@example.com', role: 'client' });
+			const decoded = decodeToken(token);
+			if (decoded && decoded.id) {
+				// In a real app, you might fetch full user details from backend using decoded.id
+				// For this task, we'll use the decoded info directly
+				setUser({ id: decoded.id, role: decoded.role, email: decoded.email }); // Assuming email is in token
+			} else {
+				localStorage.removeItem('token'); // Invalid token
+			}
 		}
 		setLoading(false);
 	}, []);
@@ -30,9 +50,13 @@ export const AuthProvider = ({ children }) => {
 			const response = await authAPI.login(email, password);
 			const { token } = response.data;
 			localStorage.setItem('token', token);
-			// In a real app, you'd decode the token to get user info
-			setUser({ name: 'John Doe', email, role: 'client' });
-			return { success: true };
+			const decoded = decodeToken(token);
+			if (decoded && decoded.id) {
+				setUser({ id: decoded.id, role: decoded.role, email }); // Assuming email is passed to login
+				return { success: true };
+			} else {
+				return { success: false, error: 'Failed to decode token after login' };
+			}
 		} catch (error) {
 			return { success: false, error: error.response?.data?.message || 'Login failed' };
 		}
@@ -41,7 +65,13 @@ export const AuthProvider = ({ children }) => {
 	const register = async (name, email, password, role = 'client') => {
 		try {
 			const response = await authAPI.register(name, email, password, role);
-			return { success: true };
+			// After successful registration, automatically log in the user
+			const loginResult = await login(email, password);
+			if (loginResult.success) {
+				return { success: true };
+			} else {
+				return { success: false, error: loginResult.error || 'Registration successful, but auto-login failed.' };
+			}
 		} catch (error) {
 			return { success: false, error: error.response?.data?.message || 'Registration failed' };
 		}
