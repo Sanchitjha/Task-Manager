@@ -5,28 +5,6 @@ export default function Home() {
 	const { user } = useAuth();
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-brand-50 to-white">
-			<header className="bg-white/70 backdrop-blur sticky top-0 z-10 border-b">
-				<div className="max-w-6xl mx-auto flex items-center justify-between py-3 px-4">
-					<div className="font-bold text-brand-800">The MANAGER</div>
-					<nav className="hidden md:flex gap-6 text-sm">
-						<Link to="/earn" className="hover:text-brand-600">Earn Coins</Link>
-						<Link to="/wallet" className="hover:text-brand-600">Wallet</Link>
-						<Link to="/shop" className="hover:text-brand-600">Shop</Link>
-						<Link to="/admin" className="hover:text-brand-600">Admin</Link>
-					</nav>
-					<div>
-						{user ? (
-							<div className="flex items-center gap-4">
-								<span className="text-sm">Welcome, {user.name}</span>
-								<Link to="/wallet" className="btn-primary">Dashboard</Link>
-							</div>
-						) : (
-							<Link to="/login" className="btn-primary">Login</Link>
-						)}
-					</div>
-				</div>
-			</header>
-
 			<main>
 				<section className="max-w-6xl mx-auto px-4 py-16 text-center">
 					<h1 className="text-4xl md:text-6xl font-extrabold leading-tight text-brand-800">
