@@ -18,6 +18,19 @@ api.interceptors.request.use((config) => {
 	return config;
 });
 
+// Upload profile image
+api.uploadProfileImage = async (userId, imageFile) => {
+	const formData = new FormData();
+	formData.append('profileImage', imageFile);
+	
+	const response = await api.post(`/users/${userId}/profile-image`, formData, {
+		headers: {
+			'Content-Type': 'multipart/form-data',
+		},
+	});
+	return response.data;
+};
+
 // Handle auth errors
 api.interceptors.response.use(
 	(response) => response,
@@ -30,9 +43,23 @@ api.interceptors.response.use(
 	}
 );
 
+// User related API calls
+export const userAPI = {
+    updateProfile: (userId, data) => api.patch(`/users/${userId}`, data),
+    uploadImage: async (userId, imageFile) => {
+        const formData = new FormData();
+        formData.append('profileImage', imageFile);
+        return api.post(`/users/${userId}/profile-image`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    },
+};
+
 export const authAPI = {
-	login: (email, password) => api.post('/auth/login', { email, password }),
-	register: (name, email, password, role) => api.post('/auth/register', { name, email, password, role }),
+    login: (email, password) => api.post('/auth/login', { email, password }),
+    register: (name, email, password, role) => api.post('/auth/register', { name, email, password, role }),
 };
 
 export const videosAPI = {
