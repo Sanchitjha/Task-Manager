@@ -8,6 +8,7 @@ import Earn from './pages/Earn';
 import Wallet from './pages/Wallet';
 import Shop from './pages/Shop';
 import Admin from './pages/Admin';
+import Profile from './pages/Profile';
 
 function App() {
 	return (
@@ -37,6 +38,11 @@ function App() {
 					<Route path="/admin" element={
 						<ProtectedRoute adminOnly>
 							<Admin />
+						</ProtectedRoute>
+					} />
+					<Route path="/profile" element={
+						<ProtectedRoute>
+							<Profile />
 						</ProtectedRoute>
 					} />
 				</Routes>
