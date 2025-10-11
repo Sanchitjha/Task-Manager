@@ -1,25 +1,84 @@
-import LogoutButton from './LogoutButton';
-import { authService } from '../utils/auth';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
-const Navbar = () => {
-  const user = authService.getUser();
-  const isAuthenticated = authService.isAuthenticated();
+export default function Navbar() {
+	const { user, logout } = useAuth();
+	const location = useLocation();
 
-  return (
-    <nav className="bg-gray-800 text-white p-4">
-      <div className="container mx-auto flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Task Manager</h1>
-        
-        {isAuthenticated && (
-          <div className="flex gap-4 items-center">
-            <span>Welcome, {user?.name}</span>
-            <span className="text-sm text-gray-400">({user?.role})</span>
-            <LogoutButton />
-          </div>
-        )}
-      </div>
-    </nav>
-  );
-};
+	if (location.pathname === '/login') {
+		return null;
+	}
+	const handleLogout = () => {
+		logout();
+		
+	};
 
-export default Navbar;
+	return (
+		<nav className="bg-white shadow-md border-b border-gray-200">
+			<div className="container mx-auto px-4">
+				<div className="flex justify-between items-center h-16">
+					{/* Logo */}
+					<Link to="/" className="text-2xl font-bold text-brand-600 hover:text-brand-700 transition">
+						The MANAGER
+					</Link>
+
+					{/* Navigation Links */}
+					<div className="flex items-center gap-6">
+						{user && (
+							<>
+								<Link 
+									to="/earn" 
+									className="text-gray-700 hover:text-brand-600 font-medium transition"
+								>
+									Earn
+								</Link>
+								<Link 
+									to="/wallet" 
+									className="text-gray-700 hover:text-brand-600 font-medium transition"
+								>
+									Wallet
+								</Link>
+								<Link 
+									to="/shop" 
+									className="text-gray-700 hover:text-brand-600 font-medium transition"
+								>
+									Shop
+								</Link>
+								{(user.role === 'admin' || user.role === 'subadmin') && (
+									<Link 
+										to="/admin" 
+										className="text-gray-700 hover:text-brand-600 font-medium transition"
+									>
+										Admin
+									</Link>
+								)}
+							</>
+						)}
+						{/* User Info & Login/Logout */}
+						{user ? (
+							<div className="flex items-center gap-4">
+								<div className="text-right">
+									<div className="text-sm font-semibold text-gray-800">{user.email}</div>
+									<div className="text-xs text-gray-500 capitalize">{user.role}</div>
+								</div>
+								<button 
+									onClick={handleLogout}
+									className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition font-medium"
+								>
+									Logout
+								</button>
+							</div>
+						) : (
+							<Link 
+								to="/login" 
+								className="px-4 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700 transition font-medium"
+							>
+								Login
+							</Link>
+						)}
+					</div>
+				</div>
+			</div>
+		</nav>
+	);
+}
