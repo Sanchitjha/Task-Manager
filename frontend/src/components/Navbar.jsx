@@ -44,6 +44,18 @@ export default function Navbar() {
 								>
 									Shop
 								</Link>
+								{/* Profile Link with Image */}
+								<Link 
+									to="/profile" 
+									className="flex items-center gap-2 text-gray-700 hover:text-brand-600 font-medium transition"
+								>
+									<img
+										src={user.profileImage || '/default-avatar.png'}
+										alt="Profile"
+										className="w-8 h-8 rounded-full object-cover"
+									/>
+									Profile
+								</Link>
 								{(user.role === 'admin' || user.role === 'subadmin') && (
 									<Link 
 										to="/admin" 
