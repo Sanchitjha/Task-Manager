@@ -43,23 +43,9 @@ api.interceptors.response.use(
 	}
 );
 
-// User related API calls
-export const userAPI = {
-    updateProfile: (userId, data) => api.patch(`/users/${userId}`, data),
-    uploadImage: async (userId, imageFile) => {
-        const formData = new FormData();
-        formData.append('profileImage', imageFile);
-        return api.post(`/users/${userId}/profile-image`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-    },
-};
-
 export const authAPI = {
-    login: (email, password) => api.post('/auth/login', { email, password }),
-    register: (name, email, password, role) => api.post('/auth/register', { name, email, password, role }),
+	login: (email, password) => api.post('/auth/login', { email, password }),
+	register: (name, email, password, role) => api.post('/auth/register', { name, email, password, role }),
 };
 
 export const videosAPI = {
