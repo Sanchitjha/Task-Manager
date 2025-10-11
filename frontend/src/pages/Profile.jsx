@@ -1,41 +1,28 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { userAPI } from '../lib/api';
+import api from '../lib/api';
 
 const Profile = () => {
     const { user, setUser } = useAuth();
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
-    const [editMode, setEditMode] = useState(false);
-    const [formData, setFormData] = useState({
-        name: user?.name || ''
-    });
+    const [editingName, setEditingName] = useState(false);
+    const [newName, setNewName] = useState(user?.name || '');
 
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleNameUpdate = async () => {
         try {
             setLoading(true);
-            setMessage({ type: 'info', text: 'Updating profile...' });
-
-            const response = await userAPI.updateProfile(user._id, { name: formData.name });
-            
-            if (response.data) {
-                setUser(prev => ({ ...prev, name: response.data.name }));
-                setMessage({ type: 'success', text: 'Profile updated successfully!' });
-                setEditMode(false);
-            }
+            const response = await api.patch(`/users/${user._id}`, {
+                name: newName
+            });
+            setUser({ ...user, name: response.data.name });
+            setEditingName(false);
+            setMessage({ type: 'success', text: 'Name updated successfully!' });
         } catch (error) {
-            console.error('Error updating profile:', error);
-            setMessage({
-                type: 'error',
-                text: error.response?.data?.msg || 'Error updating profile'
+            console.error('Error updating name:', error);
+            setMessage({ 
+                type: 'error', 
+                text: error.response?.data?.msg || 'Error updating name' 
             });
         } finally {
             setLoading(false);
@@ -46,25 +33,15 @@ const Profile = () => {
         const file = e.target.files[0];
         if (!file) return;
 
-        try {
-            setLoading(true);
-            setMessage({ type: 'info', text: 'Uploading image...' });
-            
-            const response = await userAPI.uploadImage(user._id, file);
-            
-            if (response.data) {
-                setUser(prev => ({ ...prev, profileImage: response.data.profileImage }));
-                setMessage({ type: 'success', text: 'Profile image updated successfully!' });
-            }
-        } catch (error) {
-            console.error('Error uploading image:', error);
-            setMessage({
-                type: 'error',
-                text: error.response?.data?.msg || 'Error uploading image'
-            });
-        } finally {
-            setLoading(false);
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            setMessage({ type: 'error', text: 'Please upload an image file' });
+            return;
         }
+
+        // Create FormData
+        const formData = new FormData();
+        formData.append('profileImage', file);
 
         try {
             setLoading(true);
@@ -142,32 +119,50 @@ const Profile = () => {
                 </div>
 
                 {/* User Info */}
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Name</label>
-                        {editMode ? (
-                            <input
-                                type="text"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                required
-                            />
-                        ) : (
-                            <div className="mt-1 text-lg flex items-center gap-2">
-                                {user?.name}
-                                <button
-                                    type="button"
-                                    onClick={() => setEditMode(true)}
-                                    className="text-blue-500 hover:text-blue-600"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                    </svg>
-                                </button>
-                            </div>
-                        )}
+                        <div className="mt-1 flex items-center gap-2">
+                            {editingName ? (
+                                <>
+                                    <input
+                                        type="text"
+                                        value={newName}
+                                        onChange={(e) => setNewName(e.target.value)}
+                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        disabled={loading}
+                                    />
+                                    <button
+                                        onClick={handleNameUpdate}
+                                        disabled={loading}
+                                        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+                                    >
+                                        Save
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setEditingName(false);
+                                            setNewName(user?.name || '');
+                                        }}
+                                        className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                    >
+                                        Cancel
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="text-lg">{user?.name}</span>
+                                    <button
+                                        onClick={() => setEditingName(true)}
+                                        className="text-blue-500 hover:text-blue-600"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                        </svg>
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Email</label>
@@ -177,28 +172,7 @@ const Profile = () => {
                         <label className="block text-sm font-medium text-gray-700">Role</label>
                         <div className="mt-1 text-lg capitalize">{user?.role}</div>
                     </div>
-                    {editMode && (
-                        <div className="flex gap-2">
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
-                            >
-                                Save Changes
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setEditMode(false);
-                                    setFormData({ name: user?.name || '' });
-                                }}
-                                className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    )}
-                </form>
+                </div>
 
                 {/* Status Messages */}
                 {message.text && (
