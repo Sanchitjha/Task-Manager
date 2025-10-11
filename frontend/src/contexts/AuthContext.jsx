@@ -35,11 +35,9 @@ export const AuthProvider = ({ children }) => {
 		if (token) {
 			const decoded = decodeToken(token);
 			if (decoded && decoded.id) {
-				// In a real app, you might fetch full user details from backend using decoded.id
-				// For this task, we'll use the decoded info directly
-				setUser({ id: decoded.id, role: decoded.role, email: decoded.email }); // Assuming email is in token
+				setUser({ id: decoded.id, role: decoded.role, email: decoded.email });
 			} else {
-				localStorage.removeItem('token'); // Invalid token
+				localStorage.removeItem('token');
 			}
 		}
 		setLoading(false);
@@ -52,7 +50,7 @@ export const AuthProvider = ({ children }) => {
 			localStorage.setItem('token', token);
 			const decoded = decodeToken(token);
 			if (decoded && decoded.id) {
-				setUser({ id: decoded.id, role: decoded.role, email }); // Assuming email is passed to login
+				setUser({ id: decoded.id, role: decoded.role, email });
 				return { success: true };
 			} else {
 				return { success: false, error: 'Failed to decode token after login' };
@@ -64,7 +62,7 @@ export const AuthProvider = ({ children }) => {
 
 	const register = async (name, email, password, role = 'client') => {
 		try {
-			const response = await authAPI.register(name, email, password, role);
+			await authAPI.register(name, email, password, role);
 			// After successful registration, automatically log in the user
 			const loginResult = await login(email, password);
 			if (loginResult.success) {
@@ -77,9 +75,27 @@ export const AuthProvider = ({ children }) => {
 		}
 	};
 
-	const logout = () => {
-		localStorage.removeItem('token');
-		setUser(null);
+	const logout = async () => {
+		try {
+			// Call backend logout endpoint (optional but recommended)
+			const token = localStorage.getItem('token');
+			if (token) {
+				await fetch('http://localhost:5000/api/auth/logout', {
+					method: 'POST',
+					headers: {
+						'Authorization': `Bearer ${token}`,
+						'Content-Type': 'application/json'
+					},
+					credentials: 'include'
+				}).catch(err => console.error('Backend logout failed:', err));
+			}
+		} finally {
+			// Always clear local state regardless of API call result
+			localStorage.removeItem('token');
+			setUser(null);
+			// Force redirect to login page
+			window.location.href = '/login';
+		}
 	};
 
 	const value = {
