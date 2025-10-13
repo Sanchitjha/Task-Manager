@@ -43,23 +43,21 @@ router.post('/login', async (req, res, next) => {
 			{ expiresIn: '24h' }
 		);
 		
-		// Set cookie
-		res.cookie('token', token, {
-			httpOnly: true,
-			secure: process.env.NODE_ENV === 'production',
-			sameSite: 'strict',
-			maxAge: 24 * 60 * 60 * 1000 // 24 hours
-		});
+		// Send user data without password
+		const userData = {
+			_id: user._id,
+			name: user.name,
+			email: user.email,
+			role: user.role,
+			profileImage: user.profileImage,
+			coinsBalance: user.coinsBalance || 0,
+			walletBalance: user.walletBalance || 0
+		};
 		
 		// Send response with token and user data
-		res.json({ 
-			token, 
-			user: { 
-				id: user._id, 
-				name: user.name, 
-				email: user.email, 
-				role: user.role 
-			} 
+		res.json({
+			token,
+			user: userData
 		});
 	} catch (e) { 
 		next(e); 
