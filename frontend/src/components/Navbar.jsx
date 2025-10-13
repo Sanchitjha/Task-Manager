@@ -50,9 +50,9 @@ export default function Navbar() {
 									className="flex items-center gap-2 text-gray-700 hover:text-brand-600 font-medium transition"
 								>
 									<img
-										src={user.profileImage || '/default-avatar.png'}
+										src={user.profileImage ? `http://localhost:5000${user.profileImage}` : '/default-avatar.png'}
 										alt="Profile"
-										className="w-8 h-8 rounded-full object-cover"
+										className="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
 									/>
 									Profile
 								</Link>
