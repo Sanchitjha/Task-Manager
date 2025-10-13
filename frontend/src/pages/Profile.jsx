@@ -15,6 +15,16 @@ const Profile = () => {
         }
     }, [user]);
 
+    // Auto-dismiss messages after 3 seconds
+    useEffect(() => {
+        if (message.text) {
+            const timer = setTimeout(() => {
+                setMessage({ type: '', text: '' });
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [message]);
+
     const handleNameUpdate = async (e) => {
         e.preventDefault();
         if (!newName.trim() || newName === user?.name) {
@@ -24,12 +34,12 @@ const Profile = () => {
 
         try {
             setLoading(true);
-            console.log('Current user state:', user); // Debug log
             if (!user?._id) {
                 throw new Error('User ID is missing');
             }
-            const response = await api.updateProfile(user._id, { name: newName });
-            setUser({ ...user, name: response.data.name });
+            const response = await api.patch(`/users/${user._id}`, { name: newName });
+            // Update the entire user object with the response data
+            setUser({ ...user, ...response.data });
             setMessage({ type: 'success', text: 'Name updated successfully!' });
             setEditName(false);
         } catch (error) {
@@ -54,16 +64,19 @@ const Profile = () => {
             setLoading(true);
             setMessage({ type: 'info', text: 'Uploading image...' });
 
-            console.log('Uploading image for user:', user); // Debug log
             const response = await api.post(`/users/${user._id}/profile-image`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
 
-            // Update user context with new image
-            setUser({ ...user, profileImage: response.data.profileImage });
+            // Update user context with new image and force re-render
+            const updatedUser = { ...user, profileImage: response.data.profileImage };
+            setUser(updatedUser);
             setMessage({ type: 'success', text: 'Profile image updated successfully!' });
+            
+            // Clear the file input to allow re-uploading the same file
+            e.target.value = '';
         } catch (error) {
             console.error('Error uploading image:', error);
             setMessage({ 
@@ -84,7 +97,8 @@ const Profile = () => {
                 <div className="mb-6">
                     <div className="relative inline-block">
                         <img
-                            src={user?.profileImage || '/default-avatar.png'}
+                            key={user?.profileImage || 'default'}
+                            src={user?.profileImage ? `http://localhost:5000${user.profileImage}?t=${Date.now()}` : '/default-avatar.png'}
                             alt="Profile"
                             className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
                         />
@@ -192,14 +206,6 @@ const Profile = () => {
                         {message.text}
                     </div>
                 )}
-
-                {/* Debug Information */}
-                <div className="mt-4 p-4 bg-gray-100 rounded">
-                    <h3 className="text-lg font-semibold mb-2">Debug Info:</h3>
-                    <pre className="whitespace-pre-wrap">
-                        {JSON.stringify({ user }, null, 2)}
-                    </pre>
-                </div>
             </div>
         </div>
     );

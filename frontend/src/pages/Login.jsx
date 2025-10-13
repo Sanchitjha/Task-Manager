@@ -9,7 +9,7 @@ export default function Login() {
 		name: '',
 		role: 'client'
 	});
-	const [isLogin, setIsLogin] = useState(false);
+	const [isLogin, setIsLogin] = useState(true); // Changed to true so login form shows by default
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 
@@ -24,7 +24,9 @@ export default function Login() {
 		try {
 			let result;
 			if (isLogin) {
+				console.log('Submitting login with:', formData.email); // Debug
 				result = await login(formData.email, formData.password);
+				console.log('Login result:', result); // Debug
 			} else {
 				result = await register(formData.name, formData.email, formData.password, formData.role);
 			}
@@ -32,10 +34,12 @@ export default function Login() {
 			if (result.success) {
 				navigate('/');
 			} else {
-				setError(result.error);
+				setError(result.error || 'Authentication failed');
+				console.error('Auth failed:', result); // Debug
 			}
 		} catch (err) {
-			setError('An unexpected error occurred');
+			console.error('Unexpected error:', err); // Debug
+			setError(err.message || 'An unexpected error occurred');
 		} finally {
 			setLoading(false);
 		}
