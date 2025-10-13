@@ -61,24 +61,28 @@ export const AuthProvider = ({ children }) => {
 
 	const login = async (email, password) => {
 		try {
-			const response = await authAPI.login(email, password);
-			const { token } = response.data;
+			console.log('Attempting login with:', { email }); // Debug log
+			const response = await api.post('/auth/login', { email, password });
+			console.log('Login response:', response.data); // Debug log
+			const { token, user: userData } = response.data;
 			localStorage.setItem('token', token);
-			const decoded = decodeToken(token);
-			if (decoded && decoded.id) {
-				setUser({ id: decoded.id, role: decoded.role, email });
-				return { success: true };
-			} else {
-				return { success: false, error: 'Failed to decode token after login' };
-			}
+			setUser(userData);
+			// Set authorization header
+			api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+			return { success: true };
 		} catch (error) {
+			console.error('Login error details:', {
+				message: error.message,
+				response: error.response?.data,
+				status: error.response?.status
+			});
 			return { success: false, error: error.response?.data?.message || 'Login failed' };
 		}
 	};
 
 	const register = async (name, email, password, role = 'client') => {
 		try {
-			await authAPI.register(name, email, password, role);
+			await api.post('/auth/register', { name, email, password, role });
 			// After successful registration, automatically log in the user
 			const loginResult = await login(email, password);
 			if (loginResult.success) {
