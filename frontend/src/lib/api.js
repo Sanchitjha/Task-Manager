@@ -2,12 +2,22 @@ import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
+// Helper function to get complete profile image URL
+const getProfileImageUrl = (path) => {
+    if (!path) return '/default-avatar.png';
+    return `${API_BASE_URL}${path}`;
+};
+
 const api = axios.create({
-	baseURL: API_BASE_URL,
-	headers: {
-		'Content-Type': 'application/json',
-	},
+    baseURL: API_BASE_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    withCredentials: true // Add this to handle cookies properly
 });
+
+// Add helper function to api object
+api.getProfileImageUrl = getProfileImageUrl;
 
 // Add auth token to requests
 api.interceptors.request.use((config) => {
