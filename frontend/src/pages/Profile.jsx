@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
 
@@ -6,23 +6,37 @@ const Profile = () => {
     const { user, setUser } = useAuth();
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
-    const [editingName, setEditingName] = useState(false);
-    const [newName, setNewName] = useState(user?.name || '');
+    const [editName, setEditName] = useState(false);
+    const [newName, setNewName] = useState('');
 
-    const handleNameUpdate = async () => {
+    useEffect(() => {
+        if (user?.name) {
+            setNewName(user.name);
+        }
+    }, [user]);
+
+    const handleNameUpdate = async (e) => {
+        e.preventDefault();
+        if (!newName.trim() || newName === user?.name) {
+            setEditName(false);
+            return;
+        }
+
         try {
             setLoading(true);
-            const response = await api.patch(`/users/${user._id}`, {
-                name: newName
-            });
+            console.log('Current user state:', user); // Debug log
+            if (!user?._id) {
+                throw new Error('User ID is missing');
+            }
+            const response = await api.updateProfile(user._id, { name: newName });
             setUser({ ...user, name: response.data.name });
-            setEditingName(false);
             setMessage({ type: 'success', text: 'Name updated successfully!' });
+            setEditName(false);
         } catch (error) {
             console.error('Error updating name:', error);
-            setMessage({ 
-                type: 'error', 
-                text: error.response?.data?.msg || 'Error updating name' 
+            setMessage({
+                type: 'error',
+                text: error.response?.data?.msg || 'Error updating name'
             });
         } finally {
             setLoading(false);
@@ -33,13 +47,6 @@ const Profile = () => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            setMessage({ type: 'error', text: 'Please upload an image file' });
-            return;
-        }
-
-        // Create FormData
         const formData = new FormData();
         formData.append('profileImage', file);
 
@@ -47,7 +54,7 @@ const Profile = () => {
             setLoading(true);
             setMessage({ type: 'info', text: 'Uploading image...' });
 
-            // Upload the image
+            console.log('Uploading image for user:', user); // Debug log
             const response = await api.post(`/users/${user._id}/profile-image`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
@@ -122,45 +129,46 @@ const Profile = () => {
                 <div className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Name</label>
-                        <div className="mt-1 flex items-center gap-2">
-                            {editingName ? (
-                                <>
+                        <div className="mt-1">
+                            {editName ? (
+                                <form onSubmit={handleNameUpdate} className="flex gap-2">
                                     <input
                                         type="text"
                                         value={newName}
                                         onChange={(e) => setNewName(e.target.value)}
-                                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         disabled={loading}
+                                        required
                                     />
                                     <button
-                                        onClick={handleNameUpdate}
+                                        type="submit"
+                                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         disabled={loading}
-                                        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
                                     >
                                         Save
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => {
-                                            setEditingName(false);
+                                            setEditName(false);
                                             setNewName(user?.name || '');
                                         }}
-                                        className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                                        className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                        disabled={loading}
                                     >
                                         Cancel
                                     </button>
-                                </>
+                                </form>
                             ) : (
-                                <>
+                                <div className="flex justify-between items-center">
                                     <span className="text-lg">{user?.name}</span>
                                     <button
-                                        onClick={() => setEditingName(true)}
-                                        className="text-blue-500 hover:text-blue-600"
+                                        onClick={() => setEditName(true)}
+                                        className="text-blue-500 hover:text-blue-600 focus:outline-none"
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                        </svg>
+                                        Edit
                                     </button>
-                                </>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -184,6 +192,14 @@ const Profile = () => {
                         {message.text}
                     </div>
                 )}
+
+                {/* Debug Information */}
+                <div className="mt-4 p-4 bg-gray-100 rounded">
+                    <h3 className="text-lg font-semibold mb-2">Debug Info:</h3>
+                    <pre className="whitespace-pre-wrap">
+                        {JSON.stringify({ user }, null, 2)}
+                    </pre>
+                </div>
             </div>
         </div>
     );
