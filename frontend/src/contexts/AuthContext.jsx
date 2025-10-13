@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../lib/api';
+import api from '../lib/api';
 
 const AuthContext = createContext();
 
@@ -29,18 +29,34 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
 	const [user, setUser] = useState(null);
 	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
 
 	useEffect(() => {
-		const token = localStorage.getItem('token');
-		if (token) {
-			const decoded = decodeToken(token);
-			if (decoded && decoded.id) {
-				setUser({ id: decoded.id, role: decoded.role, email: decoded.email });
-			} else {
+		const fetchUserData = async () => {
+			try {
+				const token = localStorage.getItem('token');
+				if (token) {
+					const decoded = decodeToken(token);
+					if (decoded && decoded.id) {
+						const response = await api.get(`/users/${decoded.id}`);
+						setUser(response.data);
+					} else {
+						localStorage.removeItem('token');
+						setUser(null);
+					}
+				} else {
+					setUser(null);
+				}
+			} catch (error) {
+				console.error('Error fetching user data:', error);
 				localStorage.removeItem('token');
+				setUser(null);
+			} finally {
+				setLoading(false);
 			}
-		}
-		setLoading(false);
+		};
+
+		fetchUserData();
 	}, []);
 
 	const login = async (email, password) => {
@@ -98,12 +114,25 @@ export const AuthProvider = ({ children }) => {
 		}
 	};
 
+	if (loading) {
+		return (
+			<div className="flex items-center justify-center min-h-screen">
+				<div className="text-center">
+					<div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
+					<p className="mt-4 text-gray-600">Loading...</p>
+				</div>
+			</div>
+		);
+	}
+
 	const value = {
 		user,
+		setUser,
 		loading,
 		login,
 		register,
-		logout
+		logout,
+		error
 	};
 
 	return (
