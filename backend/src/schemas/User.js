@@ -7,8 +7,8 @@ const userSchema = new Schema(
 		password: { type: String, required: true },
 		profileImage: { type: String, default: null },
 		role: { type: String, enum: ['admin', 'subadmin', 'client', 'vendor'], default: 'client' },
-		walletBalance: { type: Number, default: 0 },
-		profileImage: { type: String, default: null },
+		coinsBalance: { type: Number, default: 0 }, // Earned coins (not yet redeemed)
+		walletBalance: { type: Number, default: 0 }, // Redeemed money
 		transferOverride: {
 			sendBlocked: { type: Boolean, default: false },
 			receiveBlocked: { type: Boolean, default: false }
