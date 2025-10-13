@@ -4,10 +4,12 @@ const videoSchema = new Schema(
 	{
 		title: { type: String, required: true },
 		url: { type: String, required: true },
+		thumbnailUrl: { type: String },
+		description: { type: String },
 		duration: { type: Number, required: true }, // in seconds
-		coinsPerMinute: { type: Number, default: 10 }, // coins earned per minute of watch time
-		maxCoins: { type: Number, default: 50 }, // maximum coins earnable per video
-		isActive: { type: Boolean, default: true } // for admin to enable/disable videos
+		coinsReward: { type: Number, default: 10, required: true }, // Total coins for completing video
+		isActive: { type: Boolean, default: true }, // for admin to enable/disable videos
+		addedBy: { type: Schema.Types.ObjectId, ref: 'User' } // Track who added the video
 	},
 	{ timestamps: true }
 );
