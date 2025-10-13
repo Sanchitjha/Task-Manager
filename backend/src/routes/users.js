@@ -28,12 +28,16 @@ router.get('/:id', async (req, res, next) => {
     }
 });
 
-router.patch('/:id', async (req, res, next) => {
+router.patch('/:id', auth, async (req, res, next) => {
     try {
-        
+        // Check if user is updating their own profile or is an admin
+        if (req.user._id.toString() !== req.params.id && req.user.role !== 'admin') {
+            return res.status(403).json({ msg: 'Not authorized to update this profile' });
+        }
+
         const user = await User.findByIdAndUpdate(
             req.params.id, 
-            req.body, 
+            { name: req.body.name }, // Only allow name updates through this endpoint
             { new: true, runValidators: true } 
         ).select('-password');
 
@@ -74,7 +78,7 @@ router.post('/:id/profile-image', auth, upload.single('profileImage'), async (re
         }
 
         // Check if user is updating their own profile or is an admin
-        if (req.user.id !== req.params.id && req.user.role !== 'admin') {
+        if (req.user._id.toString() !== req.params.id && req.user.role !== 'admin') {
             return res.status(403).json({ msg: 'Not authorized to update this profile' });
         }
 
