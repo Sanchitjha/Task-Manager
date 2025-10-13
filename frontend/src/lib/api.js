@@ -35,18 +35,38 @@ api.uploadProfileImage = async (userId, imageFile) => {
 api.interceptors.response.use(
 	(response) => response,
 	(error) => {
+		console.error('API Error:', error.response || error);
 		if (error.response?.status === 401) {
 			localStorage.removeItem('token');
-			window.location.href = '/login';
+			if (window.location.pathname !== '/login') {
+				window.location.href = '/login';
+			}
 		}
 		return Promise.reject(error);
 	}
 );
 
-export const authAPI = {
-	login: (email, password) => api.post('/auth/login', { email, password }),
-	register: (name, email, password, role) => api.post('/auth/register', { name, email, password, role }),
+// Debug helper function
+api.getMe = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    
+    const decoded = JSON.parse(atob(token.split('.')[1]));
+    const response = await api.get(`/users/${decoded.id}`);
+    return response.data;
 };
+
+// User profile functions
+api.updateProfile = async (userId, data) => {
+    const response = await api.patch(`/users/${userId}`, data);
+    return response.data;
+};
+
+export const authAPI = {
+    login: (email, password) => api.post('/auth/login', { email, password }),
+    register: (name, email, password, role) => api.post('/auth/register', { name, email, password, role }),
+};
+
 
 export const videosAPI = {
 	getVideos: () => api.get('/videos'),
