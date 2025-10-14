@@ -57,17 +57,17 @@ router.get('/admin', auth, adminOnly, async (req, res, next) => {
 // Add new video (admin/subadmin only)
 router.post('/', auth, adminOnly, async (req, res, next) => {
 	try {
-		const { title, url, duration, coinsReward, description, thumbnailUrl } = req.body;
+		const { title, url, duration, coinsPerMinute, description, thumbnailUrl } = req.body;
 		
-		if (!title || !url || !duration || !coinsReward) {
-			return res.status(400).json({ message: 'Title, URL, duration, and coins reward are required' });
+		if (!title || !url || !duration || !coinsPerMinute) {
+			return res.status(400).json({ message: 'Title, URL, duration, and coins per minute are required' });
 		}
 		
 		const video = await Video.create({ 
 			title, 
 			url, 
 			duration, 
-			coinsReward,
+			coinsPerMinute,
 			description,
 			thumbnailUrl,
 			addedBy: req.user._id
@@ -80,11 +80,11 @@ router.post('/', auth, adminOnly, async (req, res, next) => {
 // Update video (admin/subadmin only)
 router.patch('/:id', auth, adminOnly, async (req, res, next) => {
 	try {
-		const { title, url, duration, coinsReward, description, thumbnailUrl, isActive } = req.body;
+		const { title, url, duration, coinsPerMinute, description, thumbnailUrl, isActive } = req.body;
 		
 		const video = await Video.findByIdAndUpdate(
 			req.params.id,
-			{ title, url, duration, coinsReward, description, thumbnailUrl, isActive },
+			{ title, url, duration, coinsPerMinute, description, thumbnailUrl, isActive },
 			{ new: true, runValidators: true }
 		);
 		
@@ -151,13 +151,18 @@ router.post('/:id/watch', auth, async (req, res, next) => {
 		watchRecord.watchTime = Math.min(watchTime, video.duration);
 		watchRecord.lastWatchedAt = new Date();
 		
-		// Check if video is completed (watched at least 90% of duration)
-		const completionThreshold = video.duration * 0.9;
+		// Check if video is completed (watched 100% of duration)
+		// Using 99% to account for slight timing variations
+		const completionThreshold = video.duration * 0.99;
 		let coinsAwarded = 0;
 		
 		if (watchRecord.watchTime >= completionThreshold && !watchRecord.completed) {
 			watchRecord.completed = true;
-			coinsAwarded = video.coinsReward;
+			
+			// Calculate coins dynamically based on duration and coins per minute
+			const minutes = Math.ceil(video.duration / 60);
+			coinsAwarded = minutes * video.coinsPerMinute;
+			
 			watchRecord.coinsEarned = coinsAwarded;
 			
 			// Update user's coins balance
