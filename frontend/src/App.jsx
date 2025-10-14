@@ -9,6 +9,8 @@ import Wallet from './pages/Wallet';
 import Shop from './pages/Shop';
 import Admin from './pages/Admin';
 import AdminVideos from './pages/AdminVideos';
+import AdminDashboard from './pages/AdminDashboard';
+import SubAdminDashboard from './pages/SubAdminDashboard';
 import Profile from './pages/Profile';
 
 function App() {
@@ -44,6 +46,16 @@ function App() {
 					<Route path="/admin/videos" element={
 						<ProtectedRoute adminOnly>
 							<AdminVideos />
+						</ProtectedRoute>
+					} />
+					<Route path="/admin/dashboard" element={
+						<ProtectedRoute adminOnly>
+							<AdminDashboard />
+						</ProtectedRoute>
+					} />
+					<Route path="/subadmin/dashboard" element={
+						<ProtectedRoute>
+							<SubAdminDashboard />
 						</ProtectedRoute>
 					} />
 					<Route path="/profile" element={
