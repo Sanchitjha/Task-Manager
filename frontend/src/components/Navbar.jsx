@@ -56,12 +56,31 @@ export default function Navbar() {
 									/>
 									Profile
 								</Link>
-								{(user.role === 'admin' || user.role === 'subadmin') && (
+								{/* Admin Dashboard Link */}
+								{user.role === 'admin' && (
+									<Link 
+										to="/admin/dashboard" 
+										className="text-gray-700 hover:text-brand-600 font-medium transition"
+									>
+										Admin Dashboard
+									</Link>
+								)}
+								{/* Sub-Admin Dashboard Link */}
+								{user.role === 'subadmin' && (
+									<Link 
+										to="/subadmin/dashboard" 
+										className="text-gray-700 hover:text-brand-600 font-medium transition"
+									>
+										My Dashboard
+									</Link>
+								)}
+								{/* Admin Panel Link (Admin only) */}
+								{user.role === 'admin' && (
 									<Link 
 										to="/admin" 
 										className="text-gray-700 hover:text-brand-600 font-medium transition"
 									>
-										Admin
+										Admin Panel
 									</Link>
 								)}
 							</>

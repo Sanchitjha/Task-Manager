@@ -82,8 +82,27 @@ export const AuthProvider = ({ children }) => {
 
 	const register = async (name, email, password, role = 'client') => {
 		try {
-			await api.post('/auth/register', { name, email, password, role });
-			// After successful registration, automatically log in the user
+			let endpoint = '/auth/register'; // Default for clients
+			
+			// Route to different endpoints based on role
+			if (role === 'subadmin') {
+				endpoint = '/auth/register-subadmin';
+			} else if (role === 'admin') {
+				endpoint = '/auth/register-admin';
+			}
+			
+			const response = await api.post(endpoint, { name, email, password, role });
+			
+			// Handle sub-admin pending approval case
+			if (role === 'subadmin') {
+				return { 
+					success: true, 
+					message: 'Sub-admin account created. Awaiting admin approval.',
+					pendingApproval: true 
+				};
+			}
+			
+			// For client and admin, automatically log in
 			const loginResult = await login(email, password);
 			if (loginResult.success) {
 				return { success: true };
