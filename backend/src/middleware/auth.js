@@ -10,6 +10,11 @@ const auth = async (req, res, next) => {
 		const user = await User.findById(decoded.id).select('-password');
 		if (!user) return res.status(401).json({ message: 'Invalid token' });
 		
+		// Check if sub-admin is approved
+		if (user.role === 'subadmin' && !user.isApproved) {
+			return res.status(403).json({ message: 'Your account is pending admin approval' });
+		}
+		
 		req.user = user;
 		req.userId = user._id;
 		next();
@@ -19,10 +24,17 @@ const auth = async (req, res, next) => {
 };
 
 const adminOnly = (req, res, next) => {
+	if (req.user.role !== 'admin') {
+		return res.status(403).json({ message: 'Admin access required' });
+	}
+	next();
+};
+
+const adminOrSubadmin = (req, res, next) => {
 	if (req.user.role !== 'admin' && req.user.role !== 'subadmin') {
 		return res.status(403).json({ message: 'Admin or Sub-admin access required' });
 	}
 	next();
 };
 
-module.exports = { auth, adminOnly };
+module.exports = { auth, adminOnly, adminOrSubadmin };
