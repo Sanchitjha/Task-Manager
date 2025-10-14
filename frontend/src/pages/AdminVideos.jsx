@@ -14,7 +14,7 @@ export default function Admin() {
 		url: '',
 		description: '',
 		duration: '',
-		coinsReward: '',
+		coinsPerMinute: '',
 		thumbnailUrl: ''
 	});
 
@@ -68,7 +68,7 @@ export default function Admin() {
 				url: '',
 				description: '',
 				duration: '',
-				coinsReward: '',
+				coinsPerMinute: '',
 				thumbnailUrl: ''
 			});
 			setShowAddModal(false);
@@ -94,7 +94,7 @@ export default function Admin() {
 			url: video.url,
 			description: video.description || '',
 			duration: video.duration,
-			coinsReward: video.coinsReward,
+			coinsPerMinute: video.coinsPerMinute || 5,
 			thumbnailUrl: video.thumbnailUrl || ''
 		});
 		setShowAddModal(true);
@@ -158,7 +158,7 @@ export default function Admin() {
 							url: '',
 							description: '',
 							duration: '',
-							coinsReward: '',
+							coinsPerMinute: '',
 							thumbnailUrl: ''
 						});
 						setShowAddModal(true);
@@ -232,9 +232,14 @@ export default function Admin() {
 											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="text-sm font-medium text-green-600">
-												{video.coinsReward} coins
-											</span>
+											<div className="text-sm">
+												<div className="font-medium text-green-600">
+													{video.coinsPerMinute || 5} coins/min
+												</div>
+												<div className="text-gray-500 text-xs">
+													Total: {Math.ceil(video.duration / 60) * (video.coinsPerMinute || 5)} coins
+												</div>
+											</div>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<button
@@ -328,15 +333,20 @@ export default function Admin() {
 								</div>
 
 								<div>
-									<label className="block text-sm font-medium mb-2">Coins Reward *</label>
+									<label className="block text-sm font-medium mb-2">Coins Per Minute *</label>
 									<input
 										type="number"
-										value={formData.coinsReward}
-										onChange={(e) => setFormData({ ...formData, coinsReward: e.target.value })}
+										value={formData.coinsPerMinute}
+										onChange={(e) => setFormData({ ...formData, coinsPerMinute: e.target.value })}
 										className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 										min="1"
 										required
 									/>
+									{formData.duration && formData.coinsPerMinute && (
+										<p className="text-xs text-gray-500 mt-1">
+											Total: {Math.ceil(formData.duration / 60) * formData.coinsPerMinute} coins for this video
+										</p>
+									)}
 								</div>
 							</div>
 
@@ -358,7 +368,7 @@ export default function Admin() {
 											url: '',
 											description: '',
 											duration: '',
-											coinsReward: '',
+											coinsPerMinute: '',
 											thumbnailUrl: ''
 										});
 									}}
