@@ -10,6 +10,7 @@ const videosRouter = require('./routes/videos');
 const walletRouter = require('./routes/wallet');
 const transactionsRouter = require('./routes/transactions');
 const settingsRouter = require('./routes/settings');
+const adminRouter = require('./routes/admin');
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use('/api/videos', videosRouter);
 app.use('/api/wallet', walletRouter);
 app.use('/api/transactions', transactionsRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/admin', adminRouter);
 
 app.use((err, _req, res, _next) => {
 	const status = err.status || 500;
