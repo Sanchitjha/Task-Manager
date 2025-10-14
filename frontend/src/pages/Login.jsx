@@ -32,6 +32,14 @@ export default function Login() {
 			}
 
 			if (result.success) {
+				// Special handling for sub-admin pending approval
+				if (result.pendingApproval) {
+					setError(''); // Clear any previous errors
+					alert('Sub-admin account created successfully! Your account is pending admin approval. You will be able to login once approved.');
+					setIsLogin(true); // Switch to login view
+					setFormData({ email: '', password: '', name: '', role: 'client' });
+					return;
+				}
 				navigate('/');
 			} else {
 				setError(result.error || 'Authentication failed');
@@ -116,6 +124,7 @@ export default function Login() {
 									<option value="client">Client</option>
 									<option value="vendor">Vendor</option>
 									<option value="subadmin">Sub-admin</option>
+									<option value="admin">Admin</option>
 								</select>
 							</div>
 						)}
