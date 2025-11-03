@@ -13,17 +13,10 @@ export default function Earn() {
 	const [message, setMessage] = useState({ type: '', text: '' });
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [highestWatchedTime, setHighestWatchedTime] = useState(0);
-	const [playerReady, setPlayerReady] = useState(false);
 	
 	const playerRef = useRef(null);
 	const intervalRef = useRef(null);
 	const iframeRef = useRef(null);
-
-	// Helper function to calculate total coins based on video duration and coins per minute
-	const calculateTotalCoins = (durationSeconds, coinsPerMinute) => {
-		const minutes = Math.ceil(durationSeconds / 60);
-		return minutes * coinsPerMinute;
-	};
 
 	useEffect(() => {
 		fetchVideos();
@@ -90,19 +83,15 @@ export default function Earn() {
 
 		// Reset states
 		setIsPlaying(false);
-		setPlayerReady(false);
 		setSelectedVideo(video);
 		const startTime = video.progress?.watchTime || 0;
 		setWatchTime(startTime);
 		setHighestWatchedTime(startTime);
 		setVideoDuration(video.duration);
 
-		// Calculate total coins user will earn
-		const totalCoins = calculateTotalCoins(video.duration, video.coinsPerMinute);
-		
 		setMessage({ 
 			type: 'info', 
-			text: `Video loaded! You will earn ${video.coinsPerMinute} coins per minute. Total: ${totalCoins} coins for completing this ${Math.ceil(video.duration / 60)} minute video.` 
+			text: 'Video loaded! Click play on the video to start earning. Do not skip forward!' 
 		});
 	};
 
@@ -253,24 +242,15 @@ export default function Earn() {
 	}, [selectedVideo?._id]); // Only re-run when video ID changes
 
 	const onPlayerReady = (event) => {
-		console.log('Player ready');
-		setPlayerReady(true);
-		
 		// Player is ready
 		const duration = event.target.getDuration();
 		if (duration > 0) {
 			setVideoDuration(duration);
 		}
 		
-		// Only seek to last position if it's greater than 5 seconds
-		// This prevents the 0-1 second loop issue
-		if (selectedVideo?.progress?.watchTime > 5) {
-			setTimeout(() => {
-				event.target.seekTo(selectedVideo.progress.watchTime, true);
-				setHighestWatchedTime(selectedVideo.progress.watchTime);
-				setWatchTime(selectedVideo.progress.watchTime);
-			}, 1000); // Delay seek to prevent loop
-		}
+		// Don't seek automatically - let video start from 0
+		// User can manually seek if needed
+		console.log('Player ready, duration:', duration);
 	};
 
 	const onPlayerStateChange = (event) => {
@@ -304,35 +284,20 @@ export default function Earn() {
 			clearInterval(intervalRef.current);
 		}
 
-		// Track every 1000ms (1 second) for better stability
+		// Track every 2 seconds for more stable tracking
 		intervalRef.current = setInterval(() => {
-			if (player && player.getCurrentTime && playerReady) {
+			if (player && player.getCurrentTime) {
 				try {
 					const currentTime = player.getCurrentTime();
 					
-					// Check if user is trying to skip forward (allow 3 second buffer for loading)
-					// Only check after 10 seconds to avoid false positives during initialization
-					if (currentTime > 10 && currentTime > highestWatchedTime + 3) {
-						// User tried to skip forward - reset to highest watched time
-						player.seekTo(highestWatchedTime, true);
-						setMessage({ 
-							type: 'error', 
-							text: '⚠️ Skipping forward is not allowed! You must watch the entire video to earn coins.' 
-						});
-						return;
-					}
-					
-					// Update watch time and highest watched time
-					if (currentTime > highestWatchedTime) {
+					// Simple tracking - just update time if it's greater than what we have
+					if (currentTime > watchTime) {
+						setWatchTime(currentTime);
 						setHighestWatchedTime(currentTime);
-						setWatchTime(currentTime);
-					} else {
-						// Just update display time even if not highest
-						setWatchTime(currentTime);
 					}
 					
-					// Check if video is complete (99% or more)
-					if (currentTime >= videoDuration * 0.99 && videoDuration > 0) {
+					// Check if video is complete (98% or more to account for buffering)
+					if (currentTime >= videoDuration * 0.98 && videoDuration > 0) {
 						stopTracking();
 						submitWatchTime(selectedVideo, Math.ceil(videoDuration));
 					}
@@ -340,7 +305,7 @@ export default function Earn() {
 					console.error('Error tracking video:', error);
 				}
 			}
-		}, 1000); // Changed to 1000ms for more stable tracking
+		}, 2000); // Track every 2 seconds
 	};
 
 	const stopTracking = () => {
@@ -426,8 +391,16 @@ export default function Earn() {
 									)}
 									<div className="mt-2 flex items-center gap-3">
 										<span className="text-sm font-medium text-green-600">
-											Reward: {selectedVideo.coinsReward} coins
+											Reward: {selectedVideo.useTimeBased ? 
+												`${Math.ceil(selectedVideo.duration / (selectedVideo.intervalDuration || 60)) * (selectedVideo.coinsPerInterval || 5)} coins` :
+												`${selectedVideo.coinsReward} coins`
+											}
 										</span>
+										{selectedVideo.useTimeBased && (
+											<span className="text-xs text-gray-500">
+												({selectedVideo.coinsPerInterval || 5} per {selectedVideo.intervalDuration || 60}s)
+											</span>
+										)}
 										<span className="text-sm text-gray-500">
 											Duration: {formatTime(selectedVideo.duration)}
 										</span>
@@ -528,8 +501,16 @@ export default function Earn() {
 													<div className="text-sm text-gray-600 mt-1 flex items-center gap-3">
 														<span>⏱️ {formatTime(video.duration)}</span>
 														<span className="text-green-600 font-semibold">
-															🪙 {video.coinsReward} coins
+															🪙 {video.useTimeBased ? 
+																Math.ceil(video.duration / (video.intervalDuration || 60)) * (video.coinsPerInterval || 5) :
+																video.coinsReward
+															} coins
 														</span>
+														{video.useTimeBased && (
+															<span className="text-xs text-gray-500">
+																(time-based)
+															</span>
+														)}
 													</div>
 													{video.progress && video.progress.watchTime > 0 && (
 														<div className="mt-2">
@@ -592,8 +573,16 @@ export default function Earn() {
 									<div className="p-4 bg-green-50 rounded-lg border border-green-200">
 										<label className="block text-sm text-green-700 mb-1">Coins on Completion</label>
 										<div className="text-3xl font-bold text-green-600">
-											+{selectedVideo.coinsReward}
+											+{selectedVideo.useTimeBased ? 
+												Math.ceil(selectedVideo.duration / (selectedVideo.intervalDuration || 60)) * (selectedVideo.coinsPerInterval || 5) :
+												selectedVideo.coinsReward
+											}
 										</div>
+										{selectedVideo.useTimeBased && (
+											<div className="text-xs text-green-600 mt-1">
+												Time-based calculation
+											</div>
+										)}
 									</div>
 								</>
 							)}

@@ -14,8 +14,11 @@ export default function Admin() {
 		url: '',
 		description: '',
 		duration: '',
-		coinsPerMinute: '',
-		thumbnailUrl: ''
+		coinsReward: '',
+		thumbnailUrl: '',
+		useTimeBased: false,
+		coinsPerInterval: '5',
+		intervalDuration: '60'
 	});
 
 	useEffect(() => {
@@ -68,8 +71,11 @@ export default function Admin() {
 				url: '',
 				description: '',
 				duration: '',
-				coinsPerMinute: '',
-				thumbnailUrl: ''
+				coinsReward: '',
+				thumbnailUrl: '',
+				useTimeBased: false,
+				coinsPerInterval: '5',
+				intervalDuration: '60'
 			});
 			setShowAddModal(false);
 			setEditingVideo(null);
@@ -94,8 +100,11 @@ export default function Admin() {
 			url: video.url,
 			description: video.description || '',
 			duration: video.duration,
-			coinsPerMinute: video.coinsPerMinute || 5,
-			thumbnailUrl: video.thumbnailUrl || ''
+			coinsReward: video.coinsReward,
+			thumbnailUrl: video.thumbnailUrl || '',
+			useTimeBased: video.useTimeBased || false,
+			coinsPerInterval: video.coinsPerInterval || 5,
+			intervalDuration: video.intervalDuration || 60
 		});
 		setShowAddModal(true);
 	};
@@ -158,8 +167,11 @@ export default function Admin() {
 							url: '',
 							description: '',
 							duration: '',
-							coinsPerMinute: '',
-							thumbnailUrl: ''
+							coinsReward: '',
+							thumbnailUrl: '',
+							useTimeBased: false,
+							coinsPerInterval: '5',
+							intervalDuration: '60'
 						});
 						setShowAddModal(true);
 					}}
@@ -232,14 +244,20 @@ export default function Admin() {
 											</span>
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
-											<div className="text-sm">
-												<div className="font-medium text-green-600">
-													{video.coinsPerMinute || 5} coins/min
+											{video.useTimeBased ? (
+												<div className="text-sm">
+													<span className="font-medium text-green-600">
+														{Math.ceil(video.duration / (video.intervalDuration || 60)) * (video.coinsPerInterval || 5)} coins
+													</span>
+													<div className="text-xs text-gray-500">
+														Time-based: {video.coinsPerInterval || 5} per {video.intervalDuration || 60}s
+													</div>
 												</div>
-												<div className="text-gray-500 text-xs">
-													Total: {Math.ceil(video.duration / 60) * (video.coinsPerMinute || 5)} coins
-												</div>
-											</div>
+											) : (
+												<span className="text-sm font-medium text-green-600">
+													{video.coinsReward} coins
+												</span>
+											)}
 										</td>
 										<td className="px-6 py-4 whitespace-nowrap">
 											<button
@@ -333,21 +351,88 @@ export default function Admin() {
 								</div>
 
 								<div>
-									<label className="block text-sm font-medium mb-2">Coins Per Minute *</label>
+									<label className="block text-sm font-medium mb-2">Thumbnail URL</label>
 									<input
-										type="number"
-										value={formData.coinsPerMinute}
-										onChange={(e) => setFormData({ ...formData, coinsPerMinute: e.target.value })}
+										type="url"
+										value={formData.thumbnailUrl}
+										onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
 										className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-										min="1"
-										required
+										placeholder="https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg"
 									/>
-									{formData.duration && formData.coinsPerMinute && (
-										<p className="text-xs text-gray-500 mt-1">
-											Total: {Math.ceil(formData.duration / 60) * formData.coinsPerMinute} coins for this video
-										</p>
-									)}
 								</div>
+							</div>
+
+							{/* Coin Calculation Settings */}
+							<div className="border-t pt-4">
+								<h4 className="text-lg font-medium mb-3">Coin Reward Settings</h4>
+								
+								<div className="mb-4">
+									<label className="flex items-center space-x-2">
+										<input
+											type="checkbox"
+											checked={formData.useTimeBased}
+											onChange={(e) => setFormData({ ...formData, useTimeBased: e.target.checked })}
+											className="rounded"
+										/>
+										<span className="text-sm font-medium">Use time-based coin calculation</span>
+									</label>
+									<p className="text-xs text-gray-500 mt-1">
+										When enabled, coins are calculated based on video duration and time intervals
+									</p>
+								</div>
+
+								{formData.useTimeBased ? (
+									<div className="grid grid-cols-2 gap-4">
+										<div>
+											<label className="block text-sm font-medium mb-2">Coins per Interval *</label>
+											<input
+												type="number"
+												value={formData.coinsPerInterval}
+												onChange={(e) => setFormData({ ...formData, coinsPerInterval: e.target.value })}
+												className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+												min="1"
+												required
+											/>
+										</div>
+
+										<div>
+											<label className="block text-sm font-medium mb-2">Interval Duration (seconds) *</label>
+											<input
+												type="number"
+												value={formData.intervalDuration}
+												onChange={(e) => setFormData({ ...formData, intervalDuration: e.target.value })}
+												className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+												min="1"
+												required
+											/>
+										</div>
+									</div>
+								) : (
+									<div>
+										<label className="block text-sm font-medium mb-2">Fixed Coins Reward *</label>
+										<input
+											type="number"
+											value={formData.coinsReward}
+											onChange={(e) => setFormData({ ...formData, coinsReward: e.target.value })}
+											className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+											min="1"
+											required
+										/>
+									</div>
+								)}
+
+								{/* Display calculated total */}
+								{formData.useTimeBased && formData.duration && formData.coinsPerInterval && formData.intervalDuration && (
+									<div className="mt-3 p-3 bg-blue-50 rounded-md">
+										<p className="text-sm text-blue-700">
+											<strong>Total Coins:</strong> {Math.ceil(formData.duration / formData.intervalDuration) * formData.coinsPerInterval} coins
+											<br />
+											<span className="text-xs">
+												({Math.ceil(formData.duration / formData.intervalDuration)} intervals × {formData.coinsPerInterval} coins each)
+											</span>
+										</p>
+									</div>
+								)}
 							</div>
 
 							<div className="flex gap-3 pt-4">
@@ -368,8 +453,11 @@ export default function Admin() {
 											url: '',
 											description: '',
 											duration: '',
-											coinsPerMinute: '',
-											thumbnailUrl: ''
+											coinsReward: '',
+											thumbnailUrl: '',
+											useTimeBased: false,
+											coinsPerInterval: '5',
+											intervalDuration: '60'
 										});
 									}}
 									className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
