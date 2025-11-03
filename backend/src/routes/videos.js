@@ -57,19 +57,39 @@ router.get('/admin', auth, adminOnly, async (req, res, next) => {
 // Add new video (admin/subadmin only)
 router.post('/', auth, adminOnly, async (req, res, next) => {
 	try {
-		const { title, url, duration, coinsPerMinute, description, thumbnailUrl } = req.body;
+		const { 
+			title, 
+			url, 
+			duration, 
+			coinsReward, 
+			description, 
+			thumbnailUrl,
+			useTimeBased,
+			coinsPerInterval,
+			intervalDuration
+		} = req.body;
 		
-		if (!title || !url || !duration || !coinsPerMinute) {
-			return res.status(400).json({ message: 'Title, URL, duration, and coins per minute are required' });
+		if (!title || !url || !duration) {
+			return res.status(400).json({ message: 'Title, URL, and duration are required' });
+		}
+		
+		// If time-based, validate interval fields
+		if (useTimeBased && (!coinsPerInterval || !intervalDuration)) {
+			return res.status(400).json({ 
+				message: 'Coins per interval and interval duration are required for time-based videos' 
+			});
 		}
 		
 		const video = await Video.create({ 
 			title, 
 			url, 
 			duration, 
-			coinsPerMinute,
+			coinsReward: coinsReward || 10,
 			description,
 			thumbnailUrl,
+			useTimeBased: useTimeBased || false,
+			coinsPerInterval: coinsPerInterval || 5,
+			intervalDuration: intervalDuration || 60,
 			addedBy: req.user._id
 		});
 		
@@ -80,11 +100,34 @@ router.post('/', auth, adminOnly, async (req, res, next) => {
 // Update video (admin/subadmin only)
 router.patch('/:id', auth, adminOnly, async (req, res, next) => {
 	try {
-		const { title, url, duration, coinsPerMinute, description, thumbnailUrl, isActive } = req.body;
+		const { 
+			title, 
+			url, 
+			duration, 
+			coinsReward, 
+			description, 
+			thumbnailUrl, 
+			isActive,
+			useTimeBased,
+			coinsPerInterval,
+			intervalDuration
+		} = req.body;
+		
+		const updateData = {};
+		if (title !== undefined) updateData.title = title;
+		if (url !== undefined) updateData.url = url;
+		if (duration !== undefined) updateData.duration = duration;
+		if (coinsReward !== undefined) updateData.coinsReward = coinsReward;
+		if (description !== undefined) updateData.description = description;
+		if (thumbnailUrl !== undefined) updateData.thumbnailUrl = thumbnailUrl;
+		if (isActive !== undefined) updateData.isActive = isActive;
+		if (useTimeBased !== undefined) updateData.useTimeBased = useTimeBased;
+		if (coinsPerInterval !== undefined) updateData.coinsPerInterval = coinsPerInterval;
+		if (intervalDuration !== undefined) updateData.intervalDuration = intervalDuration;
 		
 		const video = await Video.findByIdAndUpdate(
 			req.params.id,
-			{ title, url, duration, coinsPerMinute, description, thumbnailUrl, isActive },
+			updateData,
 			{ new: true, runValidators: true }
 		);
 		
@@ -159,9 +202,13 @@ router.post('/:id/watch', auth, async (req, res, next) => {
 		if (watchRecord.watchTime >= completionThreshold && !watchRecord.completed) {
 			watchRecord.completed = true;
 			
-			// Calculate coins dynamically based on duration and coins per minute
-			const minutes = Math.ceil(video.duration / 60);
-			coinsAwarded = minutes * video.coinsPerMinute;
+			// Calculate coins based on whether video uses time-based system
+			if (video.useTimeBased) {
+				const intervals = Math.ceil(video.duration / video.intervalDuration);
+				coinsAwarded = intervals * video.coinsPerInterval;
+			} else {
+				coinsAwarded = video.coinsReward;
+			}
 			
 			watchRecord.coinsEarned = coinsAwarded;
 			
@@ -179,7 +226,10 @@ router.post('/:id/watch', auth, async (req, res, next) => {
 				description: `Earned ${coinsAwarded} coins by watching "${video.title}"`,
 				metadata: {
 					videoId: video._id,
-					watchTime: watchRecord.watchTime
+					watchTime: watchRecord.watchTime,
+					coinCalculation: video.useTimeBased ? 
+						`${Math.ceil(video.duration / video.intervalDuration)} intervals × ${video.coinsPerInterval} coins` :
+						`Fixed reward: ${video.coinsReward} coins`
 				}
 			});
 		}
