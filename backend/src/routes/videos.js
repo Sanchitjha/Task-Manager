@@ -7,6 +7,54 @@ const { auth, adminOnly } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Helper function to extract YouTube video ID from URL
+const getYouTubeVideoId = (url) => {
+	const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+	const match = url.match(regExp);
+	return (match && match[2].length === 11) ? match[2] : null;
+};
+
+// Helper function to fetch video duration from YouTube (using oEmbed API - no API key needed)
+const getYouTubeVideoDuration = async (videoUrl) => {
+	try {
+		const videoId = getYouTubeVideoId(videoUrl);
+		if (!videoId) {
+			throw new Error('Invalid YouTube URL');
+		}
+
+		// Use YouTube oEmbed API to get basic video info
+		const oEmbedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+		const response = await fetch(oEmbedUrl);
+		
+		if (!response.ok) {
+			throw new Error('Video not found or private');
+		}
+
+		const data = await response.json();
+		
+		// For duration, we'll use a different approach since oEmbed doesn't provide duration
+		// We'll extract it from the video page HTML (basic scraping)
+		const videoPageUrl = `https://www.youtube.com/watch?v=${videoId}`;
+		const pageResponse = await fetch(videoPageUrl);
+		const html = await pageResponse.text();
+		
+		// Look for duration in the page HTML
+		const durationMatch = html.match(/"lengthSeconds":"(\d+)"/);
+		const duration = durationMatch ? parseInt(durationMatch[1]) : 0;
+		
+		return {
+			title: data.title,
+			duration: duration,
+			thumbnailUrl: data.thumbnail_url,
+			videoId: videoId
+		};
+	} catch (error) {
+		console.error('Error fetching YouTube video info:', error);
+		// Return null if we can't fetch the info - admin will need to enter manually
+		return null;
+	}
+};
+
 // Get all active videos (for clients)
 router.get('/', auth, async (req, res, next) => {
 	try {
@@ -54,47 +102,121 @@ router.get('/admin', auth, adminOnly, async (req, res, next) => {
 	} catch (e) { next(e); }
 });
 
+// Auto-detect video information from YouTube URL (for preview)
+router.post('/detect', auth, adminOnly, async (req, res, next) => {
+	try {
+		const { url, coinsPerMinute } = req.body;
+		
+		if (!url) {
+			return res.status(400).json({ message: 'YouTube URL is required' });
+		}
+
+		const coinsPerMin = coinsPerMinute || 5;
+		const videoInfo = await getYouTubeVideoDuration(url);
+		
+		if (!videoInfo || !videoInfo.duration) {
+			return res.status(400).json({ 
+				message: 'Could not detect video information. Please check the URL or use manual entry.' 
+			});
+		}
+
+		const totalMinutes = Math.ceil(videoInfo.duration / 60);
+		const totalCoins = totalMinutes * coinsPerMin;
+
+		res.json({
+			detected: true,
+			title: videoInfo.title,
+			duration: videoInfo.duration,
+			durationFormatted: `${Math.floor(videoInfo.duration/60)}:${(videoInfo.duration%60).toString().padStart(2,'0')}`,
+			thumbnailUrl: videoInfo.thumbnailUrl,
+			totalMinutes,
+			coinsPerMinute: coinsPerMin,
+			totalCoins,
+			preview: `This ${Math.floor(videoInfo.duration/60)}:${(videoInfo.duration%60).toString().padStart(2,'0')} video will give ${totalCoins} coins (${totalMinutes} minutes × ${coinsPerMin} coins per minute)`
+		});
+	} catch (e) { 
+		console.error('Error detecting video:', e);
+		res.status(500).json({ message: 'Failed to detect video information' });
+	}
+});
+
 // Add new video (admin/subadmin only)
 router.post('/', auth, adminOnly, async (req, res, next) => {
 	try {
 		const { 
 			title, 
 			url, 
-			duration, 
-			coinsReward, 
 			description, 
-			thumbnailUrl,
-			useTimeBased,
-			coinsPerInterval,
-			intervalDuration
+			coinsPerMinute, // Changed to coins per minute for easier admin understanding
+			manualDuration // Optional: if admin wants to override auto-detected duration
 		} = req.body;
 		
-		if (!title || !url || !duration) {
-			return res.status(400).json({ message: 'Title, URL, and duration are required' });
+		if (!title || !url) {
+			return res.status(400).json({ message: 'Title and YouTube URL are required' });
 		}
-		
-		// If time-based, validate interval fields
-		if (useTimeBased && (!coinsPerInterval || !intervalDuration)) {
-			return res.status(400).json({ 
-				message: 'Coins per interval and interval duration are required for time-based videos' 
-			});
+
+		// Set default coins per minute if not provided
+		const coinsPerMin = coinsPerMinute || 5;
+
+		let videoInfo;
+		let finalDuration;
+		let finalTitle = title;
+		let thumbnailUrl = '';
+
+		// Try to automatically fetch video information
+		if (manualDuration) {
+			// Admin provided manual duration
+			finalDuration = parseInt(manualDuration);
+		} else {
+			// Try to auto-fetch video duration
+			videoInfo = await getYouTubeVideoDuration(url);
+			if (videoInfo && videoInfo.duration > 0) {
+				finalDuration = videoInfo.duration;
+				thumbnailUrl = videoInfo.thumbnailUrl || '';
+				// Use YouTube title if admin didn't provide a custom one
+				if (!title.trim()) {
+					finalTitle = videoInfo.title;
+				}
+			} else {
+				return res.status(400).json({ 
+					message: 'Could not automatically detect video duration. Please provide manual duration in seconds.' 
+				});
+			}
 		}
-		
+
+		if (!finalDuration || finalDuration <= 0) {
+			return res.status(400).json({ message: 'Invalid video duration' });
+		}
+
+		// Calculate total coins based on minutes
+		const totalMinutes = Math.ceil(finalDuration / 60); // Round up to next minute
+		const totalCoins = totalMinutes * coinsPerMin;
+
 		const video = await Video.create({ 
-			title, 
+			title: finalTitle, 
 			url, 
-			duration, 
-			coinsReward: coinsReward || 10,
-			description,
+			duration: finalDuration,
+			description: description || '',
 			thumbnailUrl,
-			useTimeBased: useTimeBased || false,
-			coinsPerInterval: coinsPerInterval || 5,
-			intervalDuration: intervalDuration || 60,
+			// Always use time-based calculation with minute intervals
+			useTimeBased: true,
+			coinsPerInterval: coinsPerMin,
+			intervalDuration: 60, // Always 1 minute intervals
+			coinsReward: totalCoins, // Store calculated total for backward compatibility
 			addedBy: req.user._id
 		});
 		
-		res.status(201).json(video);
-	} catch (e) { next(e); }
+		res.status(201).json({
+			...video.toObject(),
+			autoDetected: !!videoInfo,
+			calculatedCoins: totalCoins,
+			totalMinutes: totalMinutes,
+			message: `Video added successfully! Duration: ${Math.floor(finalDuration/60)}:${(finalDuration%60).toString().padStart(2,'0')} | Total coins: ${totalCoins} (${totalMinutes} minutes × ${coinsPerMin} coins)`
+		});
+	} catch (e) { 
+		console.error('Error adding video:', e);
+		next(e); 
+	}
 });
 
 // Update video (admin/subadmin only)
