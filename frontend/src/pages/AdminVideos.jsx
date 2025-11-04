@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
 
-export default function Admin() {
+export default function AdminVideos() {
 	const { user } = useAuth();
 	const [videos, setVideos] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -13,13 +13,12 @@ export default function Admin() {
 		title: '',
 		url: '',
 		description: '',
-		duration: '',
-		coinsReward: '',
-		thumbnailUrl: '',
-		useTimeBased: false,
-		coinsPerInterval: '5',
-		intervalDuration: '60'
+		coinsPerMinute: '5',
+		manualDuration: '',
+		useAutoDetect: true
 	});
+	const [detectedInfo, setDetectedInfo] = useState(null);
+	const [detecting, setDetecting] = useState(false);
 
 	useEffect(() => {
 		if (user && (user.role === 'admin' || user.role === 'subadmin')) {
@@ -28,7 +27,6 @@ export default function Admin() {
 	}, [user]);
 
 	useEffect(() => {
-		// Auto-dismiss messages after 3 seconds
 		if (message.text) {
 			const timer = setTimeout(() => {
 				setMessage({ type: '', text: '' });
@@ -49,38 +47,76 @@ export default function Admin() {
 		}
 	};
 
+	const detectVideoInfo = async () => {
+		if (!formData.url) {
+			setMessage({ type: 'error', text: 'Please enter a YouTube URL first' });
+			return;
+		}
+
+		try {
+			setDetecting(true);
+			const response = await api.post('/videos/detect', {
+				url: formData.url,
+				coinsPerMinute: parseInt(formData.coinsPerMinute) || 5
+			});
+			
+			setDetectedInfo(response.data);
+			if (!formData.title) {
+				setFormData(prev => ({ ...prev, title: response.data.title }));
+			}
+			setMessage({ type: 'success', text: 'Video information detected successfully!' });
+		} catch (error) {
+			console.error('Failed to detect video:', error);
+			setDetectedInfo(null);
+			setMessage({ 
+				type: 'error', 
+				text: error.response?.data?.message || 'Failed to detect video information' 
+			});
+		} finally {
+			setDetecting(false);
+		}
+	};
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		
 		try {
 			setLoading(true);
 			
-			if (editingVideo) {
-				// Update existing video
-				await api.patch(`/videos/${editingVideo._id}`, formData);
-				setMessage({ type: 'success', text: 'Video updated successfully!' });
-			} else {
-				// Add new video
-				await api.post('/videos', formData);
-				setMessage({ type: 'success', text: 'Video added successfully!' });
+			const submitData = {
+				title: formData.title,
+				url: formData.url,
+				description: formData.description,
+				coinsPerMinute: parseInt(formData.coinsPerMinute) || 5
+			};
+
+			if (!formData.useAutoDetect && formData.manualDuration) {
+				submitData.manualDuration = parseInt(formData.manualDuration);
 			}
 			
-			// Reset form and close modal
+			if (editingVideo) {
+				await api.patch(`/videos/${editingVideo._id}`, submitData);
+				setMessage({ type: 'success', text: 'Video updated successfully!' });
+			} else {
+				const response = await api.post('/videos', submitData);
+				setMessage({ 
+					type: 'success', 
+					text: response.data.message || 'Video added successfully!' 
+				});
+			}
+			
 			setFormData({
 				title: '',
 				url: '',
 				description: '',
-				duration: '',
-				coinsReward: '',
-				thumbnailUrl: '',
-				useTimeBased: false,
-				coinsPerInterval: '5',
-				intervalDuration: '60'
+				coinsPerMinute: '5',
+				manualDuration: '',
+				useAutoDetect: true
 			});
+			setDetectedInfo(null);
 			setShowAddModal(false);
 			setEditingVideo(null);
 			
-			// Refresh videos list
 			fetchVideos();
 		} catch (error) {
 			console.error('Failed to save video:', error);
@@ -99,13 +135,11 @@ export default function Admin() {
 			title: video.title,
 			url: video.url,
 			description: video.description || '',
-			duration: video.duration,
-			coinsReward: video.coinsReward,
-			thumbnailUrl: video.thumbnailUrl || '',
-			useTimeBased: video.useTimeBased || false,
-			coinsPerInterval: video.coinsPerInterval || 5,
-			intervalDuration: video.intervalDuration || 60
+			coinsPerMinute: video.coinsPerInterval || 5,
+			manualDuration: video.duration,
+			useAutoDetect: false
 		});
+		setDetectedInfo(null);
 		setShowAddModal(true);
 	};
 
@@ -139,12 +173,6 @@ export default function Admin() {
 		}
 	};
 
-	const formatDuration = (seconds) => {
-		const mins = Math.floor(seconds / 60);
-		const secs = seconds % 60;
-		return `${mins}:${secs.toString().padStart(2, '0')}`;
-	};
-
 	if (!user || (user.role !== 'admin' && user.role !== 'subadmin')) {
 		return (
 			<div className="container mx-auto p-4">
@@ -159,20 +187,18 @@ export default function Admin() {
 		<div className="container mx-auto p-4">
 			<div className="flex justify-between items-center mb-6">
 				<h1 className="text-3xl font-bold">Video Management</h1>
-				<button
+				<button 
 					onClick={() => {
 						setEditingVideo(null);
 						setFormData({
 							title: '',
 							url: '',
 							description: '',
-							duration: '',
-							coinsReward: '',
-							thumbnailUrl: '',
-							useTimeBased: false,
-							coinsPerInterval: '5',
-							intervalDuration: '60'
+							coinsPerMinute: '5',
+							manualDuration: '',
+							useAutoDetect: true
 						});
+						setDetectedInfo(null);
 						setShowAddModal(true);
 					}}
 					className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
@@ -181,7 +207,6 @@ export default function Admin() {
 				</button>
 			</div>
 
-			{/* Status Messages */}
 			{message.text && (
 				<div className={`mb-4 p-4 rounded-lg ${
 					message.type === 'error' ? 'bg-red-100 text-red-700' :
@@ -192,7 +217,6 @@ export default function Admin() {
 				</div>
 			)}
 
-			{/* Videos List */}
 			<div className="bg-white rounded-lg shadow-md">
 				{loading ? (
 					<div className="p-8 text-center">
@@ -226,74 +250,75 @@ export default function Admin() {
 								</tr>
 							</thead>
 							<tbody className="bg-white divide-y divide-gray-200">
-								{videos.map(video => (
-									<tr key={video._id} className="hover:bg-gray-50">
-										<td className="px-6 py-4">
-											<div className="flex items-center">
-												<div>
-													<div className="font-medium text-gray-900">{video.title}</div>
-													<div className="text-sm text-gray-500 truncate max-w-xs">
-														{video.url}
+								{videos.map(video => {
+									const totalMinutes = Math.ceil(video.duration / 60);
+									const totalCoins = totalMinutes * (video.coinsPerInterval || 5);
+									
+									return (
+										<tr key={video._id} className="hover:bg-gray-50">
+											<td className="px-6 py-4">
+												<div className="flex items-center">
+													<div>
+														<div className="font-medium text-gray-900">{video.title}</div>
+														<div className="text-sm text-gray-500 truncate max-w-xs">
+															{video.url}
+														</div>
 													</div>
 												</div>
-											</div>
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap">
-											<span className="text-sm text-gray-900">
-												{formatDuration(video.duration)}
-											</span>
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap">
-											{video.useTimeBased ? (
+											</td>
+											<td className="px-6 py-4 whitespace-nowrap">
+												<span className="text-sm text-gray-900">
+													{Math.floor(video.duration / 60)}:{(video.duration % 60).toString().padStart(2, '0')}
+												</span>
+												<div className="text-xs text-gray-500">
+													{totalMinutes} minutes
+												</div>
+											</td>
+											<td className="px-6 py-4 whitespace-nowrap">
 												<div className="text-sm">
 													<span className="font-medium text-green-600">
-														{Math.ceil(video.duration / (video.intervalDuration || 60)) * (video.coinsPerInterval || 5)} coins
+														{totalCoins} coins
 													</span>
 													<div className="text-xs text-gray-500">
-														Time-based: {video.coinsPerInterval || 5} per {video.intervalDuration || 60}s
+														{video.coinsPerInterval || 5} per minute
 													</div>
 												</div>
-											) : (
-												<span className="text-sm font-medium text-green-600">
-													{video.coinsReward} coins
-												</span>
-											)}
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap">
-											<button
-												onClick={() => handleToggleActive(video)}
-												className={`px-3 py-1 rounded-full text-xs font-medium ${
-													video.isActive
-														? 'bg-green-100 text-green-800 hover:bg-green-200'
-														: 'bg-red-100 text-red-800 hover:bg-red-200'
-												}`}
-											>
-												{video.isActive ? 'Active' : 'Inactive'}
-											</button>
-										</td>
-										<td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-											<button
-												onClick={() => handleEdit(video)}
-												className="text-blue-600 hover:text-blue-900 mr-3"
-											>
-												Edit
-											</button>
-											<button
-												onClick={() => handleDelete(video._id)}
-												className="text-red-600 hover:text-red-900"
-											>
-												Delete
-											</button>
-										</td>
-									</tr>
-								))}
+											</td>
+											<td className="px-6 py-4 whitespace-nowrap">
+												<button
+													onClick={() => handleToggleActive(video)}
+													className={`px-3 py-1 rounded-full text-xs font-medium ${
+														video.isActive
+															? 'bg-green-100 text-green-800 hover:bg-green-200'
+															: 'bg-red-100 text-red-800 hover:bg-red-200'
+													}`}
+												>
+													{video.isActive ? 'Active' : 'Inactive'}
+												</button>
+											</td>
+											<td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+												<button
+													onClick={() => handleEdit(video)}
+													className="text-blue-600 hover:text-blue-900 mr-3"
+												>
+													Edit
+												</button>
+												<button
+													onClick={() => handleDelete(video._id)}
+													className="text-red-600 hover:text-red-900"
+												>
+													Delete
+												</button>
+											</td>
+										</tr>
+									);
+								})}
 							</tbody>
 						</table>
 					</div>
 				)}
 			</div>
 
-			{/* Add/Edit Video Modal */}
 			{showAddModal && (
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
 					<div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -309,21 +334,34 @@ export default function Admin() {
 									onChange={(e) => setFormData({ ...formData, title: e.target.value })}
 									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 									required
+									placeholder="Video title (auto-filled if detected)"
 								/>
 							</div>
 
 							<div>
 								<label className="block text-sm font-medium mb-2">YouTube URL *</label>
-								<input
-									type="url"
-									value={formData.url}
-									onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-									placeholder="https://www.youtube.com/watch?v=..."
-									required
-								/>
+								<div className="flex gap-2">
+									<input
+										type="url"
+										value={formData.url}
+										onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+										className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+										placeholder="https://www.youtube.com/watch?v=..."
+										required
+									/>
+									{!editingVideo && (
+										<button
+											type="button"
+											onClick={detectVideoInfo}
+											disabled={detecting || !formData.url}
+											className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-300"
+										>
+											{detecting ? 'Detecting...' : 'Auto Detect'}
+										</button>
+									)}
+								</div>
 								<p className="text-xs text-gray-500 mt-1">
-									Enter full YouTube URL (e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+									Paste YouTube URL and click "Auto Detect" to automatically get video info
 								</p>
 							</div>
 
@@ -334,106 +372,76 @@ export default function Admin() {
 									onChange={(e) => setFormData({ ...formData, description: e.target.value })}
 									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 									rows="3"
+									placeholder="Optional description of the video"
 								/>
 							</div>
 
 							<div className="grid grid-cols-2 gap-4">
 								<div>
-									<label className="block text-sm font-medium mb-2">Duration (seconds) *</label>
+									<label className="block text-sm font-medium mb-2">Coins per Minute *</label>
 									<input
 										type="number"
-										value={formData.duration}
-										onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+										value={formData.coinsPerMinute}
+										onChange={(e) => setFormData({ ...formData, coinsPerMinute: e.target.value })}
 										className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 										min="1"
 										required
 									/>
-								</div>
-
-								<div>
-									<label className="block text-sm font-medium mb-2">Thumbnail URL</label>
-									<input
-										type="url"
-										value={formData.thumbnailUrl}
-										onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
-										className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-										placeholder="https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg"
-									/>
-								</div>
-							</div>
-
-							{/* Coin Calculation Settings */}
-							<div className="border-t pt-4">
-								<h4 className="text-lg font-medium mb-3">Coin Reward Settings</h4>
-								
-								<div className="mb-4">
-									<label className="flex items-center space-x-2">
-										<input
-											type="checkbox"
-											checked={formData.useTimeBased}
-											onChange={(e) => setFormData({ ...formData, useTimeBased: e.target.checked })}
-											className="rounded"
-										/>
-										<span className="text-sm font-medium">Use time-based coin calculation</span>
-									</label>
 									<p className="text-xs text-gray-500 mt-1">
-										When enabled, coins are calculated based on video duration and time intervals
+										How many coins users get per minute of video
 									</p>
 								</div>
 
-								{formData.useTimeBased ? (
-									<div className="grid grid-cols-2 gap-4">
-										<div>
-											<label className="block text-sm font-medium mb-2">Coins per Interval *</label>
-											<input
-												type="number"
-												value={formData.coinsPerInterval}
-												onChange={(e) => setFormData({ ...formData, coinsPerInterval: e.target.value })}
-												className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-												min="1"
-												required
-											/>
-										</div>
-
-										<div>
-											<label className="block text-sm font-medium mb-2">Interval Duration (seconds) *</label>
-											<input
-												type="number"
-												value={formData.intervalDuration}
-												onChange={(e) => setFormData({ ...formData, intervalDuration: e.target.value })}
-												className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-												min="1"
-												required
-											/>
-										</div>
-									</div>
-								) : (
+								{!formData.useAutoDetect && (
 									<div>
-										<label className="block text-sm font-medium mb-2">Fixed Coins Reward *</label>
+										<label className="block text-sm font-medium mb-2">Manual Duration (seconds)</label>
 										<input
 											type="number"
-											value={formData.coinsReward}
-											onChange={(e) => setFormData({ ...formData, coinsReward: e.target.value })}
+											value={formData.manualDuration}
+											onChange={(e) => setFormData({ ...formData, manualDuration: e.target.value })}
 											className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 											min="1"
-											required
+											placeholder="Enter duration in seconds"
 										/>
 									</div>
 								)}
-
-								{/* Display calculated total */}
-								{formData.useTimeBased && formData.duration && formData.coinsPerInterval && formData.intervalDuration && (
-									<div className="mt-3 p-3 bg-blue-50 rounded-md">
-										<p className="text-sm text-blue-700">
-											<strong>Total Coins:</strong> {Math.ceil(formData.duration / formData.intervalDuration) * formData.coinsPerInterval} coins
-											<br />
-											<span className="text-xs">
-												({Math.ceil(formData.duration / formData.intervalDuration)} intervals × {formData.coinsPerInterval} coins each)
-											</span>
-										</p>
-									</div>
-								)}
 							</div>
+
+							{!editingVideo && (
+								<div className="flex items-center space-x-2">
+									<input
+										type="checkbox"
+										checked={formData.useAutoDetect}
+										onChange={(e) => setFormData({ ...formData, useAutoDetect: e.target.checked })}
+										className="rounded"
+									/>
+									<label className="text-sm font-medium">
+										Auto-detect video duration from YouTube
+									</label>
+								</div>
+							)}
+
+							{detectedInfo && (
+								<div className="bg-green-50 border border-green-200 rounded-lg p-4">
+									<h4 className="font-medium text-green-800 mb-2">✅ Video Detected Successfully!</h4>
+									<div className="text-sm text-green-700 space-y-1">
+										<p><strong>Duration:</strong> {detectedInfo.durationFormatted} ({detectedInfo.totalMinutes} minutes)</p>
+										<p><strong>Total Coins:</strong> {detectedInfo.totalCoins} coins</p>
+										<p><strong>Calculation:</strong> {detectedInfo.preview}</p>
+									</div>
+								</div>
+							)}
+
+							{!formData.useAutoDetect && formData.manualDuration && formData.coinsPerMinute && (
+								<div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+									<h4 className="font-medium text-blue-800 mb-2">📊 Manual Calculation</h4>
+									<div className="text-sm text-blue-700">
+										<p><strong>Duration:</strong> {Math.floor(formData.manualDuration/60)}:{(formData.manualDuration%60).toString().padStart(2,'0')} ({Math.ceil(formData.manualDuration/60)} minutes)</p>
+										<p><strong>Total Coins:</strong> {Math.ceil(formData.manualDuration/60) * formData.coinsPerMinute} coins</p>
+										<p><strong>Calculation:</strong> {Math.ceil(formData.manualDuration/60)} minutes × {formData.coinsPerMinute} coins per minute</p>
+									</div>
+								</div>
+							)}
 
 							<div className="flex gap-3 pt-4">
 								<button
@@ -448,16 +456,14 @@ export default function Admin() {
 									onClick={() => {
 										setShowAddModal(false);
 										setEditingVideo(null);
+										setDetectedInfo(null);
 										setFormData({
 											title: '',
 											url: '',
 											description: '',
-											duration: '',
-											coinsReward: '',
-											thumbnailUrl: '',
-											useTimeBased: false,
-											coinsPerInterval: '5',
-											intervalDuration: '60'
+											coinsPerMinute: '5',
+											manualDuration: '',
+											useAutoDetect: true
 										});
 									}}
 									className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
