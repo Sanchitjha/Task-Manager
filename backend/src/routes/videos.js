@@ -274,12 +274,11 @@ router.delete('/:id', auth, adminOnly, async (req, res, next) => {
 	} catch (e) { next(e); }
 });
 
-// Track video watch progress and award coins (clients only)
+// Track video watch progress and award coins (all authenticated users)
 router.post('/:id/watch', auth, async (req, res, next) => {
 	try {
-		if (req.user.role !== 'client') {
-			return res.status(403).json({ message: 'Only clients can earn coins from videos' });
-		}
+		// Allow all authenticated users to watch videos and earn coins
+		// (admins can test their own videos, clients earn normally)
 		
 		const { watchTime } = req.body; // Watch time in seconds
 		const video = await Video.findById(req.params.id);
@@ -324,13 +323,10 @@ router.post('/:id/watch', auth, async (req, res, next) => {
 		if (watchRecord.watchTime >= completionThreshold && !watchRecord.completed) {
 			watchRecord.completed = true;
 			
-			// Calculate coins based on whether video uses time-based system
-			if (video.useTimeBased) {
-				const intervals = Math.ceil(video.duration / video.intervalDuration);
-				coinsAwarded = intervals * video.coinsPerInterval;
-			} else {
-				coinsAwarded = video.coinsReward;
-			}
+			// Calculate coins based on minute-based system
+			// Always use time-based calculation: minutes × coins per minute
+			const totalMinutes = Math.ceil(video.duration / 60);
+			coinsAwarded = totalMinutes * (video.coinsPerInterval || 5);
 			
 			watchRecord.coinsEarned = coinsAwarded;
 			
@@ -349,9 +345,7 @@ router.post('/:id/watch', auth, async (req, res, next) => {
 				metadata: {
 					videoId: video._id,
 					watchTime: watchRecord.watchTime,
-					coinCalculation: video.useTimeBased ? 
-						`${Math.ceil(video.duration / video.intervalDuration)} intervals × ${video.coinsPerInterval} coins` :
-						`Fixed reward: ${video.coinsReward} coins`
+					coinCalculation: `${totalMinutes} minutes × ${video.coinsPerInterval || 5} coins per minute`
 				}
 			});
 		}

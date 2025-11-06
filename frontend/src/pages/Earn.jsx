@@ -95,7 +95,7 @@ export default function Earn() {
 		});
 	};
 
-	const stopWatching = () => {
+	const stopWatching = async () => {
 		// Stop tracking
 		if (intervalRef.current) {
 			clearInterval(intervalRef.current);
@@ -105,26 +105,28 @@ export default function Earn() {
 		
 		// Save current progress if there's a selected video
 		if (selectedVideo && highestWatchedTime > 0 && !selectedVideo.progress?.completed) {
-			const timeToSave = Math.floor(highestWatchedTime);
+			const timeToSave = Math.floor(highestWatchedTime); // Save highest watched time, not current time
 			
-			// Submit watch time to backend
-			api.post(`/videos/${selectedVideo._id}/watch`, {
-				watchTime: timeToSave
-			}).then(response => {
+			try {
+				// Submit watch time to backend
+				const response = await api.post(`/videos/${selectedVideo._id}/watch`, {
+					watchTime: timeToSave
+				});
+				
 				setMessage({ 
 					type: 'success', 
-					text: `Progress saved! Watch time: ${formatTime(timeToSave)}` 
+					text: `✅ Progress saved! You can resume from ${formatTime(timeToSave)} next time. Remember: no skipping allowed!` 
 				});
 				
 				// Refresh videos to update progress
 				fetchVideos();
-			}).catch(error => {
+			} catch (error) {
 				console.error('Failed to save progress:', error);
 				setMessage({ 
 					type: 'error', 
 					text: 'Failed to save progress. Please try again.' 
 				});
-			});
+			}
 		}
 		
 		// Destroy the player
@@ -250,11 +252,30 @@ export default function Earn() {
 		
 		// Start from previous position if available
 		const startTime = selectedVideo.progress?.watchTime || 0;
+		
+		// IMPORTANT: Set highest watched time to saved position
+		// This prevents users from skipping beyond where they left off
+		setWatchTime(startTime);
+		setHighestWatchedTime(startTime); // Critical for anti-cheat
+		
 		if (startTime > 0) {
-			event.target.seekTo(startTime, true);
+			// Seek to the saved position
+			setTimeout(() => {
+				event.target.seekTo(startTime, true);
+			}, 1000); // Small delay to ensure player is fully ready
+			
+			setMessage({ 
+				type: 'info', 
+				text: `▶️ Resuming from ${formatTime(startTime)}. Click play to continue! You must watch from here - no skipping forward allowed.` 
+			});
+		} else {
+			setMessage({ 
+				type: 'info', 
+				text: '🎬 Video loaded! Click play to start earning coins. You must watch the complete video - no skipping allowed!' 
+			});
 		}
 		
-		console.log('Player ready, duration:', duration, 'starting at:', startTime);
+		console.log('Player ready, duration:', duration, 'starting at:', startTime, 'highest allowed:', startTime);
 	};
 
 	const onPlayerStateChange = (event) => {
@@ -265,8 +286,13 @@ export default function Earn() {
 		// YT.PlayerState.ENDED = 0
 		
 		if (event.data === 1) { // Playing
+			console.log('Video started playing, current time:', player.getCurrentTime());
 			setIsPlaying(true);
-			startTracking(player);
+			
+			// Short delay to let player stabilize, then start tracking
+			setTimeout(() => {
+				startTracking(player);
+			}, 1000);
 		} else if (event.data === 2 || event.data === 0) { // Paused or Ended
 			setIsPlaying(false);
 			stopTracking();
@@ -288,7 +314,7 @@ export default function Earn() {
 			clearInterval(intervalRef.current);
 		}
 
-		// Track every 1 second for better accuracy
+		// Track every 2 seconds for normal experience
 		intervalRef.current = setInterval(() => {
 			if (player && player.getCurrentTime) {
 				try {
@@ -300,15 +326,29 @@ export default function Earn() {
 						setVideoDuration(playerDuration);
 					}
 					
-					// Always update watch time to current time (no anti-cheat for now)
+					// LENIENT ANTI-SKIP - Only prevent major jumps
+					const majorSkipThreshold = 30; // Only prevent jumps of 30+ seconds
+					
+					// Allow normal progression and small variations
+					if (currentTime > highestWatchedTime + majorSkipThreshold) {
+						console.log('⚠️ MAJOR SKIP DETECTED! Current:', currentTime, 'Highest:', highestWatchedTime);
+						player.seekTo(highestWatchedTime, true);
+						setMessage({ 
+							type: 'error', 
+							text: '🚫 Large skip detected! Returned to your last position.' 
+						});
+						return;
+					}
+					
+					// Update watch time for UI
 					setWatchTime(currentTime);
 					
-					// Update highest watched time
+					// Always update highest watched time when moving forward (allow small seeks)
 					if (currentTime > highestWatchedTime) {
 						setHighestWatchedTime(currentTime);
 					}
 					
-					// Check if video is complete (98% or more to account for buffering)
+					// Check if video is complete
 					const actualDuration = playerDuration > 0 ? playerDuration : videoDuration;
 					if (currentTime >= actualDuration * 0.98 && actualDuration > 0) {
 						stopTracking();
@@ -318,7 +358,7 @@ export default function Earn() {
 					console.error('Error tracking video:', error);
 				}
 			}
-		}, 1000); // Track every 1 second for smooth progress
+		}, 2000); // Track every 2 seconds - less aggressive
 	};
 
 	const stopTracking = () => {
@@ -455,27 +495,31 @@ export default function Earn() {
 								<div className="flex gap-3">
 									<button
 										onClick={stopWatching}
-										className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition"
+										className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition flex items-center"
 									>
+										<svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v6a2 2 0 002 2h3m8 0h3a2 2 0 002-2V9a2 2 0 00-2-2h-3m-6 4h6" />
+										</svg>
 										Save Progress & Stop
 									</button>
 									{isPlaying && (
 										<span className="px-4 py-2 bg-green-100 text-green-700 rounded-md flex items-center">
 											<span className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></span>
-											Watching...
+											Watching... (Progress tracking active)
 										</span>
 									)}
 								</div>
 
 								{/* Important Instructions */}
-								<div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-									<h4 className="font-semibold text-yellow-800 mb-2">⚠️ Important Rules:</h4>
-									<ul className="text-sm text-yellow-700 space-y-1">
-										<li>• You must watch the <strong>entire video</strong> from start to finish</li>
-										<li>• <strong>Skipping forward is NOT allowed</strong> - the video will reset to your last position</li>
-										<li>• Watch time is only counted when the video is <strong>actively playing</strong></li>
-										<li>• Coins are <strong>automatically credited</strong> when you complete 100% of the video</li>
-										<li>• You can pause and resume, but cannot skip ahead</li>
+								<div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+									<h4 className="font-semibold text-blue-800 mb-2">� Video Watching Rules:</h4>
+									<ul className="text-sm text-blue-700 space-y-1">
+										<li>• <strong>Watch naturally!</strong> Normal seeking and buffering is allowed</li>
+										<li>• <strong>Large skips blocked:</strong> Only jumps of 30+ seconds are prevented</li>
+										<li>• <strong>"Save Progress & Stop"</strong> saves your exact position to resume later</li>
+										<li>• <strong>When resuming</strong>, you start from where you left off</li>
+										<li>• <strong>Only completed videos</strong> (100% watched) will award coins</li>
+										<li>• You can pause, rewind, and resume normally</li>
 									</ul>
 								</div>
 							</div>
@@ -531,6 +575,9 @@ export default function Earn() {
 																	className="bg-blue-500 h-1.5 rounded-full"
 																	style={{ width: `${Math.min((video.progress.watchTime / video.duration) * 100, 100)}%` }}
 																/>
+															</div>
+															<div className="text-xs text-blue-600 mt-1 font-medium">
+																📍 Will resume from {formatTime(video.progress.watchTime)}
 															</div>
 														</div>
 													)}
@@ -606,10 +653,14 @@ export default function Earn() {
 									</li>
 									<li className="flex items-start">
 										<span className="mr-2">3️⃣</span>
-										<span>Coins automatically credited at 100%</span>
+										<span>Use "Save Progress & Stop" to resume later</span>
 									</li>
 									<li className="flex items-start">
 										<span className="mr-2">4️⃣</span>
+										<span>Coins automatically credited at 100%</span>
+									</li>
+									<li className="flex items-start">
+										<span className="mr-2">5️⃣</span>
 										<span>Redeem coins in your wallet</span>
 									</li>
 								</ul>
@@ -617,7 +668,7 @@ export default function Earn() {
 
 							<div className="pt-4 border-t">
 								<p className="text-xs text-gray-500 italic">
-									💡 Tip: Keep the video playing and don't try to skip. The system detects any attempt to cheat!
+									💡 Tip: Use "Save Progress & Stop" to save your position and resume exactly where you left off. Anti-cheat prevents any forward skipping!
 								</p>
 							</div>
 						</div>
