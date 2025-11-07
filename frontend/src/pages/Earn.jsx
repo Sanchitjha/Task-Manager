@@ -314,7 +314,7 @@ export default function Earn() {
 			clearInterval(intervalRef.current);
 		}
 
-		// Track every 2 seconds for normal experience
+		// Track every 2 seconds for smooth experience
 		intervalRef.current = setInterval(() => {
 			if (player && player.getCurrentTime) {
 				try {
@@ -326,24 +326,11 @@ export default function Earn() {
 						setVideoDuration(playerDuration);
 					}
 					
-					// LENIENT ANTI-SKIP - Only prevent major jumps
-					const majorSkipThreshold = 30; // Only prevent jumps of 30+ seconds
-					
-					// Allow normal progression and small variations
-					if (currentTime > highestWatchedTime + majorSkipThreshold) {
-						console.log('⚠️ MAJOR SKIP DETECTED! Current:', currentTime, 'Highest:', highestWatchedTime);
-						player.seekTo(highestWatchedTime, true);
-						setMessage({ 
-							type: 'error', 
-							text: '🚫 Large skip detected! Returned to your last position.' 
-						});
-						return;
-					}
-					
 					// Update watch time for UI
 					setWatchTime(currentTime);
 					
-					// Always update highest watched time when moving forward (allow small seeks)
+					// Always update highest watched time when moving forward
+					// Allow natural video progression without interference
 					if (currentTime > highestWatchedTime) {
 						setHighestWatchedTime(currentTime);
 					}
@@ -358,7 +345,7 @@ export default function Earn() {
 					console.error('Error tracking video:', error);
 				}
 			}
-		}, 2000); // Track every 2 seconds - less aggressive
+		}, 2000); // Track every 2 seconds for smooth experience
 	};
 
 	const stopTracking = () => {
@@ -503,23 +490,23 @@ export default function Earn() {
 										Save Progress & Stop
 									</button>
 									{isPlaying && (
-										<span className="px-4 py-2 bg-green-100 text-green-700 rounded-md flex items-center">
-											<span className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></span>
-											Watching... (Progress tracking active)
+										<span className="px-4 py-2 bg-blue-100 text-blue-700 rounded-md flex items-center">
+											<span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-2"></span>
+											Watching... (Earning coins)
 										</span>
 									)}
 								</div>
 
 								{/* Important Instructions */}
-								<div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-									<h4 className="font-semibold text-blue-800 mb-2">� Video Watching Rules:</h4>
-									<ul className="text-sm text-blue-700 space-y-1">
-										<li>• <strong>Watch naturally!</strong> Normal seeking and buffering is allowed</li>
-										<li>• <strong>Large skips blocked:</strong> Only jumps of 30+ seconds are prevented</li>
+								<div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+									<h4 className="font-semibold text-green-800 mb-2">✅ Video Watching - Normal Mode:</h4>
+									<ul className="text-sm text-green-700 space-y-1">
+										<li>• <strong>Watch naturally!</strong> All YouTube controls work normally</li>
+										<li>• <strong>No restrictions:</strong> Pause, rewind, fast-forward as needed</li>
 										<li>• <strong>"Save Progress & Stop"</strong> saves your exact position to resume later</li>
-										<li>• <strong>When resuming</strong>, you start from where you left off</li>
-										<li>• <strong>Only completed videos</strong> (100% watched) will award coins</li>
-										<li>• You can pause, rewind, and resume normally</li>
+										<li>• <strong>Resume feature:</strong> Start from where you left off</li>
+										<li>• <strong>Earn coins:</strong> Complete the video to get your reward</li>
+										<li>• Enjoy watching! No interference from the system</li>
 									</ul>
 								</div>
 							</div>
