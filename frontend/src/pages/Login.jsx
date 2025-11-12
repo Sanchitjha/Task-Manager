@@ -1,20 +1,96 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../lib/api';
 
 export default function Login() {
 	const [formData, setFormData] = useState({
 		email: '',
 		password: '',
 		name: '',
+		phone: '',
+		otp: '',
 		role: 'client'
 	});
 	const [isLogin, setIsLogin] = useState(true); // Changed to true so login form shows by default
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
+	const [success, setSuccess] = useState('');
+	const [currentStep, setCurrentStep] = useState('register'); // 'register', 'otp', 'complete'
+	const [otpSent, setOtpSent] = useState(false);
+	const [phoneNumber, setPhoneNumber] = useState('');
 
 	const { login, register } = useAuth();
 	const navigate = useNavigate();
+
+	// Send OTP for phone verification
+	const sendOTP = async (e) => {
+		e.preventDefault();
+		if (!formData.phone.trim()) {
+			setError('Phone number is required');
+			return;
+		}
+
+		setLoading(true);
+		setError('');
+		setSuccess('');
+
+		try {
+			const response = await api.post('/auth/send-otp', {
+				phone: formData.phone
+			});
+
+			if (response.data.success) {
+				setSuccess('OTP sent successfully! Check your phone.');
+				setOtpSent(true);
+				setCurrentStep('otp');
+				setPhoneNumber(response.data.phoneNumber);
+			}
+		} catch (error) {
+			setError(error.response?.data?.message || 'Failed to send OTP');
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	// Verify OTP and complete registration
+	const verifyOTPAndRegister = async (e) => {
+		e.preventDefault();
+		if (!formData.otp || !formData.name || !formData.email || !formData.password) {
+			setError('All fields are required');
+			return;
+		}
+
+		setLoading(true);
+		setError('');
+
+		try {
+			const response = await api.post('/auth/verify-otp-register', {
+				phone: phoneNumber,
+				otp: formData.otp,
+				name: formData.name,
+				email: formData.email,
+				password: formData.password,
+				role: formData.role
+			});
+
+			if (response.data.success) {
+				setSuccess('Registration completed successfully! Phone verified. You can now login.');
+				setTimeout(() => {
+					setIsLogin(true);
+					setCurrentStep('register');
+					setOtpSent(false);
+					setFormData({ email: '', password: '', name: '', phone: '', otp: '', role: 'client' });
+					setError('');
+					setSuccess('');
+				}, 2000);
+			}
+		} catch (error) {
+			setError(error.response?.data?.message || 'Failed to verify OTP');
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
@@ -66,53 +142,163 @@ export default function Login() {
 				<div className="card">
 					<div className="text-center mb-8">
 						<h1 className="text-3xl font-bold text-brand-800 mb-2">
-							{isLogin ? 'Welcome Back' : 'Create Account'}
+							{isLogin ? 'Welcome Back' : 
+							 currentStep === 'otp' ? 'Verify Phone' : 'Create Account'}
 						</h1>
 						<p className="text-gray-600">
-							{isLogin ? 'Sign in to your account' : 'Join The MANAGER platform'}
+							{isLogin ? 'Sign in to your account' : 
+							 currentStep === 'otp' ? 'Enter the OTP sent to your phone' : 'Join The MANAGER platform'}
 						</p>
 					</div>
 
-					<form onSubmit={handleSubmit} className="space-y-6">
-						{!isLogin && (
+					{/* Login Form */}
+					{isLogin && (
+						<form onSubmit={handleSubmit} className="space-y-6">
 							<div>
-								<label className="block text-sm font-medium mb-2">Full Name</label>
+								<label className="block text-sm font-medium mb-2">Email</label>
+								<input
+									type="email"
+									name="email"
+									value={formData.email}
+									onChange={handleChange}
+									required
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
+								/>
+							</div>
+
+							<div>
+								<label className="block text-sm font-medium mb-2">Password</label>
+								<input
+									type="password"
+									name="password"
+									value={formData.password}
+									onChange={handleChange}
+									required
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
+								/>
+							</div>
+
+							{error && (
+								<div className="text-red-600 text-sm text-center">{error}</div>
+							)}
+
+							<button
+								type="submit"
+								disabled={loading}
+								className="btn-primary w-full"
+							>
+								{loading ? 'Signing In...' : 'Sign In'}
+							</button>
+						</form>
+					)}
+
+					{/* Registration Step 1: Phone Number */}
+					{!isLogin && currentStep === 'register' && (
+						<form onSubmit={sendOTP} className="space-y-6">
+							<div>
+								<label className="block text-sm font-medium mb-2">
+									Phone Number <span className="text-red-500">*</span>
+								</label>
+								<input
+									type="tel"
+									name="phone"
+									value={formData.phone}
+									onChange={handleChange}
+									placeholder="+1234567890 or 1234567890"
+									required
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
+								/>
+								<p className="text-xs text-gray-500 mt-1">
+									We'll send an OTP to verify your phone number
+								</p>
+							</div>
+
+							{error && (
+								<div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-md text-sm">
+									{error}
+								</div>
+							)}
+
+							{success && (
+								<div className="bg-green-50 border border-green-200 text-green-600 px-3 py-2 rounded-md text-sm">
+									{success}
+								</div>
+							)}
+
+							<button
+								type="submit"
+								disabled={loading}
+								className="btn-primary w-full"
+							>
+								{loading ? 'Sending OTP...' : 'Send OTP'}
+							</button>
+						</form>
+					)}
+
+					{/* Registration Step 2: OTP Verification */}
+					{!isLogin && currentStep === 'otp' && (
+						<form onSubmit={verifyOTPAndRegister} className="space-y-6">
+							<div>
+								<label className="block text-sm font-medium mb-2">
+									Enter OTP <span className="text-red-500">*</span>
+								</label>
+								<input
+									type="text"
+									name="otp"
+									value={formData.otp}
+									onChange={handleChange}
+									placeholder="Enter 6-digit OTP"
+									maxLength={6}
+									required
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600 text-center text-xl tracking-wider"
+								/>
+								<p className="text-xs text-gray-500 mt-1">
+									OTP sent to: <strong>{phoneNumber}</strong>
+								</p>
+							</div>
+
+							<div>
+								<label className="block text-sm font-medium mb-2">
+									Full Name <span className="text-red-500">*</span>
+								</label>
 								<input
 									type="text"
 									name="name"
 									value={formData.name}
 									onChange={handleChange}
-									required={!isLogin}
+									required
 									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
 								/>
 							</div>
-						)}
 
-						<div>
-							<label className="block text-sm font-medium mb-2">Email</label>
-							<input
-								type="email"
-								name="email"
-								value={formData.email}
-								onChange={handleChange}
-								required
-								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
-							/>
-						</div>
+							<div>
+								<label className="block text-sm font-medium mb-2">
+									Email <span className="text-red-500">*</span>
+								</label>
+								<input
+									type="email"
+									name="email"
+									value={formData.email}
+									onChange={handleChange}
+									required
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
+								/>
+							</div>
 
-						<div>
-							<label className="block text-sm font-medium mb-2">Password</label>
-							<input
-								type="password"
-								name="password"
-								value={formData.password}
-								onChange={handleChange}
-								required
-								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
-							/>
-						</div>
+							<div>
+								<label className="block text-sm font-medium mb-2">
+									Password <span className="text-red-500">*</span>
+								</label>
+								<input
+									type="password"
+									name="password"
+									value={formData.password}
+									onChange={handleChange}
+									required
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
+								/>
+							</div>
 
-						{!isLogin && (
 							<div>
 								<label className="block text-sm font-medium mb-2">Role</label>
 								<select
@@ -127,25 +313,54 @@ export default function Login() {
 									<option value="admin">Admin</option>
 								</select>
 							</div>
-						)}
 
-						{error && (
-							<div className="text-red-600 text-sm text-center">{error}</div>
-						)}
+							{error && (
+								<div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-md text-sm">
+									{error}
+								</div>
+							)}
 
-						<button
-							type="submit"
-							disabled={loading}
-							className="btn-primary w-full"
-						>
-							{loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
-						</button>
-					</form>
+							{success && (
+								<div className="bg-green-50 border border-green-200 text-green-600 px-3 py-2 rounded-md text-sm">
+									{success}
+								</div>
+							)}
+
+							<div className="flex space-x-3">
+								<button
+									type="button"
+									onClick={() => {
+										setCurrentStep('register');
+										setOtpSent(false);
+										setError('');
+										setSuccess('');
+									}}
+									className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+								>
+									← Back
+								</button>
+								<button
+									type="submit"
+									disabled={loading}
+									className="flex-1 btn-primary"
+								>
+									{loading ? 'Verifying...' : 'Complete Registration'}
+								</button>
+							</div>
+						</form>
+					)}
 
 					<div className="mt-6 text-center">
 						<button
 							type="button"
-							onClick={() => setIsLogin(!isLogin)}
+							onClick={() => {
+								setIsLogin(!isLogin);
+								setCurrentStep('register');
+								setOtpSent(false);
+								setError('');
+								setSuccess('');
+								setFormData({ email: '', password: '', name: '', phone: '', otp: '', role: 'client' });
+							}}
 							className="text-brand-600 hover:underline"
 						>
 							{isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
