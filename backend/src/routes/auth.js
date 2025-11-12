@@ -60,12 +60,21 @@ router.post('/send-otp', async (req, res, next) => {
 		const otpResult = await OTPService.sendOTP(normalizedPhone, otpCode);
 		
 		if (otpResult.success) {
-			res.json({
+			// In development, include OTP in response for easier testing
+			const response = {
 				success: true,
 				message: 'OTP sent successfully to your phone number',
 				phoneNumber: normalizedPhone,
 				expiresIn: '5 minutes'
-			});
+			};
+			
+			// Only include OTP in development mode
+			if (process.env.NODE_ENV !== 'production') {
+				response.developmentOTP = otpCode;
+				response.developmentMessage = `Development Mode: Your OTP is ${otpCode}`;
+			}
+			
+			res.json(response);
 		} else {
 			res.status(500).json({ 
 				success: false, 

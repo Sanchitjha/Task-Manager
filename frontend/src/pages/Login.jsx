@@ -41,7 +41,17 @@ export default function Login() {
 			});
 
 			if (response.data.success) {
-				setSuccess('OTP sent successfully! Check your phone.');
+				let successMessage = 'OTP sent successfully! Check your phone.';
+				
+				// Show OTP in development mode
+				if (response.data.developmentOTP) {
+					successMessage = `Development Mode: Your OTP is ${response.data.developmentOTP}`;
+					
+					// Auto-fill OTP in development for easier testing
+					setFormData({ ...formData, otp: response.data.developmentOTP });
+				}
+				
+				setSuccess(successMessage);
 				setOtpSent(true);
 				setCurrentStep('otp');
 				setPhoneNumber(response.data.phoneNumber);
@@ -238,6 +248,21 @@ export default function Login() {
 					{/* Registration Step 2: OTP Verification */}
 					{!isLogin && currentStep === 'otp' && (
 						<form onSubmit={verifyOTPAndRegister} className="space-y-6">
+							{/* Development OTP Display */}
+							{formData.otp && (
+								<div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+									<div className="flex items-center">
+										<svg className="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+											<path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+										</svg>
+										<div>
+											<p className="text-yellow-800 font-medium">Development Mode</p>
+											<p className="text-yellow-700 text-sm">OTP auto-filled: <strong>{formData.otp}</strong></p>
+										</div>
+									</div>
+								</div>
+							)}
+
 							<div>
 								<label className="block text-sm font-medium mb-2">
 									Enter OTP <span className="text-red-500">*</span>
