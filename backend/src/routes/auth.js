@@ -3,8 +3,169 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { User } = require('../schemas/User');
 const { auth, adminOnly } = require('../middleware/auth'); 
+const { OTPService } = require('../lib/otpService');
 
 const router = express.Router();
+
+// Send OTP for registration
+router.post('/send-otp', async (req, res, next) => {
+	try {
+		const { phone } = req.body;
+		
+		if (!phone) {
+			return res.status(400).json({ message: 'Phone number is required' });
+		}
+		
+		// Validate phone format
+		if (!OTPService.isValidPhoneFormat(phone)) {
+			return res.status(400).json({ message: 'Invalid phone number format' });
+		}
+		
+		const normalizedPhone = OTPService.normalizePhone(phone);
+		
+		// Check if phone number already exists and is verified
+		const existingUser = await User.findOne({ phone: normalizedPhone, isPhoneVerified: true });
+		if (existingUser) {
+			return res.status(400).json({ message: 'Phone number already registered and verified' });
+		}
+		
+		// Generate OTP
+		const otpCode = OTPService.generateOTP();
+		const otpExpiry = OTPService.generateOTPExpiry();
+		
+		// Find or create temporary user record for OTP
+		let tempUser = await User.findOne({ phone: normalizedPhone, isPhoneVerified: false });
+		
+		if (tempUser) {
+			// Update existing temp record
+			tempUser.otpCode = otpCode;
+			tempUser.otpExpiry = otpExpiry;
+			tempUser.otpAttempts = 0;
+			await tempUser.save();
+		} else {
+			// Create new temp record (will be completed after OTP verification)
+			tempUser = await User.create({
+				name: 'Temp User', // Will be updated during registration
+				email: `temp_${Date.now()}@temp.com`, // Temporary email
+				password: 'temp', // Temporary password
+				phone: normalizedPhone,
+				isPhoneVerified: false,
+				otpCode,
+				otpExpiry,
+				otpAttempts: 0
+			});
+		}
+		
+		// Send OTP
+		const otpResult = await OTPService.sendOTP(normalizedPhone, otpCode);
+		
+		if (otpResult.success) {
+			res.json({
+				success: true,
+				message: 'OTP sent successfully to your phone number',
+				phoneNumber: normalizedPhone,
+				expiresIn: '5 minutes'
+			});
+		} else {
+			res.status(500).json({ 
+				success: false, 
+				message: 'Failed to send OTP. Please try again.' 
+			});
+		}
+		
+	} catch (error) {
+		console.error('Send OTP error:', error);
+		next(error);
+	}
+});
+
+// Verify OTP and complete registration
+router.post('/verify-otp-register', async (req, res, next) => {
+	try {
+		const { phone, otp, name, email, password, role } = req.body;
+		
+		// Validate required fields
+		if (!phone || !otp || !name || !email || !password) {
+			return res.status(400).json({ 
+				message: 'Phone, OTP, name, email, and password are required' 
+			});
+		}
+		
+		// Only allow client registration through public route
+		if (role && role !== 'client') {
+			return res.status(403).json({ message: 'Only clients can register publicly' });
+		}
+		
+		const normalizedPhone = OTPService.normalizePhone(phone);
+		
+		// Find user with this phone number
+		const user = await User.findOne({ phone: normalizedPhone, isPhoneVerified: false });
+		
+		if (!user) {
+			return res.status(400).json({ 
+				message: 'No OTP request found for this phone number. Please request a new OTP.' 
+			});
+		}
+		
+		// Check if OTP expired
+		if (OTPService.isOTPExpired(user.otpExpiry)) {
+			return res.status(400).json({ 
+				message: 'OTP has expired. Please request a new OTP.' 
+			});
+		}
+		
+		// Check OTP attempts
+		if (user.otpAttempts >= 5) {
+			return res.status(400).json({ 
+				message: 'Too many failed attempts. Please request a new OTP.' 
+			});
+		}
+		
+		// Verify OTP
+		if (user.otpCode !== otp) {
+			user.otpAttempts += 1;
+			await user.save();
+			
+			return res.status(400).json({ 
+				message: `Invalid OTP. ${5 - user.otpAttempts} attempts remaining.` 
+			});
+		}
+		
+		// Check if email already exists (separate from temp record)
+		const existingEmailUser = await User.findOne({ 
+			email, 
+			isPhoneVerified: true 
+		});
+		if (existingEmailUser) {
+			return res.status(400).json({ message: 'Email already registered' });
+		}
+		
+		// OTP verified! Complete the registration
+		const hash = await bcrypt.hash(password, 10);
+		
+		user.name = name;
+		user.email = email;
+		user.password = hash;
+		user.role = 'client';
+		user.isApproved = true;
+		user.isPhoneVerified = true;
+		user.otpCode = undefined;
+		user.otpExpiry = undefined;
+		user.otpAttempts = 0;
+		
+		await user.save();
+		
+		res.json({ 
+			success: true,
+			message: 'Registration completed successfully! Phone number verified.',
+			userId: user._id 
+		});
+		
+	} catch (error) {
+		console.error('Verify OTP error:', error);
+		next(error);
+	}
+});
 
 // Register new user (public - only for clients)
 router.post('/register', async (req, res, next) => {
@@ -144,6 +305,8 @@ router.post('/login', async (req, res, next) => {
 			_id: user._id,
 			name: user.name,
 			email: user.email,
+			phone: user.phone,
+			isPhoneVerified: user.isPhoneVerified || false,
 			role: user.role,
 			profileImage: user.profileImage,
 			coinsBalance: user.coinsBalance || 0,
