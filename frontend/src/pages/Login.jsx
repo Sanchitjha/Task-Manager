@@ -18,16 +18,16 @@ export default function Login() {
 	const [success, setSuccess] = useState('');
 	const [currentStep, setCurrentStep] = useState('register'); // 'register', 'otp', 'complete'
 	const [otpSent, setOtpSent] = useState(false);
-	const [phoneNumber, setPhoneNumber] = useState('');
+	const [emailAddress, setEmailAddress] = useState('');
 
 	const { login, register } = useAuth();
 	const navigate = useNavigate();
 
-	// Send OTP for phone verification
-	const sendOTP = async (e) => {
+	// Send Email OTP for verification
+	const sendEmailOTP = async (e) => {
 		e.preventDefault();
-		if (!formData.phone.trim()) {
-			setError('Phone number is required');
+		if (!formData.email.trim()) {
+			setError('Email address is required');
 			return;
 		}
 
@@ -36,12 +36,12 @@ export default function Login() {
 		setSuccess('');
 
 		try {
-			const response = await api.post('/auth/send-otp', {
-				phone: formData.phone
+			const response = await api.post('/auth/send-email-otp', {
+				email: formData.email
 			});
 
 			if (response.data.success) {
-				let successMessage = 'OTP sent successfully! Check your phone.';
+				let successMessage = 'OTP sent successfully! Check your email inbox.';
 				
 				// Show OTP in development mode
 				if (response.data.developmentOTP) {
@@ -54,7 +54,7 @@ export default function Login() {
 				setSuccess(successMessage);
 				setOtpSent(true);
 				setCurrentStep('otp');
-				setPhoneNumber(response.data.phoneNumber);
+				setEmailAddress(response.data.email);
 			}
 		} catch (error) {
 			setError(error.response?.data?.message || 'Failed to send OTP');
@@ -63,11 +63,11 @@ export default function Login() {
 		}
 	};
 
-	// Verify OTP and complete registration
-	const verifyOTPAndRegister = async (e) => {
+	// Verify Email OTP and complete registration
+	const verifyEmailOTPAndRegister = async (e) => {
 		e.preventDefault();
-		if (!formData.otp || !formData.name || !formData.email || !formData.password) {
-			setError('All fields are required');
+		if (!formData.otp || !formData.name || !formData.password) {
+			setError('OTP, name, and password are required');
 			return;
 		}
 
@@ -75,17 +75,17 @@ export default function Login() {
 		setError('');
 
 		try {
-			const response = await api.post('/auth/verify-otp-register', {
-				phone: phoneNumber,
+			const response = await api.post('/auth/verify-email-otp-register', {
+				email: emailAddress,
 				otp: formData.otp,
 				name: formData.name,
-				email: formData.email,
 				password: formData.password,
+				phone: formData.phone || null, // Optional phone number
 				role: formData.role
 			});
 
 			if (response.data.success) {
-				setSuccess('Registration completed successfully! Phone verified. You can now login.');
+				setSuccess('Registration completed successfully! Email verified. You can now login.');
 				setTimeout(() => {
 					setIsLogin(true);
 					setCurrentStep('register');
@@ -153,11 +153,11 @@ export default function Login() {
 					<div className="text-center mb-8">
 						<h1 className="text-3xl font-bold text-brand-800 mb-2">
 							{isLogin ? 'Welcome Back' : 
-							 currentStep === 'otp' ? 'Verify Phone' : 'Create Account'}
+							 currentStep === 'otp' ? 'Verify Email' : 'Create Account'}
 						</h1>
 						<p className="text-gray-600">
 							{isLogin ? 'Sign in to your account' : 
-							 currentStep === 'otp' ? 'Enter the OTP sent to your phone' : 'Join The MANAGER platform'}
+							 currentStep === 'otp' ? 'Enter the OTP sent to your email' : 'Join The MANAGER platform'}
 						</p>
 					</div>
 
@@ -202,24 +202,24 @@ export default function Login() {
 						</form>
 					)}
 
-					{/* Registration Step 1: Phone Number */}
+					{/* Registration Step 1: Email Address */}
 					{!isLogin && currentStep === 'register' && (
-						<form onSubmit={sendOTP} className="space-y-6">
+						<form onSubmit={sendEmailOTP} className="space-y-6">
 							<div>
 								<label className="block text-sm font-medium mb-2">
-									Phone Number <span className="text-red-500">*</span>
+									Email Address <span className="text-red-500">*</span>
 								</label>
 								<input
-									type="tel"
-									name="phone"
-									value={formData.phone}
+									type="email"
+									name="email"
+									value={formData.email}
 									onChange={handleChange}
-									placeholder="+1234567890 or 1234567890"
+									placeholder="your.email@example.com"
 									required
 									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
 								/>
 								<p className="text-xs text-gray-500 mt-1">
-									We'll send an OTP to verify your phone number
+									We'll send a verification OTP to your email address
 								</p>
 							</div>
 
@@ -240,14 +240,14 @@ export default function Login() {
 								disabled={loading}
 								className="btn-primary w-full"
 							>
-								{loading ? 'Sending OTP...' : 'Send OTP'}
+								{loading ? 'Sending OTP...' : 'Send Email OTP'}
 							</button>
 						</form>
 					)}
 
-					{/* Registration Step 2: OTP Verification */}
+					{/* Registration Step 2: Email OTP Verification */}
 					{!isLogin && currentStep === 'otp' && (
-						<form onSubmit={verifyOTPAndRegister} className="space-y-6">
+						<form onSubmit={verifyEmailOTPAndRegister} className="space-y-6">
 							{/* Development OTP Display */}
 							{formData.otp && (
 								<div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
@@ -265,7 +265,7 @@ export default function Login() {
 
 							<div>
 								<label className="block text-sm font-medium mb-2">
-									Enter OTP <span className="text-red-500">*</span>
+									Enter Email OTP <span className="text-red-500">*</span>
 								</label>
 								<input
 									type="text"
@@ -278,7 +278,7 @@ export default function Login() {
 									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600 text-center text-xl tracking-wider"
 								/>
 								<p className="text-xs text-gray-500 mt-1">
-									OTP sent to: <strong>{phoneNumber}</strong>
+									OTP sent to: <strong>{emailAddress}</strong>
 								</p>
 							</div>
 
@@ -298,6 +298,34 @@ export default function Login() {
 
 							<div>
 								<label className="block text-sm font-medium mb-2">
+									Password <span className="text-red-500">*</span>
+								</label>
+								<input
+									type="password"
+									name="password"
+									value={formData.password}
+									onChange={handleChange}
+									required
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
+								/>
+							</div>
+
+							<div>
+								<label className="block text-sm font-medium mb-2">
+									Phone Number (Optional)
+								</label>
+								<input
+									type="tel"
+									name="phone"
+									value={formData.phone}
+									onChange={handleChange}
+									placeholder="+1234567890 or 1234567890"
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
+								/>
+								<p className="text-xs text-gray-500 mt-1">
+									Phone number can be added to your profile (no verification required)
+								</p>
+							</div>
 									Email <span className="text-red-500">*</span>
 								</label>
 								<input
