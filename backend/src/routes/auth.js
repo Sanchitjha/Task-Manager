@@ -3,75 +3,72 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { User } = require('../schemas/User');
 const { auth, adminOnly } = require('../middleware/auth'); 
-const { OTPService } = require('../lib/otpService');
+const { EmailOTPService } = require('../lib/emailOtpService');
 
 const router = express.Router();
 
-// Send OTP for registration
-router.post('/send-otp', async (req, res, next) => {
+// Send Email OTP for registration
+router.post('/send-email-otp', async (req, res, next) => {
 	try {
-		const { phone } = req.body;
+		const { email } = req.body;
 		
-		if (!phone) {
-			return res.status(400).json({ message: 'Phone number is required' });
+		if (!email) {
+			return res.status(400).json({ message: 'Email address is required' });
 		}
 		
-		// Validate phone format
-		if (!OTPService.isValidPhoneFormat(phone)) {
-			return res.status(400).json({ message: 'Invalid phone number format' });
+		// Validate email format
+		if (!EmailOTPService.isValidEmailFormat(email)) {
+			return res.status(400).json({ message: 'Invalid email address format' });
 		}
 		
-		const normalizedPhone = OTPService.normalizePhone(phone);
-		
-		// Check if phone number already exists and is verified
-		const existingUser = await User.findOne({ phone: normalizedPhone, isPhoneVerified: true });
+		// Check if email already exists and is verified
+		const existingUser = await User.findOne({ email, isEmailVerified: true });
 		if (existingUser) {
-			return res.status(400).json({ message: 'Phone number already registered and verified' });
+			return res.status(400).json({ message: 'Email address already registered and verified' });
 		}
 		
 		// Generate OTP
-		const otpCode = OTPService.generateOTP();
-		const otpExpiry = OTPService.generateOTPExpiry();
+		const otpCode = EmailOTPService.generateOTP();
+		const otpExpiry = EmailOTPService.generateOTPExpiry();
 		
 		// Find or create temporary user record for OTP
-		let tempUser = await User.findOne({ phone: normalizedPhone, isPhoneVerified: false });
+		let tempUser = await User.findOne({ email, isEmailVerified: false });
 		
 		if (tempUser) {
 			// Update existing temp record
-			tempUser.otpCode = otpCode;
-			tempUser.otpExpiry = otpExpiry;
-			tempUser.otpAttempts = 0;
+			tempUser.emailOtpCode = otpCode;
+			tempUser.emailOtpExpiry = otpExpiry;
+			tempUser.emailOtpAttempts = 0;
 			await tempUser.save();
 		} else {
 			// Create new temp record (will be completed after OTP verification)
 			tempUser = await User.create({
 				name: 'Temp User', // Will be updated during registration
-				email: `temp_${Date.now()}@temp.com`, // Temporary email
+				email,
 				password: 'temp', // Temporary password
-				phone: normalizedPhone,
-				isPhoneVerified: false,
-				otpCode,
-				otpExpiry,
-				otpAttempts: 0
+				isEmailVerified: false,
+				emailOtpCode: otpCode,
+				emailOtpExpiry: otpExpiry,
+				emailOtpAttempts: 0
 			});
 		}
 		
-		// Send OTP
-		const otpResult = await OTPService.sendOTP(normalizedPhone, otpCode);
+		// Send Email OTP
+		const otpResult = await EmailOTPService.sendEmailOTP(email, otpCode, 'New User');
 		
 		if (otpResult.success) {
-			// In development, include OTP in response for easier testing
+			// Response object
 			const response = {
 				success: true,
-				message: 'OTP sent successfully to your phone number',
-				phoneNumber: normalizedPhone,
-				expiresIn: '5 minutes'
+				message: 'OTP sent successfully to your email address',
+				email: email,
+				expiresIn: '10 minutes'
 			};
 			
-			// Only include OTP in development mode
-			if (process.env.NODE_ENV !== 'production') {
-				response.developmentOTP = otpCode;
-				response.developmentMessage = `Development Mode: Your OTP is ${otpCode}`;
+			// Include OTP in development mode
+			if (otpResult.developmentMode) {
+				response.developmentOTP = otpResult.otp;
+				response.developmentMessage = `Development Mode: Your OTP is ${otpResult.otp}`;
 			}
 			
 			res.json(response);
@@ -83,20 +80,20 @@ router.post('/send-otp', async (req, res, next) => {
 		}
 		
 	} catch (error) {
-		console.error('Send OTP error:', error);
+		console.error('Send Email OTP error:', error);
 		next(error);
 	}
 });
 
-// Verify OTP and complete registration
-router.post('/verify-otp-register', async (req, res, next) => {
+// Verify Email OTP and complete registration
+router.post('/verify-email-otp-register', async (req, res, next) => {
 	try {
-		const { phone, otp, name, email, password, role } = req.body;
+		const { email, otp, name, password, phone, role } = req.body;
 		
 		// Validate required fields
-		if (!phone || !otp || !name || !email || !password) {
+		if (!email || !otp || !name || !password) {
 			return res.status(400).json({ 
-				message: 'Phone, OTP, name, email, and password are required' 
+				message: 'Email, OTP, name, and password are required' 
 			});
 		}
 		
@@ -105,73 +102,62 @@ router.post('/verify-otp-register', async (req, res, next) => {
 			return res.status(403).json({ message: 'Only clients can register publicly' });
 		}
 		
-		const normalizedPhone = OTPService.normalizePhone(phone);
-		
-		// Find user with this phone number
-		const user = await User.findOne({ phone: normalizedPhone, isPhoneVerified: false });
+		// Find user with this email
+		const user = await User.findOne({ email, isEmailVerified: false });
 		
 		if (!user) {
 			return res.status(400).json({ 
-				message: 'No OTP request found for this phone number. Please request a new OTP.' 
+				message: 'No OTP request found for this email. Please request a new OTP.' 
 			});
 		}
 		
 		// Check if OTP expired
-		if (OTPService.isOTPExpired(user.otpExpiry)) {
+		if (EmailOTPService.isOTPExpired(user.emailOtpExpiry)) {
 			return res.status(400).json({ 
 				message: 'OTP has expired. Please request a new OTP.' 
 			});
 		}
 		
 		// Check OTP attempts
-		if (user.otpAttempts >= 5) {
+		if (user.emailOtpAttempts >= 5) {
 			return res.status(400).json({ 
 				message: 'Too many failed attempts. Please request a new OTP.' 
 			});
 		}
 		
 		// Verify OTP
-		if (user.otpCode !== otp) {
-			user.otpAttempts += 1;
+		if (user.emailOtpCode !== otp) {
+			user.emailOtpAttempts += 1;
 			await user.save();
 			
 			return res.status(400).json({ 
-				message: `Invalid OTP. ${5 - user.otpAttempts} attempts remaining.` 
+				message: `Invalid OTP. ${5 - user.emailOtpAttempts} attempts remaining.` 
 			});
-		}
-		
-		// Check if email already exists (separate from temp record)
-		const existingEmailUser = await User.findOne({ 
-			email, 
-			isPhoneVerified: true 
-		});
-		if (existingEmailUser) {
-			return res.status(400).json({ message: 'Email already registered' });
 		}
 		
 		// OTP verified! Complete the registration
 		const hash = await bcrypt.hash(password, 10);
 		
 		user.name = name;
-		user.email = email;
 		user.password = hash;
+		user.phone = phone || null; // Optional phone number
 		user.role = 'client';
 		user.isApproved = true;
-		user.isPhoneVerified = true;
-		user.otpCode = undefined;
-		user.otpExpiry = undefined;
-		user.otpAttempts = 0;
+		user.isEmailVerified = true;
+		user.emailOtpCode = undefined;
+		user.emailOtpExpiry = undefined;
+		user.emailOtpAttempts = 0;
 		
 		await user.save();
 		
 		res.json({ 
 			success: true,
-			message: 'Registration completed successfully! Phone number verified.',
+			message: 'Registration completed successfully! Email verified.',
 			userId: user._id 
 		});
 		
 	} catch (error) {
-		console.error('Verify OTP error:', error);
+		console.error('Verify Email OTP error:', error);
 		next(error);
 	}
 });
@@ -315,7 +301,7 @@ router.post('/login', async (req, res, next) => {
 			name: user.name,
 			email: user.email,
 			phone: user.phone,
-			isPhoneVerified: user.isPhoneVerified || false,
+			isEmailVerified: user.isEmailVerified || false,
 			role: user.role,
 			profileImage: user.profileImage,
 			coinsBalance: user.coinsBalance || 0,
