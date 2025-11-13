@@ -326,31 +326,6 @@ export default function Login() {
 									Phone number can be added to your profile (no verification required)
 								</p>
 							</div>
-									Email <span className="text-red-500">*</span>
-								</label>
-								<input
-									type="email"
-									name="email"
-									value={formData.email}
-									onChange={handleChange}
-									required
-									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
-								/>
-							</div>
-
-							<div>
-								<label className="block text-sm font-medium mb-2">
-									Password <span className="text-red-500">*</span>
-								</label>
-								<input
-									type="password"
-									name="password"
-									value={formData.password}
-									onChange={handleChange}
-									required
-									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
-								/>
-							</div>
 
 							<div>
 								<label className="block text-sm font-medium mb-2">Role</label>

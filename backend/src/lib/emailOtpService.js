@@ -1,8 +1,12 @@
 const crypto = require('crypto');
 const sgMail = require('@sendgrid/mail');
 
-// Initialize SendGrid with API key
-sgMail.setApiKey(process.env.SENDGRID_API_KEY || 'demo-key');
+// Initialize SendGrid with API key only if available
+if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_API_KEY.startsWith('SG.')) {
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+} else {
+    console.log('📧 SendGrid API key not configured, using mock email service');
+}
 
 // Email OTP Service using SendGrid
 class EmailOTPService {
@@ -20,7 +24,7 @@ class EmailOTPService {
     static async sendEmailOTP(email, otpCode, userName = 'User') {
         try {
             // In development mode, just log to console
-            if (!process.env.SENDGRID_API_KEY || process.env.SENDGRID_API_KEY === 'demo-key') {
+            if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_API_KEY.startsWith('SG.')) {
                 console.log(`\n📧 MOCK EMAIL SENT TO ${email}:`);
                 console.log(`🔐 Your email verification code is: ${otpCode}`);
                 console.log(`⏰ Valid for 10 minutes\n`);
