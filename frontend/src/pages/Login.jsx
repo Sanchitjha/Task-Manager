@@ -36,9 +36,14 @@ export default function Login() {
 		setSuccess('');
 
 		try {
+			console.log('🔍 Sending OTP to:', formData.email);
+			console.log('🌐 API URL:', `${api.defaults.baseURL}/auth/send-email-otp`);
+			
 			const response = await api.post('/auth/send-email-otp', {
 				email: formData.email
 			});
+
+			console.log('✅ OTP Response:', response.data);
 
 			if (response.data.success) {
 				let successMessage = 'OTP sent successfully! Check your email inbox.';
@@ -57,6 +62,8 @@ export default function Login() {
 				setEmailAddress(response.data.email);
 			}
 		} catch (error) {
+			console.error('❌ OTP Error:', error);
+			console.error('❌ Error Response:', error.response?.data);
 			setError(error.response?.data?.message || 'Failed to send OTP');
 		} finally {
 			setLoading(false);
@@ -75,6 +82,14 @@ export default function Login() {
 		setError('');
 
 		try {
+			console.log('🔍 Verifying OTP:', {
+				email: emailAddress,
+				otp: formData.otp,
+				name: formData.name,
+				phone: formData.phone,
+				role: formData.role
+			});
+			
 			const response = await api.post('/auth/verify-email-otp-register', {
 				email: emailAddress,
 				otp: formData.otp,
@@ -83,6 +98,8 @@ export default function Login() {
 				phone: formData.phone || null, // Optional phone number
 				role: formData.role
 			});
+
+			console.log('✅ Verification Response:', response.data);
 
 			if (response.data.success) {
 				setSuccess('Registration completed successfully! Email verified. You can now login.');
@@ -96,6 +113,8 @@ export default function Login() {
 				}, 2000);
 			}
 		} catch (error) {
+			console.error('❌ Verification Error:', error);
+			console.error('❌ Error Response:', error.response?.data);
 			setError(error.response?.data?.message || 'Failed to verify OTP');
 		} finally {
 			setLoading(false);
