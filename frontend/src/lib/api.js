@@ -97,4 +97,18 @@ export const settingsAPI = {
 	updateSettings: (settings) => api.post('/settings', settings),
 };
 
+// Products API
+export const productsAPI = {
+	list: (params) => api.get('/products', { params }),
+	get: (id) => api.get(`/products/${id}`),
+	create: (data) => api.post('/products', data),
+	update: (id, data) => api.put(`/products/${id}`, data),
+	remove: (id) => api.delete(`/products/${id}`),
+	uploadImages: (id, files) => {
+		const form = new FormData();
+		files.forEach((f) => form.append('images', f));
+		return api.post(`/products/${id}/images`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+	}
+};
+
 export default api;
