@@ -12,6 +12,8 @@ import AdminVideos from './pages/AdminVideos';
 import AdminDashboard from './pages/AdminDashboard';
 import SubAdminDashboard from './pages/SubAdminDashboard';
 import Profile from './pages/Profile';
+import Products from './pages/Products';
+import ProductCreate from './pages/ProductCreate';
 
 function App() {
 	return (
@@ -21,6 +23,8 @@ function App() {
 				<Routes>
 					<Route path="/" element={<Home />} />
 					<Route path="/login" element={<Login />} />
+					<Route path="/products" element={<Products />} />
+					<Route path="/vendor/products/new" element={<ProductCreate />} />
 					
 					{/* Protected Routes */}
 					<Route path="/earn" element={
