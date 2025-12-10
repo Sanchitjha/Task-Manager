@@ -97,9 +97,9 @@ router.post('/verify-email-otp-register', async (req, res, next) => {
 			});
 		}
 		
-		// Only allow client registration through public route
-		if (role && role !== 'client') {
-			return res.status(403).json({ message: 'Only clients can register publicly' });
+		// Only allow client or vendor registration through public route
+		if (role && role !== 'client' && role !== 'vendor') {
+			return res.status(403).json({ message: 'Only clients or vendors can register publicly' });
 		}
 		
 		// Find user with this email
@@ -141,7 +141,8 @@ router.post('/verify-email-otp-register', async (req, res, next) => {
 		user.name = name;
 		user.password = hash;
 		user.phone = phone || null; // Optional phone number
-		user.role = 'client';
+		// Assign role: vendor if requested, otherwise client
+		user.role = role === 'vendor' ? 'vendor' : 'client';
 		user.isApproved = true;
 		user.isEmailVerified = true;
 		user.emailOtpCode = undefined;
@@ -168,8 +169,9 @@ router.post('/register', async (req, res, next) => {
 		const { name, email, password, role } = req.body;
 		
 		// Only allow client registration through public route
-		if (role && role !== 'client') {
-			return res.status(403).json({ message: 'Only clients can register publicly' });
+		// Allow clients and vendors to register publicly
+		if (role && role !== 'client' && role !== 'vendor') {
+			return res.status(403).json({ message: 'Only clients or vendors can register publicly' });
 		}
 		
 		const existing = await User.findOne({ email });
@@ -180,7 +182,7 @@ router.post('/register', async (req, res, next) => {
 			name, 
 			email, 
 			password: hash, 
-			role: 'client',
+			role: role === 'vendor' ? 'vendor' : 'client',
 			isApproved: true 
 		});
 		
