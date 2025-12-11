@@ -39,23 +39,20 @@ export default function Navbar() {
 									Wallet
 								</Link>
 								<Link 
-									to="/shop" 
+									to="/products" 
 									className="text-gray-700 hover:text-brand-600 font-medium transition"
 								>
-									Shop
+									Products
 								</Link>
-								{/* Profile Link with Image */}
-								<Link 
-									to="/profile" 
-									className="flex items-center gap-2 text-gray-700 hover:text-brand-600 font-medium transition"
-								>
-									<img
-										src={user.profileImage ? `http://localhost:5000${user.profileImage}` : '/default-avatar.png'}
-										alt="Profile"
-										className="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
-									/>
-									Profile
-								</Link>
+								{/* Seller Portal Link */}
+								{user.role === 'vendor' && (
+									<Link 
+										to="/seller/dashboard" 
+										className="text-gray-700 hover:text-brand-600 font-medium transition bg-yellow-100 px-3 py-1 rounded"
+									>
+										🏪 Seller Portal
+									</Link>
+								)}
 								{/* Admin Dashboard Link */}
 								{user.role === 'admin' && (
 									<Link 

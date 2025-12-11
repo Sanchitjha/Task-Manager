@@ -14,6 +14,12 @@ import SubAdminDashboard from './pages/SubAdminDashboard';
 import Profile from './pages/Profile';
 import Products from './pages/Products';
 import ProductCreate from './pages/ProductCreate';
+import VendorDashboard from './pages/VendorDashboard';
+import SellerDashboard from './pages/SellerDashboard';
+import SellerInventory from './pages/SellerInventory';
+import SellerOrders from './pages/SellerOrders';
+import SellerReviews from './pages/SellerReviews';
+import SellerProfile from './pages/SellerProfile';
 
 function App() {
 	return (
@@ -24,7 +30,54 @@ function App() {
 					<Route path="/" element={<Home />} />
 					<Route path="/login" element={<Login />} />
 					<Route path="/products" element={<Products />} />
+					<Route path="/vendor/dashboard" element={
+						<ProtectedRoute>
+							<VendorDashboard />
+						</ProtectedRoute>
+					} />
 					<Route path="/vendor/products/new" element={<ProductCreate />} />
+
+					{/* Seller Portal Routes */}
+					<Route path="/seller" element={
+						<ProtectedRoute>
+							<SellerDashboard />
+						</ProtectedRoute>
+					} />
+					<Route path="/seller/dashboard" element={
+						<ProtectedRoute>
+							<SellerDashboard />
+						</ProtectedRoute>
+					} />
+					<Route path="/seller/inventory" element={
+						<ProtectedRoute>
+							<SellerInventory />
+						</ProtectedRoute>
+					} />
+					<Route path="/seller/products/new" element={
+						<ProtectedRoute>
+							<ProductCreate />
+						</ProtectedRoute>
+					} />
+					<Route path="/seller/orders" element={
+						<ProtectedRoute>
+							<SellerOrders />
+						</ProtectedRoute>
+					} />
+					<Route path="/seller/reviews" element={
+						<ProtectedRoute>
+							<SellerReviews />
+						</ProtectedRoute>
+					} />
+					<Route path="/seller/profile" element={
+						<ProtectedRoute>
+							<SellerProfile />
+						</ProtectedRoute>
+					} />
+					<Route path="/seller/wallet" element={
+						<ProtectedRoute>
+							<Wallet />
+						</ProtectedRoute>
+					} />
 					
 					{/* Protected Routes */}
 					<Route path="/earn" element={
