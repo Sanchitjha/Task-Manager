@@ -12,6 +12,7 @@ const transactionsRouter = require('./routes/transactions');
 const settingsRouter = require('./routes/settings');
 const adminRouter = require('./routes/admin');
 const productsRouter = require('./routes/products');
+const vendorRouter = require('./routes/vendor');
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use('/api/transactions', transactionsRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/products', productsRouter);
+app.use('/api/vendor', vendorRouter);
 
 app.use((err, _req, res, _next) => {
 	const status = err.status || 500;
