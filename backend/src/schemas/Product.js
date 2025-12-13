@@ -10,7 +10,10 @@ const productSchema = new Schema(
     vendor: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     category: { type: String, default: 'general' },
     isPublished: { type: Boolean, default: true },
-    sku: { type: String, default: null }
+    sku: { type: String, default: null },
+    weight: { type: String, default: null },
+    dimensions: { type: String, default: null },
+    tags: [{ type: String }]
   },
   { timestamps: true }
 );
