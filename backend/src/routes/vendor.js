@@ -43,25 +43,42 @@ router.put('/profile', auth, async (req, res, next) => {
       return res.status(403).json({ message: 'Vendor access required' });
     }
 
-    const { storeName, storeDescription, businessCategory, phone, address, shippingPolicy, returnPolicy, cancelPolicy } = req.body;
+    const { storeName, storeDescription, businessCategory, phone, email, address, shippingPolicy, returnPolicy, cancelPolicy } = req.body;
 
     let profile = await VendorProfile.findOne({ user: user._id });
     if (!profile) {
-      profile = new VendorProfile({ user: user._id });
+      // Create new profile if doesn't exist
+      profile = new VendorProfile({ 
+        user: user._id,
+        storeName: storeName || (user.name + "'s Store"),
+        email: email || user.email,
+        phone: phone || user.phone
+      });
     }
 
-    if (storeName) profile.storeName = storeName;
-    if (storeDescription) profile.storeDescription = storeDescription;
-    if (businessCategory) profile.businessCategory = businessCategory;
-    if (phone) profile.phone = phone;
-    if (address) profile.address = { ...profile.address, ...address };
-    if (shippingPolicy) profile.shippingPolicy = shippingPolicy;
-    if (returnPolicy) profile.returnPolicy = returnPolicy;
-    if (cancelPolicy) profile.cancelPolicy = cancelPolicy;
+    // Update fields
+    if (storeName !== undefined) profile.storeName = storeName;
+    if (storeDescription !== undefined) profile.storeDescription = storeDescription;
+    if (businessCategory !== undefined) profile.businessCategory = businessCategory;
+    if (phone !== undefined) profile.phone = phone;
+    if (email !== undefined) profile.email = email;
+    if (address) {
+      profile.address = { 
+        street: address.street || profile.address?.street,
+        city: address.city || profile.address?.city,
+        state: address.state || profile.address?.state,
+        zipCode: address.zipCode || profile.address?.zipCode,
+        country: address.country || 'India'
+      };
+    }
+    if (shippingPolicy !== undefined) profile.shippingPolicy = shippingPolicy;
+    if (returnPolicy !== undefined) profile.returnPolicy = returnPolicy;
+    if (cancelPolicy !== undefined) profile.cancelPolicy = cancelPolicy;
 
     await profile.save();
     res.json({ success: true, profile });
   } catch (error) {
+    console.error('Profile update error:', error);
     next(error);
   }
 });
