@@ -14,7 +14,7 @@ router.post('/', auth, async (req, res, next) => {
       return res.status(403).json({ message: 'Vendor access required' });
     }
 
-    const { title, description, price, stock, category, isPublished, sku } = req.body;
+    const { title, description, price, stock, category, isPublished, sku, weight, dimensions, tags } = req.body;
     if (!title || typeof price === 'undefined') return res.status(400).json({ message: 'Title and price required' });
 
     const product = await Product.create({
@@ -25,6 +25,9 @@ router.post('/', auth, async (req, res, next) => {
       category: category || 'general',
       isPublished: typeof isPublished !== 'undefined' ? !!isPublished : true,
       sku: sku || null,
+      weight: weight || null,
+      dimensions: dimensions || null,
+      tags: Array.isArray(tags) ? tags : (typeof tags === 'string' && tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : []),
       vendor: user._id
     });
 
@@ -72,9 +75,15 @@ router.put('/:id', auth, async (req, res, next) => {
       return res.status(403).json({ message: 'Not allowed to update this product' });
     }
 
-    const fields = ['title', 'description', 'price', 'stock', 'category', 'isPublished', 'sku'];
+    const fields = ['title', 'description', 'price', 'stock', 'category', 'isPublished', 'sku', 'weight', 'dimensions', 'tags'];
     fields.forEach((f) => {
-      if (typeof req.body[f] !== 'undefined') product[f] = req.body[f];
+      if (typeof req.body[f] !== 'undefined') {
+        if (f === 'tags') {
+          product.tags = Array.isArray(req.body.tags) ? req.body.tags : (typeof req.body.tags === 'string' ? req.body.tags.split(',').map(t => t.trim()).filter(Boolean) : []);
+        } else {
+          product[f] = req.body[f];
+        }
+      }
     });
 
     await product.save();
