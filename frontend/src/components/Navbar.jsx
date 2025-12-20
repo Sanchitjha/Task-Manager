@@ -39,6 +39,12 @@ export default function Navbar() {
 									Wallet
 								</Link>
 								<Link 
+									to="/shop" 
+									className="text-gray-700 hover:text-orange-600 font-medium transition bg-orange-100 px-3 py-1 rounded"
+								>
+									🛍️ Shop
+								</Link>
+								<Link 
 									to="/products" 
 									className="text-gray-700 hover:text-brand-600 font-medium transition"
 								>
