@@ -10,10 +10,15 @@ import Shop from './pages/Shop';
 import Admin from './pages/Admin';
 import AdminVideos from './pages/AdminVideos';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminVendors from './pages/AdminVendors';
 import SubAdminDashboard from './pages/SubAdminDashboard';
 import Profile from './pages/Profile';
 import Products from './pages/Products';
 import ProductCreate from './pages/ProductCreate';
+import ProductDetail from './pages/ProductDetail';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+import Orders from './pages/Orders';
 import VendorDashboard from './pages/VendorDashboard';
 import SellerDashboard from './pages/SellerDashboard';
 import SellerInventory from './pages/SellerInventory';
@@ -30,6 +35,22 @@ function App() {
 					<Route path="/" element={<Home />} />
 					<Route path="/login" element={<Login />} />
 					<Route path="/products" element={<Products />} />
+					<Route path="/product/:id" element={<ProductDetail />} />
+					<Route path="/cart" element={
+						<ProtectedRoute>
+							<Cart />
+						</ProtectedRoute>
+					} />
+					<Route path="/checkout" element={
+						<ProtectedRoute>
+							<Checkout />
+						</ProtectedRoute>
+					} />
+					<Route path="/orders" element={
+						<ProtectedRoute>
+							<Orders />
+						</ProtectedRoute>
+					} />
 					<Route path="/vendor/dashboard" element={
 						<ProtectedRoute>
 							<VendorDashboard />
@@ -103,6 +124,11 @@ function App() {
 					<Route path="/admin/videos" element={
 						<ProtectedRoute adminOnly>
 							<AdminVideos />
+						</ProtectedRoute>
+					} />
+					<Route path="/admin/vendors" element={
+						<ProtectedRoute adminOnly>
+							<AdminVendors />
 						</ProtectedRoute>
 					} />
 					<Route path="/admin/dashboard" element={
