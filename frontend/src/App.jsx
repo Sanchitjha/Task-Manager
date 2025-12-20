@@ -102,7 +102,7 @@ function App() {
 					
 					{/* Protected Routes */}
 					<Route path="/earn" element={
-						<ProtectedRoute>
+						<ProtectedRoute clientOnly>
 							<Earn />
 						</ProtectedRoute>
 					} />
