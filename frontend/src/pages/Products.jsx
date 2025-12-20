@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { productsAPI } from '../lib/api';
 
 export default function Products() {
@@ -20,22 +21,71 @@ export default function Products() {
   useEffect(() => { load(); }, []);
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Products</h1>
-      {loading && <div>Loading...</div>}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {items.map((p) => (
-          <div key={p._id} className="border rounded p-4">
-            {p.images && p.images[0] ? (
-              <img src={`http://localhost:5000${p.images[0]}`} alt={p.title} className="h-40 w-full object-cover mb-2 rounded" />
-            ) : (
-              <div className="h-40 w-full bg-gray-100 mb-2 flex items-center justify-center">No image</div>
-            )}
-            <h2 className="font-semibold">{p.title}</h2>
-            <p className="text-sm text-gray-600">{p.category}</p>
-            <p className="mt-2 font-bold">₹{p.price}</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-gray-900">All Products</h1>
+            <Link 
+              to="/shop" 
+              className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition"
+            >
+              🛍️ Shop with Coins
+            </Link>
           </div>
-        ))}
+          <p className="text-gray-600 mt-2">Browse our complete product catalog</p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+          </div>
+        ) : (
+          <>
+            {items.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="text-6xl mb-4">📦</div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">No Products Yet</h2>
+                <p className="text-gray-600">Products will appear here once vendors start adding them</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {items.map((p) => (
+                  <div key={p._id} className="bg-white rounded-lg shadow-sm hover:shadow-lg transition border overflow-hidden">
+                    <div className="aspect-w-1 aspect-h-1">
+                      {p.images && p.images[0] ? (
+                        <img 
+                          src={`http://localhost:5000${p.images[0]}`} 
+                          alt={p.title} 
+                          className="w-full h-48 object-cover" 
+                        />
+                      ) : (
+                        <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                          <span className="text-gray-400 text-4xl">📦</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h2 className="font-semibold text-gray-900 mb-1 line-clamp-2">{p.title}</h2>
+                      <p className="text-sm text-gray-600 mb-2">{p.category}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-bold text-orange-600">{p.price} coins</span>
+                        <Link
+                          to={`/product/${p._id}`}
+                          className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 transition"
+                        >
+                          View
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
