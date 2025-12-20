@@ -271,13 +271,25 @@ router.post('/register-admin', async (req, res, next) => {
 
 // Login user
 router.post('/login', async (req, res, next) => {
+	console.log('=== LOGIN ROUTE HIT ===');
+	console.log('Request body:', req.body);
 	try {
 		const { email, password } = req.body;
+		console.log('🔐 Login attempt:', { email, passwordLength: password?.length });
+		
 		const user = await User.findOne({ email });
-		if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+		console.log('👤 User found:', !!user, user ? { id: user._id, role: user.role, hasPassword: !!user.password } : null);
+		if (!user) {
+			console.log('❌ User not found, returning 401');
+			return res.status(401).json({ message: 'Invalid credentials' });
+		}
 		
 		const ok = await bcrypt.compare(password, user.password);
-		if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
+		console.log('🔑 Password comparison result:', ok);
+		if (!ok) {
+			console.log('❌ Password mismatch, returning 401');
+			return res.status(401).json({ message: 'Invalid credentials' });
+		}
 		
 		// Check if sub-admin is approved
 		if (user.role === 'subadmin' && !user.isApproved) {
