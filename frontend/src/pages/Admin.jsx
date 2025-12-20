@@ -45,12 +45,12 @@ export default function Admin() {
 					<div className="text-gray-600 mt-2">Active Videos</div>
 				</div>
 				<div className="bg-white rounded-lg shadow-md p-6 text-center">
-					<div className="text-4xl font-bold text-purple-600">{settings.coinPerMinute}</div>
-					<div className="text-gray-600 mt-2">Coins per Minute</div>
+					<div className="text-4xl font-bold text-orange-600">{users.filter(u => u.role === 'vendor').length}</div>
+					<div className="text-gray-600 mt-2">Active Vendors</div>
 				</div>
 			</div>
 
-			<div className="grid md:grid-cols-2 gap-6 mb-8">
+			<div className="grid md:grid-cols-3 gap-6 mb-8">
 				<button
 					onClick={() => navigate('/admin/videos')}
 					className="bg-white rounded-lg shadow-md p-8 text-left hover:shadow-lg transition group"
@@ -62,6 +62,25 @@ export default function Admin() {
 							</h2>
 							<p className="text-gray-600">
 								Add, edit, and manage videos for users to watch and earn coins
+							</p>
+						</div>
+						<div className="text-3xl group-hover:translate-x-2 transition-transform">
+							→
+						</div>
+					</div>
+				</button>
+
+				<button
+					onClick={() => navigate('/admin/vendors')}
+					className="bg-white rounded-lg shadow-md p-8 text-left hover:shadow-lg transition group"
+				>
+					<div className="flex items-center justify-between">
+						<div>
+							<h2 className="text-2xl font-semibold mb-2 group-hover:text-orange-600">
+								🏪 Vendor Management
+							</h2>
+							<p className="text-gray-600">
+								Manage vendors, products, orders, and e-commerce activities
 							</p>
 						</div>
 						<div className="text-3xl group-hover:translate-x-2 transition-transform">
