@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-export default function ProtectedRoute({ children, adminOnly = false }) {
+export default function ProtectedRoute({ children, adminOnly = false, clientOnly = false }) {
 	const { user, loading } = useAuth();
 
 	if (loading) {
@@ -24,6 +24,21 @@ export default function ProtectedRoute({ children, adminOnly = false }) {
 				<div className="card max-w-md text-center">
 					<h1 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h1>
 					<p className="text-gray-600 mb-4">You don't have permission to access this page.</p>
+					<a href="/" className="text-brand-600 hover:underline">
+						Go back to Home
+					</a>
+				</div>
+			</div>
+		);
+	}
+
+	// Check client-only access if required
+	if (clientOnly && user.role !== 'client') {
+		return (
+			<div className="min-h-screen flex items-center justify-center bg-gray-50">
+				<div className="card max-w-md text-center">
+					<h1 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h1>
+					<p className="text-gray-600 mb-4">This feature is only available for clients.</p>
 					<a href="/" className="text-brand-600 hover:underline">
 						Go back to Home
 					</a>

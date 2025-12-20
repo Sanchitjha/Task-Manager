@@ -26,12 +26,15 @@ export default function Navbar() {
 					<div className="flex items-center gap-6">
 						{user && (
 							<>
-								<Link 
-									to="/earn" 
-									className="text-gray-700 hover:text-brand-600 font-medium transition"
-								>
-									Earn
-								</Link>
+								{/* Earn Link - Client Only */}
+								{user.role === 'client' && (
+									<Link 
+										to="/earn" 
+										className="text-gray-700 hover:text-brand-600 font-medium transition"
+									>
+										Earn
+									</Link>
+								)}
 								<Link 
 									to="/wallet" 
 									className="text-gray-700 hover:text-brand-600 font-medium transition"
