@@ -434,4 +434,150 @@ router.get('/dashboard/subadmin-stats', auth, adminOrSubadmin, async (req, res, 
 	} catch (e) { next(e); }
 });
 
+// ===== VENDOR MANAGEMENT ROUTES =====
+
+// Get all vendors (admin only)
+router.get('/vendors', auth, adminOnly, async (req, res, next) => {
+	try {
+		const vendors = await User.find({ role: 'vendor' })
+			.select('-password')
+			.sort({ createdAt: -1 });
+		
+		res.json({ success: true, vendors });
+	} catch (e) { next(e); }
+});
+
+// Update vendor status (admin only)
+router.patch('/vendors/:vendorId', auth, adminOnly, async (req, res, next) => {
+	try {
+		const { isActive } = req.body;
+		
+		const vendor = await User.findById(req.params.vendorId);
+		if (!vendor || vendor.role !== 'vendor') {
+			return res.status(404).json({ error: 'Vendor not found' });
+		}
+		
+		vendor.isActive = isActive;
+		await vendor.save();
+		
+		// If deactivating vendor, unpublish their products
+		if (!isActive) {
+			const { Product } = require('../schemas/Product');
+			await Product.updateMany(
+				{ vendor: vendor._id },
+				{ isPublished: false }
+			);
+		}
+		
+		res.json({ success: true, vendor });
+	} catch (e) { next(e); }
+});
+
+// Get all products (admin only)
+router.get('/products', auth, adminOnly, async (req, res, next) => {
+	try {
+		const { Product } = require('../schemas/Product');
+		const products = await Product.find()
+			.populate('vendor', 'name email')
+			.sort({ createdAt: -1 });
+		
+		res.json({ success: true, products });
+	} catch (e) { next(e); }
+});
+
+// Delete product (admin only)
+router.delete('/products/:productId', auth, adminOnly, async (req, res, next) => {
+	try {
+		const { Product } = require('../schemas/Product');
+		const product = await Product.findById(req.params.productId);
+		if (!product) {
+			return res.status(404).json({ error: 'Product not found' });
+		}
+		
+		await Product.findByIdAndDelete(req.params.productId);
+		
+		res.json({ success: true, message: 'Product deleted successfully' });
+	} catch (e) { next(e); }
+});
+
+// Get all orders (admin only)
+router.get('/orders', auth, adminOnly, async (req, res, next) => {
+	try {
+		const { Order } = require('../schemas/Order');
+		const orders = await Order.find()
+			.populate('customer.user', 'name email phone')
+			.populate('items.product', 'title price category')
+			.populate('items.vendor', 'name email')
+			.sort({ createdAt: -1 });
+		
+		res.json({ success: true, orders });
+	} catch (e) { next(e); }
+});
+
+// Update order status (admin only)
+router.patch('/orders/:orderId', auth, adminOnly, async (req, res, next) => {
+	try {
+		const { Order } = require('../schemas/Order');
+		const { status } = req.body;
+		
+		const order = await Order.findById(req.params.orderId);
+		if (!order) {
+			return res.status(404).json({ error: 'Order not found' });
+		}
+		
+		order.status = status;
+		if (status === 'delivered') {
+			order.deliveredAt = new Date();
+		}
+		
+		await order.save();
+		
+		res.json({ success: true, order });
+	} catch (e) { next(e); }
+});
+
+// Get vendor management stats (admin only)
+router.get('/vendor-stats', auth, adminOnly, async (req, res, next) => {
+	try {
+		const totalVendors = await User.countDocuments({ role: 'vendor' });
+		const activeVendors = await User.countDocuments({ role: 'vendor', isActive: true });
+		
+		const { Product } = require('../schemas/Product');
+		const totalProducts = await Product.countDocuments();
+		const publishedProducts = await Product.countDocuments({ isPublished: true });
+		
+		const { Order } = require('../schemas/Order');
+		const totalOrders = await Order.countDocuments();
+		const pendingOrders = await Order.countDocuments({ status: 'pending' });
+		const completedOrders = await Order.countDocuments({ status: 'delivered' });
+		
+		// Calculate total revenue
+		const completedOrdersData = await Order.find({ status: 'delivered' });
+		const totalRevenue = completedOrdersData.reduce((sum, order) => sum + order.totalAmount, 0);
+		
+		const stats = {
+			vendors: {
+				total: totalVendors,
+				active: activeVendors,
+				inactive: totalVendors - activeVendors
+			},
+			products: {
+				total: totalProducts,
+				published: publishedProducts,
+				draft: totalProducts - publishedProducts
+			},
+			orders: {
+				total: totalOrders,
+				pending: pendingOrders,
+				completed: completedOrders
+			},
+			revenue: {
+				total: totalRevenue
+			}
+		};
+		
+		res.json({ success: true, stats });
+	} catch (e) { next(e); }
+});
+
 module.exports = router;
