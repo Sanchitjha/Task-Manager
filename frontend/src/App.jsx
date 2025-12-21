@@ -94,11 +94,6 @@ function App() {
 							<SellerProfile />
 						</ProtectedRoute>
 					} />
-					<Route path="/seller/wallet" element={
-						<ProtectedRoute>
-							<Wallet />
-						</ProtectedRoute>
-					} />
 					
 					{/* Protected Routes */}
 					<Route path="/earn" element={
@@ -107,7 +102,7 @@ function App() {
 						</ProtectedRoute>
 					} />
 					<Route path="/wallet" element={
-						<ProtectedRoute>
+						<ProtectedRoute clientOnly>
 							<Wallet />
 						</ProtectedRoute>
 					} />

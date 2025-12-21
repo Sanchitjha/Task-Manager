@@ -35,12 +35,15 @@ export default function Navbar() {
 										Earn
 									</Link>
 								)}
-								<Link 
-									to="/wallet" 
-									className="text-gray-700 hover:text-brand-600 font-medium transition"
-								>
-									Wallet
-								</Link>
+								{/* Wallet Link - Client Only */}
+								{user.role === 'client' && (
+									<Link 
+										to="/wallet" 
+										className="text-gray-700 hover:text-brand-600 font-medium transition"
+									>
+										Wallet
+									</Link>
+								)}
 								<Link 
 									to="/shop" 
 									className="text-gray-700 hover:text-orange-600 font-medium transition bg-orange-100 px-3 py-1 rounded"
