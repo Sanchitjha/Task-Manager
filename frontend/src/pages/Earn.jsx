@@ -152,11 +152,25 @@ export default function Earn() {
 				watchTime: time
 			});
 
+			// Handle auto-rewards (coins earned per minute)
 			if (response.data.coinsAwarded > 0) {
-				setMessage({ 
-					type: 'success', 
-					text: `🎉 Congratulations! You completed the video and earned ${response.data.coinsAwarded} coins! Coins automatically added to your balance.` 
-				});
+				const isAutoReward = response.data.autoReward;
+				const minutesWatched = response.data.minutesWatched || Math.floor(time / 60) + 1;
+				
+				if (isAutoReward) {
+					// Show auto-reward message
+					setMessage({ 
+						type: 'success', 
+						text: `🎉 +${response.data.coinsAwarded} coins earned! (${minutesWatched} minute${minutesWatched > 1 ? 's' : ''} watched)` 
+					});
+				} else {
+					// Show completion message
+					setMessage({ 
+						type: 'success', 
+						text: `🎉 Congratulations! You completed the video and earned ${response.data.coinsAwarded} coins! Coins automatically added to your balance.` 
+					});
+				}
+				
 				setCoinsBalance(response.data.totalCoins);
 				
 				// Update user context
@@ -165,13 +179,15 @@ export default function Earn() {
 				// Refresh videos to update progress
 				fetchVideos();
 				
-				// Clear selected video
-				setTimeout(() => {
-					setSelectedVideo(null);
-					setWatchTime(0);
-					setHighestWatchedTime(0);
-					setIsPlaying(false);
-				}, 2000);
+				// Clear selected video only if completed
+				if (response.data.watchRecord?.completed) {
+					setTimeout(() => {
+						setSelectedVideo(null);
+						setWatchTime(0);
+						setHighestWatchedTime(0);
+						setIsPlaying(false);
+					}, 2000);
+				}
 			}
 
 			// Stop the timer if video is completed
@@ -314,6 +330,8 @@ export default function Earn() {
 			clearInterval(intervalRef.current);
 		}
 
+		let lastMinuteChecked = Math.floor(highestWatchedTime / 60);
+
 		// Track every 2 seconds for smooth experience
 		intervalRef.current = setInterval(() => {
 			if (player && player.getCurrentTime) {
@@ -333,6 +351,14 @@ export default function Earn() {
 					// Allow natural video progression without interference
 					if (currentTime > highestWatchedTime) {
 						setHighestWatchedTime(currentTime);
+						
+						// Check for minute milestones and auto-award coins
+						const currentMinute = Math.floor(currentTime / 60);
+						if (currentMinute > lastMinuteChecked) {
+							lastMinuteChecked = currentMinute;
+							// Submit watch time to get auto-rewards
+							submitWatchTime(selectedVideo, Math.floor(currentTime));
+						}
 					}
 					
 					// Check if video is complete
@@ -499,14 +525,14 @@ export default function Earn() {
 
 								{/* Important Instructions */}
 								<div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-									<h4 className="font-semibold text-green-800 mb-2">✅ Video Watching - Normal Mode:</h4>
+									<h4 className="font-semibold text-green-800 mb-2">🚀 Auto-Coin System:</h4>
 									<ul className="text-sm text-green-700 space-y-1">
-										<li>• <strong>Watch naturally!</strong> All YouTube controls work normally</li>
-										<li>• <strong>No restrictions:</strong> Pause, rewind, fast-forward as needed</li>
-										<li>• <strong>"Save Progress & Stop"</strong> saves your exact position to resume later</li>
+										<li>• <strong>Automatic rewards:</strong> Earn 5 coins every minute you watch</li>
+										<li>• <strong>Instant credit:</strong> Coins added to your wallet immediately</li>
+										<li>• <strong>Watch naturally:</strong> All YouTube controls work normally</li>
 										<li>• <strong>Resume feature:</strong> Start from where you left off</li>
-										<li>• <strong>Earn coins:</strong> Complete the video to get your reward</li>
-										<li>• Enjoy watching! No interference from the system</li>
+										<li>• <strong>Progress saved:</strong> Click "Save Progress & Stop" to pause anytime</li>
+										<li>• <strong>Fair rewards:</strong> Only earn coins for new content watched</li>
 									</ul>
 								</div>
 							</div>
