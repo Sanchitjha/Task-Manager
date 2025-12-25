@@ -11,7 +11,10 @@ export default function AdminDashboard() {
 	const [selectedSubadmin, setSelectedSubadmin] = useState(null);
 	const [subadminDetails, setSubadminDetails] = useState(null);
 	const [message, setMessage] = useState({ text: '', type: '' });
-	const [activeTab, setActiveTab] = useState('pending'); // pending, approved, details
+	const [activeTab, setActiveTab] = useState('pending'); // pending, approved, details, coins
+	const [showCoinModal, setShowCoinModal] = useState(false);
+	const [coinFormData, setCoinFormData] = useState({ userEmail: '', amount: '', description: '' });
+	const [allUsers, setAllUsers] = useState([]);
 
 	useEffect(() => {
 		if (user?.role === 'admin') {
@@ -35,6 +38,33 @@ export default function AdminDashboard() {
 		} finally {
 			setLoading(false);
 		}
+	};
+
+	const fetchAllUsers = async () => {
+		try {
+			const res = await api.get('/admin/users');
+			setAllUsers(res.data.filter(u => u.role === 'client' || u.role === 'subadmin'));
+		} catch (error) {
+			showMessage('Failed to load users', 'error');
+		}
+	};
+
+	const handleCoinDistribution = async (e) => {
+		e.preventDefault();
+		try {
+			await api.post('/admin/distribute-coins', coinFormData);
+			showMessage('Coins distributed successfully', 'success');
+			setShowCoinModal(false);
+			setCoinFormData({ userEmail: '', amount: '', description: '' });
+			fetchDashboardData();
+		} catch (error) {
+			showMessage(error.response?.data?.message || 'Failed to distribute coins', 'error');
+		}
+	};
+
+	const openCoinModal = () => {
+		fetchAllUsers();
+		setShowCoinModal(true);
 	};
 
 	const fetchSubadminDetails = async (subadminId) => {
@@ -177,6 +207,16 @@ export default function AdminDashboard() {
 								}`}
 							>
 								All Sub-Admins ({allSubadmins.length})
+							</button>
+							<button
+								onClick={() => setActiveTab('coins')}
+								className={`py-4 px-6 text-sm font-medium border-b-2 ${
+									activeTab === 'coins'
+										? 'border-green-500 text-green-600'
+										: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+								}`}
+							>
+								🪙 Distribute Coins
 							</button>
 							{selectedSubadmin && (
 								<button
@@ -390,8 +430,140 @@ export default function AdminDashboard() {
 								)}
 							</div>
 						)}
+
+						{/* Coin Distribution Tab */}
+						{activeTab === 'coins' && (
+							<div>
+								<div className="mb-6">
+									<h3 className="text-xl font-bold text-gray-900 mb-2">Distribute Coins</h3>
+									<p className="text-gray-600">Give coins to clients and sub-admins to reward their performance or for special promotions.</p>
+								</div>
+
+								<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+									{/* Earn Coins Card */}
+									<div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-6 border border-blue-200">
+										<div className="flex items-center justify-center w-12 h-12 bg-blue-500 rounded-lg mb-4">
+											<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+											</svg>
+										</div>
+										<h4 className="text-lg font-semibold text-gray-900 mb-2">Earn Coins</h4>
+										<p className="text-gray-600 text-sm">
+											Watch videos and earn coins based on your watch time
+										</p>
+									</div>
+
+									{/* Track Wallet Card */}
+									<div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-lg p-6 border border-green-200">
+										<div className="flex items-center justify-center w-12 h-12 bg-green-500 rounded-lg mb-4">
+											<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+											</svg>
+										</div>
+										<h4 className="text-lg font-semibold text-gray-900 mb-2">Track Wallet</h4>
+										<p className="text-gray-600 text-sm">
+											Monitor your balance and transaction history
+										</p>
+									</div>
+
+									{/* Redeem Rewards Card */}
+									<div className="bg-gradient-to-br from-purple-50 to-violet-100 rounded-lg p-6 border border-purple-200">
+										<div className="flex items-center justify-center w-12 h-12 bg-purple-500 rounded-lg mb-4">
+											<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+											</svg>
+										</div>
+										<h4 className="text-lg font-semibold text-gray-900 mb-2">Redeem Rewards</h4>
+										<p className="text-gray-600 text-sm">
+											Use coins for discounts on external purchases
+										</p>
+									</div>
+								</div>
+
+								<div className="mt-8">
+									<button
+										onClick={openCoinModal}
+										className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+									>
+										<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+										</svg>
+										Distribute Coins
+									</button>
+								</div>
+							</div>
+						)}
 					</div>
 				</div>
+
+				{/* Coin Distribution Modal */}
+				{showCoinModal && (
+					<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+						<div className="bg-white rounded-lg p-6 w-full max-w-md">
+							<h3 className="text-lg font-bold mb-4">Distribute Coins</h3>
+							<form onSubmit={handleCoinDistribution}>
+								<div className="mb-4">
+									<label className="block text-sm font-medium text-gray-700 mb-2">
+										Select User
+									</label>
+									<select
+										value={coinFormData.userEmail}
+										onChange={(e) => setCoinFormData({...coinFormData, userEmail: e.target.value})}
+										className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+										required
+									>
+										<option value="">Select a user...</option>
+										{allUsers.map((user) => (
+											<option key={user._id} value={user.email}>
+												{user.name} ({user.email}) - {user.role}
+											</option>
+										))}
+									</select>
+								</div>
+								<div className="mb-4">
+									<label className="block text-sm font-medium text-gray-700 mb-2">
+										Amount (Coins)
+									</label>
+									<input
+										type="number"
+										value={coinFormData.amount}
+										onChange={(e) => setCoinFormData({...coinFormData, amount: e.target.value})}
+										className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+										min="1"
+										required
+									/>
+								</div>
+								<div className="mb-6">
+									<label className="block text-sm font-medium text-gray-700 mb-2">
+										Description (Optional)
+									</label>
+									<textarea
+										value={coinFormData.description}
+										onChange={(e) => setCoinFormData({...coinFormData, description: e.target.value})}
+										className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+										rows="3"
+										placeholder="Reason for coin distribution..."
+									/>
+								</div>
+								<div className="flex gap-3">
+									<button
+										type="submit"
+										className="flex-1 bg-green-600 text-white py-2 rounded-md hover:bg-green-700"
+									>
+										Distribute Coins
+									</button>
+									<button
+										type="button"
+										onClick={() => setShowCoinModal(false)}
+										className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400"
+									>
+										Cancel
+									</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				)}
 			</div>
 		</div>
 	);
