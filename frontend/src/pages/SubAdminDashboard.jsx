@@ -10,9 +10,11 @@ export default function SubAdminDashboard() {
 	const [selectedClient, setSelectedClient] = useState(null);
 	const [clientDetails, setClientDetails] = useState(null);
 	const [showAddModal, setShowAddModal] = useState(false);
+	const [showCoinModal, setShowCoinModal] = useState(false);
 	const [message, setMessage] = useState({ text: '', type: '' });
 	const [formData, setFormData] = useState({ name: '', email: '', password: '' });
-	const [activeTab, setActiveTab] = useState('list'); // list, details
+	const [coinFormData, setCoinFormData] = useState({ clientEmail: '', amount: '', description: '' });
+	const [activeTab, setActiveTab] = useState('list'); // list, details, wallet
 
 	useEffect(() => {
 		if (user?.role === 'subadmin') {
@@ -58,6 +60,23 @@ export default function SubAdminDashboard() {
 		} catch (error) {
 			showMessage(error.response?.data?.message || 'Failed to add client', 'error');
 		}
+	};
+
+	const handleCoinDistribution = async (e) => {
+		e.preventDefault();
+		try {
+			const response = await api.post('/admin/subadmin/distribute-coins', coinFormData);
+			showMessage(response.data.message, 'success');
+			setShowCoinModal(false);
+			setCoinFormData({ clientEmail: '', amount: '', description: '' });
+			fetchDashboardData(); // Refresh data
+		} catch (error) {
+			showMessage(error.response?.data?.error || 'Failed to distribute coins', 'error');
+		}
+	};
+
+	const openCoinModal = () => {
+		setShowCoinModal(true);
 	};
 
 	const deleteClient = async (clientId) => {
@@ -130,14 +149,28 @@ export default function SubAdminDashboard() {
 				<div className="mb-8 flex justify-between items-center">
 					<div>
 						<h1 className="text-3xl font-bold text-gray-900">Sub-Admin Dashboard</h1>
-						<p className="text-gray-600 mt-2">Manage your clients</p>
+						<p className="text-gray-600 mt-2">Manage your clients and distribute coins</p>
+						<div className="mt-3 bg-blue-50 inline-flex items-center px-3 py-1 rounded-full text-sm">
+							<svg className="w-4 h-4 text-blue-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+							</svg>
+							<span className="text-blue-700 font-medium">Your Balance: {user?.coinBalance || 0} coins</span>
+						</div>
 					</div>
-					<button
-						onClick={() => setShowAddModal(true)}
-						className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium"
-					>
-						+ Add Client
-					</button>
+					<div className="flex gap-3">
+						<button
+							onClick={openCoinModal}
+							className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-medium"
+						>
+							🪙 Distribute Coins
+						</button>
+						<button
+							onClick={() => setShowAddModal(true)}
+							className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium"
+						>
+							+ Add Client
+						</button>
+					</div>
 				</div>
 
 				{/* Message */}
@@ -176,7 +209,17 @@ export default function SubAdminDashboard() {
 										: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 								}`}
 							>
-								My Clients ({clients.length})
+								📋 My Clients ({clients.length})
+							</button>
+							<button
+								onClick={() => setActiveTab('wallet')}
+								className={`py-4 px-6 text-sm font-medium border-b-2 ${
+									activeTab === 'wallet'
+										? 'border-blue-500 text-blue-600'
+										: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+								}`}
+							>
+								💰 Wallet & Rewards
 							</button>
 							{selectedClient && (
 								<button
@@ -187,7 +230,7 @@ export default function SubAdminDashboard() {
 											: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 									}`}
 								>
-									Client Details
+									👤 Client Details
 								</button>
 							)}
 						</nav>
@@ -382,9 +425,172 @@ export default function SubAdminDashboard() {
 								)}
 							</div>
 						)}
+
+						{/* Wallet Tab */}
+						{activeTab === 'wallet' && (
+							<div>
+								<div className="mb-6">
+									<h3 className="text-xl font-bold text-gray-900 mb-2">Wallet & Rewards System</h3>
+									<p className="text-gray-600">Manage your coin balance and distribute rewards to your clients</p>
+								</div>
+
+								<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+									{/* Earn Coins Card */}
+									<div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-6 border border-blue-200">
+										<div className="flex items-center justify-center w-12 h-12 bg-blue-500 rounded-lg mb-4">
+											<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+											</svg>
+										</div>
+										<h4 className="text-lg font-semibold text-gray-900 mb-2">Earn Coins</h4>
+										<p className="text-gray-600 text-sm mb-4">
+											Receive coins from admin for distribution to your clients
+										</p>
+										<div className="bg-white rounded px-3 py-2 text-center">
+											<span className="text-2xl font-bold text-blue-600">{user?.coinBalance || 0}</span>
+											<div className="text-xs text-gray-500">Available Coins</div>
+										</div>
+									</div>
+
+									{/* Track Wallet Card */}
+									<div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-lg p-6 border border-green-200">
+										<div className="flex items-center justify-center w-12 h-12 bg-green-500 rounded-lg mb-4">
+											<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+											</svg>
+										</div>
+										<h4 className="text-lg font-semibold text-gray-900 mb-2">Track Wallet</h4>
+										<p className="text-gray-600 text-sm mb-4">
+											Monitor your transactions and distributions
+										</p>
+										<div className="bg-white rounded px-3 py-2 text-center">
+											<span className="text-2xl font-bold text-green-600">{clients.length}</span>
+											<div className="text-xs text-gray-500">Clients Managed</div>
+										</div>
+									</div>
+
+									{/* Redeem Rewards Card */}
+									<div className="bg-gradient-to-br from-purple-50 to-violet-100 rounded-lg p-6 border border-purple-200">
+										<div className="flex items-center justify-center w-12 h-12 bg-purple-500 rounded-lg mb-4">
+											<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+											</svg>
+										</div>
+										<h4 className="text-lg font-semibold text-gray-900 mb-2">Redeem Rewards</h4>
+										<p className="text-gray-600 text-sm mb-4">
+											Use coins to reward client performance
+										</p>
+										<div className="bg-white rounded px-3 py-2 text-center">
+											<span className="text-2xl font-bold text-purple-600">{stats?.clients?.total || 0}</span>
+											<div className="text-xs text-gray-500">Total Distributions</div>
+										</div>
+									</div>
+								</div>
+
+								<div className="bg-white border rounded-lg p-6">
+									<h4 className="text-lg font-semibold mb-4">Quick Actions</h4>
+									<div className="flex gap-4">
+										<button
+											onClick={openCoinModal}
+											className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+										>
+											<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+											</svg>
+											Distribute Coins to Client
+										</button>
+										<button
+											onClick={() => setActiveTab('list')}
+											className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+										>
+											<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+											</svg>
+											View All Clients
+										</button>
+									</div>
+								</div>
+							</div>
+						)}
 					</div>
 				</div>
 			</div>
+
+			{/* Coin Distribution Modal */}
+			{showCoinModal && (
+				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+					<div className="bg-white rounded-lg p-6 w-full max-w-md">
+						<h3 className="text-lg font-bold mb-4">Distribute Coins to Client</h3>
+						<form onSubmit={handleCoinDistribution}>
+							<div className="mb-4">
+								<label className="block text-sm font-medium text-gray-700 mb-2">
+									Select Client
+								</label>
+								<select
+									value={coinFormData.clientEmail}
+									onChange={(e) => setCoinFormData({...coinFormData, clientEmail: e.target.value})}
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+									required
+								>
+									<option value="">Select a client...</option>
+									{clients.map((client) => (
+										<option key={client._id} value={client.email}>
+											{client.name} ({client.email}) - Balance: {client.coinsBalance} coins
+										</option>
+									))}
+								</select>
+							</div>
+							<div className="mb-4">
+								<label className="block text-sm font-medium text-gray-700 mb-2">
+									Amount (Coins)
+								</label>
+								<input
+									type="number"
+									value={coinFormData.amount}
+									onChange={(e) => setCoinFormData({...coinFormData, amount: e.target.value})}
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+									min="1"
+									max={user?.coinBalance || 0}
+									required
+								/>
+								<p className="text-xs text-gray-500 mt-1">
+									Your available balance: {user?.coinBalance || 0} coins
+								</p>
+							</div>
+							<div className="mb-6">
+								<label className="block text-sm font-medium text-gray-700 mb-2">
+									Description (Optional)
+								</label>
+								<textarea
+									value={coinFormData.description}
+									onChange={(e) => setCoinFormData({...coinFormData, description: e.target.value})}
+									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+									rows="3"
+									placeholder="Reason for coin distribution..."
+								/>
+							</div>
+							<div className="flex gap-3">
+								<button
+									type="submit"
+									className="flex-1 bg-green-600 text-white py-2 rounded-md hover:bg-green-700"
+								>
+									Distribute Coins
+								</button>
+								<button
+									type="button"
+									onClick={() => {
+										setShowCoinModal(false);
+										setCoinFormData({ clientEmail: '', amount: '', description: '' });
+									}}
+									className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400"
+								>
+									Cancel
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			)}
 
 			{/* Add Client Modal */}
 			{showAddModal && (
