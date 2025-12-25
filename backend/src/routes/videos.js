@@ -302,52 +302,56 @@ router.post('/:id/watch', auth, async (req, res, next) => {
 			});
 		}
 		
-		// If already completed, don't award more coins
-		if (watchRecord.completed) {
-			return res.json({
-				message: 'Video already completed',
-				watchRecord,
-				coinsAwarded: 0
-			});
-		}
+		// Store previous watch time for coin calculation
+		const previousWatchTime = watchRecord.watchTime;
 		
 		// Update watch time
 		watchRecord.watchTime = Math.min(watchTime, video.duration);
 		watchRecord.lastWatchedAt = new Date();
 		
-		// Check if video is completed (watched 100% of duration)
-		// Using 99% to account for slight timing variations
-		const completionThreshold = video.duration * 0.99;
+		// AUTO-COIN SYSTEM: Award 5 coins every minute for clients
 		let coinsAwarded = 0;
+		
+		if (req.user.role === 'client') {
+			// Calculate completed minutes based on current vs previous watch time
+			const previousMinutes = Math.floor(previousWatchTime / 60);
+			const currentMinutes = Math.floor(watchRecord.watchTime / 60);
+			
+			// Award 5 coins for each new minute completed
+			const newMinutesCompleted = currentMinutes - previousMinutes;
+			
+			if (newMinutesCompleted > 0) {
+				coinsAwarded = newMinutesCompleted * 5;
+				watchRecord.coinsEarned += coinsAwarded;
+				
+				// Update user's coins balance
+				await User.findByIdAndUpdate(
+					req.user._id,
+					{ $inc: { coinsBalance: coinsAwarded } }
+				);
+				
+				// Create transaction record for auto-awarded coins
+				await Transaction.create({
+					userId: req.user._id,
+					type: 'earn',
+					amount: coinsAwarded,
+					description: `Auto-earned ${coinsAwarded} coins watching "${video.title}" (${newMinutesCompleted} minute${newMinutesCompleted > 1 ? 's' : ''})`,
+					metadata: {
+						videoId: video._id,
+						watchTime: watchRecord.watchTime,
+						minutesWatched: currentMinutes + 1,
+						autoReward: true,
+						coinCalculation: `${newMinutesCompleted} new minute${newMinutesCompleted > 1 ? 's' : ''} × 5 coins per minute`
+					}
+				});
+			}
+		}
+		
+		// Check if video is completed (watched 100% of duration)
+		const completionThreshold = video.duration * 0.99;
 		
 		if (watchRecord.watchTime >= completionThreshold && !watchRecord.completed) {
 			watchRecord.completed = true;
-			
-			// Calculate coins based on minute-based system
-			// Always use time-based calculation: minutes × coins per minute
-			const totalMinutes = Math.ceil(video.duration / 60);
-			coinsAwarded = totalMinutes * (video.coinsPerInterval || 5);
-			
-			watchRecord.coinsEarned = coinsAwarded;
-			
-			// Update user's coins balance
-			await User.findByIdAndUpdate(
-				req.user._id,
-				{ $inc: { coinsBalance: coinsAwarded } }
-			);
-			
-			// Create transaction record
-			await Transaction.create({
-				userId: req.user._id,
-				type: 'earn',
-				amount: coinsAwarded,
-				description: `Earned ${coinsAwarded} coins by watching "${video.title}"`,
-				metadata: {
-					videoId: video._id,
-					watchTime: watchRecord.watchTime,
-					coinCalculation: `${totalMinutes} minutes × ${video.coinsPerInterval || 5} coins per minute`
-				}
-			});
 		}
 		
 		await watchRecord.save();
@@ -356,10 +360,12 @@ router.post('/:id/watch', auth, async (req, res, next) => {
 		const updatedUser = await User.findById(req.user._id).select('coinsBalance');
 		
 		res.json({
-			message: coinsAwarded > 0 ? 'Coins awarded!' : 'Watch progress updated',
+			message: coinsAwarded > 0 ? `+${coinsAwarded} coins earned!` : 'Watch progress updated',
 			watchRecord,
 			coinsAwarded,
-			totalCoins: updatedUser.coinsBalance
+			totalCoins: updatedUser.coinsBalance,
+			minutesWatched: Math.floor(watchRecord.watchTime / 60) + 1,
+			autoReward: req.user.role === 'client'
 		});
 	} catch (e) { next(e); }
 });
