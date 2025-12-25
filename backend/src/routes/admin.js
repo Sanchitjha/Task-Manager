@@ -580,4 +580,126 @@ router.get('/vendor-stats', auth, adminOnly, async (req, res, next) => {
 	} catch (e) { next(e); }
 });
 
+// ===== COIN DISTRIBUTION ROUTES =====
+
+// Distribute coins to users (Admin only)
+router.post('/distribute-coins', auth, adminOnly, async (req, res, next) => {
+	try {
+		const { userEmail, amount, description } = req.body;
+		
+		if (!userEmail || !amount || amount <= 0) {
+			return res.status(400).json({ error: 'User email and valid amount are required' });
+		}
+		
+		// Find the target user
+		const targetUser = await User.findOne({ email: userEmail });
+		if (!targetUser) {
+			return res.status(404).json({ error: 'User not found' });
+		}
+		
+		// Add coins to user's balance
+		targetUser.coinBalance = (targetUser.coinBalance || 0) + parseInt(amount);
+		await targetUser.save();
+		
+		// Create transaction record
+		const transaction = new Transaction({
+			user: targetUser._id,
+			type: 'admin_distribution',
+			amount: parseInt(amount),
+			description: description || `Admin distribution: ${amount} coins`,
+			status: 'completed',
+			performedBy: req.user._id
+		});
+		
+		await transaction.save();
+		
+		res.json({ 
+			success: true, 
+			message: `Successfully distributed ${amount} coins to ${targetUser.name}`,
+			newBalance: targetUser.coinBalance 
+		});
+		
+	} catch (e) { next(e); }
+});
+
+// Get all users for coin distribution dropdown (Admin only)
+router.get('/all-users', auth, adminOnly, async (req, res, next) => {
+	try {
+		const users = await User.find({ 
+			role: { $in: ['client', 'subadmin'] },
+			isApproved: true 
+		}).select('name email role coinBalance').sort({ name: 1 });
+		
+		res.json(users);
+	} catch (e) { next(e); }
+});
+
+// Sub-admin coin distribution to clients
+router.post('/subadmin/distribute-coins', auth, async (req, res, next) => {
+	try {
+		if (req.user.role !== 'subadmin') {
+			return res.status(403).json({ error: 'Only sub-admins can use this endpoint' });
+		}
+
+		const { clientEmail, amount, description } = req.body;
+		
+		if (!clientEmail || !amount || amount <= 0) {
+			return res.status(400).json({ error: 'Client email and valid amount are required' });
+		}
+
+		// Check if sub-admin has enough coins
+		const subadmin = await User.findById(req.user._id);
+		if (!subadmin || (subadmin.coinBalance || 0) < parseInt(amount)) {
+			return res.status(400).json({ error: 'Insufficient coin balance' });
+		}
+
+		// Find the target client and verify it's managed by this sub-admin
+		const targetClient = await User.findOne({ 
+			email: clientEmail, 
+			role: 'client',
+			addedBy: req.user._id 
+		});
+		
+		if (!targetClient) {
+			return res.status(404).json({ error: 'Client not found or not managed by you' });
+		}
+
+		// Transfer coins
+		subadmin.coinBalance = (subadmin.coinBalance || 0) - parseInt(amount);
+		targetClient.coinBalance = (targetClient.coinBalance || 0) + parseInt(amount);
+		
+		await subadmin.save();
+		await targetClient.save();
+
+		// Create transaction records
+		const subadminTransaction = new Transaction({
+			user: subadmin._id,
+			type: 'subadmin_distribution_out',
+			amount: -parseInt(amount),
+			description: description || `Distributed ${amount} coins to ${targetClient.name}`,
+			status: 'completed',
+			relatedUser: targetClient._id
+		});
+
+		const clientTransaction = new Transaction({
+			user: targetClient._id,
+			type: 'subadmin_distribution_in',
+			amount: parseInt(amount),
+			description: description || `Received ${amount} coins from sub-admin`,
+			status: 'completed',
+			performedBy: subadmin._id
+		});
+
+		await subadminTransaction.save();
+		await clientTransaction.save();
+
+		res.json({ 
+			success: true, 
+			message: `Successfully distributed ${amount} coins to ${targetClient.name}`,
+			newBalance: subadmin.coinBalance 
+		});
+
+	} catch (e) { next(e); }
+});
+
 module.exports = router;
