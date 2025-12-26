@@ -44,8 +44,8 @@ export default function Navbar() {
 										Wallet
 									</Link>
 								)}
-								{/* Shop Link - Not for Sub-Admins */}
-								{user.role !== 'subadmin' && (
+								{/* Shop Link - Only for Clients and Admins */}
+								{(user.role === 'client' || user.role === 'admin') && (
 									<Link 
 										to="/shop" 
 										className="text-gray-700 hover:text-orange-600 font-medium transition bg-orange-100 px-3 py-1 rounded"
