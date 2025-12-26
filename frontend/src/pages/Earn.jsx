@@ -56,7 +56,7 @@ export default function Earn() {
 
 	const startWatching = (video) => {
 		if (video.progress?.completed) {
-			setMessage({ type: 'info', text: 'You have already completed this video!' });
+			setMessage({ type: 'info', text: `✅ You have already completed "${video.title}" and earned ${Math.ceil(video.duration / 60) * 5} coins!` });
 			return;
 		}
 
@@ -152,24 +152,15 @@ export default function Earn() {
 				watchTime: time
 			});
 
-			// Handle auto-rewards (coins earned per minute)
+			// Handle completion-based rewards
 			if (response.data.coinsAwarded > 0) {
-				const isAutoReward = response.data.autoReward;
-				const minutesWatched = response.data.minutesWatched || Math.floor(time / 60) + 1;
+				const { coinsAwarded, progressPercent } = response.data;
 				
-				if (isAutoReward) {
-					// Show auto-reward message
-					setMessage({ 
-						type: 'success', 
-						text: `🎉 +${response.data.coinsAwarded} coins earned! (${minutesWatched} minute${minutesWatched > 1 ? 's' : ''} watched)` 
-					});
-				} else {
-					// Show completion message
-					setMessage({ 
-						type: 'success', 
-						text: `🎉 Congratulations! You completed the video and earned ${response.data.coinsAwarded} coins! Coins automatically added to your balance.` 
-					});
-				}
+				// Show completion message
+				setMessage({ 
+					type: 'success', 
+					text: `🎆 CONGRATULATIONS! You watched the full video (${progressPercent}%) and earned ${coinsAwarded} coins! 🎆` 
+				});
 				
 				setCoinsBalance(response.data.totalCoins);
 				
@@ -179,15 +170,22 @@ export default function Earn() {
 				// Refresh videos to update progress
 				fetchVideos();
 				
-				// Clear selected video only if completed
-				if (response.data.watchRecord?.completed) {
-					setTimeout(() => {
-						setSelectedVideo(null);
-						setWatchTime(0);
-						setHighestWatchedTime(0);
-						setIsPlaying(false);
-					}, 2000);
-				}
+				// Clear selected video after completion
+				setTimeout(() => {
+					setSelectedVideo(null);
+					setWatchTime(0);
+					setHighestWatchedTime(0);
+					setIsPlaying(false);
+				}, 3000);
+			} else {
+				// Show progress update
+				const progressPercent = response.data.progressPercent || 0;
+				const requiredPercent = response.data.requiredPercent || 95;
+				
+				setMessage({ 
+					type: 'info', 
+					text: `Progress: ${progressPercent}% (Need ${requiredPercent}% to earn coins)` 
+				});
 			}
 
 			// Stop the timer if video is completed
@@ -516,23 +514,23 @@ export default function Earn() {
 										Save Progress & Stop
 									</button>
 									{isPlaying && (
-										<span className="px-4 py-2 bg-blue-100 text-blue-700 rounded-md flex items-center">
-											<span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-2"></span>
-											Watching... (Earning coins)
+											<span className="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-md flex items-center">
+												<span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse mr-2"></span>
+												Watching... (Earn coins on completion)
 										</span>
 									)}
 								</div>
 
 								{/* Important Instructions */}
-								<div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-									<h4 className="font-semibold text-green-800 mb-2">🚀 Auto-Coin System:</h4>
-									<ul className="text-sm text-green-700 space-y-1">
-										<li>• <strong>Automatic rewards:</strong> Earn 5 coins every minute you watch</li>
-										<li>• <strong>Instant credit:</strong> Coins added to your wallet immediately</li>
-										<li>• <strong>Watch naturally:</strong> All YouTube controls work normally</li>
-										<li>• <strong>Resume feature:</strong> Start from where you left off</li>
-										<li>• <strong>Progress saved:</strong> Click "Save Progress & Stop" to pause anytime</li>
-										<li>• <strong>Fair rewards:</strong> Only earn coins for new content watched</li>
+								<div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+									<h4 className="font-semibold text-yellow-800 mb-2">🏆 NEW Completion-Based Rewards:</h4>
+									<ul className="text-sm text-yellow-700 space-y-1">
+										<li>• <strong>Watch 95% of the video:</strong> Earn ALL coins at once (5 coins per minute)</li>
+										<li>• <strong>No partial rewards:</strong> Must complete the video to earn coins</li>
+										<li>• <strong>No skipping allowed:</strong> Progress tracked to prevent cheating</li>
+										<li>• <strong>Resume feature:</strong> Can pause and resume from where you left off</li>
+										<li>• <strong>One-time reward:</strong> Each video can only be completed once</li>
+										<li>• <strong>Fair system:</strong> Encourages full engagement with content</li>
 									</ul>
 								</div>
 							</div>
@@ -571,10 +569,10 @@ export default function Earn() {
 													<div className="text-sm text-gray-600 mt-1 flex items-center gap-3">
 														<span>⏱️ {formatTime(video.duration)}</span>
 														<span className="text-green-600 font-semibold">
-															🪙 {Math.ceil(video.duration / 60) * (video.coinsPerInterval || 5)} coins
+															🪙 {Math.ceil(video.duration / 60) * 5} coins total
 														</span>
-														<span className="text-xs text-gray-500">
-															({video.coinsPerInterval || 5} per minute)
+														<span className="text-xs text-yellow-600 font-medium">
+															(Must watch 95%)
 														</span>
 													</div>
 													{video.progress && video.progress.watchTime > 0 && (
@@ -636,18 +634,18 @@ export default function Earn() {
 										<div className="text-sm text-gray-500 mt-1">
 											{Math.floor(getProgressPercentage())}% completed
 										</div>
-										<div className="text-sm text-blue-600 mt-1 font-medium">
-											Coins Earned So Far: {Math.floor(watchTime / 60) * (selectedVideo.coinsPerInterval || 5)}
+											<div className="text-sm text-yellow-600 mt-1 font-medium">
+												Will earn on completion: {Math.ceil(selectedVideo.duration / 60) * 5} coins
 										</div>
 									</div>
 
 									<div className="p-4 bg-green-50 rounded-lg border border-green-200">
-										<label className="block text-sm text-green-700 mb-1">Coins on Completion</label>
-										<div className="text-3xl font-bold text-green-600">
-											+{Math.ceil(selectedVideo.duration / 60) * (selectedVideo.coinsPerInterval || 5)}
-										</div>
-										<div className="text-xs text-green-600 mt-1">
-											{Math.ceil(selectedVideo.duration / 60)} minutes × {selectedVideo.coinsPerInterval || 5} coins per minute
+											<label className="block text-sm text-green-700 mb-1">Reward on 95% Completion</label>
+											<div className="text-3xl font-bold text-green-600">
+												+{Math.ceil(selectedVideo.duration / 60) * 5}
+											</div>
+											<div className="text-xs text-green-600 mt-1">
+												Complete video to earn all coins at once
 										</div>
 									</div>
 								</>
