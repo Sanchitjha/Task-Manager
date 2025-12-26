@@ -309,49 +309,48 @@ router.post('/:id/watch', auth, async (req, res, next) => {
 		watchRecord.watchTime = Math.min(watchTime, video.duration);
 		watchRecord.lastWatchedAt = new Date();
 		
-		// AUTO-COIN SYSTEM: Award 5 coins every minute for clients
+		// FULL VIDEO COMPLETION COIN SYSTEM: Award coins only after watching complete video
 		let coinsAwarded = 0;
 		
-		if (req.user.role === 'client') {
-			// Calculate completed minutes based on current vs previous watch time
-			const previousMinutes = Math.floor(previousWatchTime / 60);
-			const currentMinutes = Math.floor(watchRecord.watchTime / 60);
+		// Check if video is completed (watched 95% or more of duration)
+		const completionThreshold = video.duration * 0.95; // 95% completion required
+		const videoCompleted = watchRecord.watchTime >= completionThreshold;
+		
+		if (req.user.role === 'client' && videoCompleted && !watchRecord.completed && !watchRecord.coinsEarned) {
+			// Calculate total coins based on video duration (5 coins per minute)
+			const totalMinutes = Math.ceil(video.duration / 60);
+			coinsAwarded = totalMinutes * 5;
 			
-			// Award 5 coins for each new minute completed
-			const newMinutesCompleted = currentMinutes - previousMinutes;
+			// Award all coins at once for completing the video
+			watchRecord.coinsEarned = coinsAwarded;
 			
-			if (newMinutesCompleted > 0) {
-				coinsAwarded = newMinutesCompleted * 5;
-				watchRecord.coinsEarned += coinsAwarded;
-				
-				// Update user's coins balance
-				await User.findByIdAndUpdate(
-					req.user._id,
-					{ $inc: { coinsBalance: coinsAwarded } }
-				);
-				
-				// Create transaction record for auto-awarded coins
-				await Transaction.create({
-					userId: req.user._id,
-					type: 'earn',
-					amount: coinsAwarded,
-					description: `Auto-earned ${coinsAwarded} coins watching "${video.title}" (${newMinutesCompleted} minute${newMinutesCompleted > 1 ? 's' : ''})`,
-					metadata: {
-						videoId: video._id,
-						watchTime: watchRecord.watchTime,
-						minutesWatched: currentMinutes + 1,
-						autoReward: true,
-						coinCalculation: `${newMinutesCompleted} new minute${newMinutesCompleted > 1 ? 's' : ''} × 5 coins per minute`
-					}
-				});
-			}
+			// Update user's coins balance
+			await User.findByIdAndUpdate(
+				req.user._id,
+				{ $inc: { coinsBalance: coinsAwarded } }
+			);
+			
+			// Create transaction record for video completion
+			await Transaction.create({
+				userId: req.user._id,
+				type: 'earn',
+				amount: coinsAwarded,
+				description: `Completed video "${video.title}" and earned ${coinsAwarded} coins (${totalMinutes} minutes watched)`,
+				metadata: {
+					videoId: video._id,
+					watchTime: watchRecord.watchTime,
+					videoLength: video.duration,
+					totalMinutes: totalMinutes,
+					completionReward: true,
+					coinCalculation: `${totalMinutes} minutes × 5 coins per minute = ${coinsAwarded} coins`
+				}
+			});
 		}
 		
-		// Check if video is completed (watched 100% of duration)
-		const completionThreshold = video.duration * 0.99;
-		
-		if (watchRecord.watchTime >= completionThreshold && !watchRecord.completed) {
+		// Mark video as completed if threshold is reached
+		if (videoCompleted && !watchRecord.completed) {
 			watchRecord.completed = true;
+			watchRecord.completedAt = new Date();
 		}
 		
 		await watchRecord.save();
@@ -360,12 +359,14 @@ router.post('/:id/watch', auth, async (req, res, next) => {
 		const updatedUser = await User.findById(req.user._id).select('coinsBalance');
 		
 		res.json({
-			message: coinsAwarded > 0 ? `+${coinsAwarded} coins earned!` : 'Watch progress updated',
+			message: coinsAwarded > 0 ? `🎉 Video completed! +${coinsAwarded} coins earned!` : 'Watch progress updated',
 			watchRecord,
 			coinsAwarded,
 			totalCoins: updatedUser.coinsBalance,
 			minutesWatched: Math.floor(watchRecord.watchTime / 60) + 1,
-			autoReward: req.user.role === 'client'
+			completionReward: coinsAwarded > 0,
+			progressPercent: Math.round((watchRecord.watchTime / video.duration) * 100),
+			requiredPercent: 95
 		});
 	} catch (e) { next(e); }
 });
