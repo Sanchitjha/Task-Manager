@@ -7,6 +7,7 @@ const videoWatchSchema = new Schema(
 		watchTime: { type: Number, default: 0 }, // Total watch time in seconds
 		coinsEarned: { type: Number, default: 0 },
 		completed: { type: Boolean, default: false },
+		completedAt: { type: Date }, // When video was completed
 		lastWatchedAt: { type: Date, default: Date.now }
 	},
 	{ timestamps: true }
