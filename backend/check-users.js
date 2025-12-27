@@ -1,6 +1,6 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const User = require('./src/schemas/User');
+const { User } = require('./src/schemas/User');
 
 async function checkUsers() {
     try {
@@ -30,9 +30,6 @@ async function checkUsers() {
         console.error('Error:', error);
         process.exit(1);
     }
-}
-
-checkUsers();
 }
 
 checkUsers();
