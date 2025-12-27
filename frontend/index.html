@@ -4,7 +4,43 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>client</title>
+    
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="/manifest.json" />
+    <!-- Theme color handled via CSS for better browser compatibility -->
+    <style>
+      :root { --theme-color: #2563eb; }
+      /* Fallback for browsers that don't support meta theme-color */
+      @supports not (color-scheme: light) {
+        html { background-color: #2563eb; }
+      }
+    </style>
+    <meta name="background-color" content="#ffffff" />
+    <meta name="display" content="standalone" />
+    <meta name="orientation" content="portrait" />
+    
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Task Manager Pro" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+    
+    <!-- Windows PWA Support -->
+    <meta name="msapplication-TileImage" content="/pwa-192x192.png" />
+    <meta name="msapplication-TileColor" content="#2563eb" />
+    
+    <!-- SEO and Social Media -->
+    <meta name="description" content="Complete task management with video earning and e-commerce platform. Earn coins by watching videos, manage tasks, and shop for rewards." />
+    <meta name="keywords" content="task manager, earn coins, videos, e-commerce, productivity, PWA" />
+    <meta name="author" content="Task Manager Pro" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Task Manager Pro" />
+    <meta property="og:description" content="Complete task management with video earning and e-commerce platform" />
+    <meta property="og:image" content="/pwa-512x512.png" />
+    <meta property="og:type" content="website" />
+    
+    <title>Task Manager Pro</title>
   </head>
   <body>
     <div id="root"></div>
