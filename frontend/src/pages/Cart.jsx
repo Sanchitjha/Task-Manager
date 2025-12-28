@@ -61,7 +61,9 @@ export default function Cart() {
   };
 
   const clearCart = () => {
-    updateCart([]);
+    if (window.confirm('Are you sure you want to clear your cart?')) {
+      updateCart([]);
+    }
   };
 
   const getCartTotal = () => {
@@ -110,9 +112,19 @@ export default function Cart() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
-          <p className="text-gray-600 mt-2">{getTotalItems()} items in your cart</p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
+            <p className="text-gray-600 mt-2">{getTotalItems()} items in your cart</p>
+          </div>
+          {cart.length > 0 && (
+            <button
+              onClick={clearCart}
+              className="px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition"
+            >
+              Clear Cart
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -168,10 +180,15 @@ export default function Cart() {
                       {item.price * item.quantity} coins
                     </p>
                     <button
-                      onClick={() => removeItem(item._id)}
-                      className="text-red-600 hover:text-red-700 text-sm mt-1"
+                      onClick={() => {
+                        if (window.confirm(`Remove ${item.title} from cart?`)) {
+                          removeItem(item._id);
+                        }
+                      }}
+                      className="text-red-600 hover:text-red-700 text-sm mt-1 hover:bg-red-50 px-2 py-1 rounded"
+                      title="Remove from cart"
                     >
-                      Remove
+                      🗑️ Remove
                     </button>
                   </div>
                 </div>
