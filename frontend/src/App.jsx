@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import InstallPrompt from './components/InstallPrompt';
@@ -31,9 +32,10 @@ import SellerProfile from './pages/SellerProfile';
 function App() {
 	return (
 		<AuthProvider>
-			<Router>
-				<OfflineIndicator />
-				<Navbar />
+			<NotificationProvider>
+				<Router>
+					<OfflineIndicator />
+					<Navbar />
 				<Routes>
 					<Route path="/" element={<Home />} />
 					<Route path="/login" element={<Login />} />
@@ -145,8 +147,9 @@ function App() {
 						</ProtectedRoute>
 					} />
 				</Routes>
-				<InstallPrompt />
-			</Router>
+					<InstallPrompt />
+				</Router>
+			</NotificationProvider>
 		</AuthProvider>
 	);
 }
