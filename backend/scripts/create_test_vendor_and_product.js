@@ -36,7 +36,7 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-    const loginJson = await res.json();
+    const loginJson = await res.json();+
     console.log('login response:', loginJson);
     const token = loginJson.token;
     if(!token){
