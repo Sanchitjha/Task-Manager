@@ -62,36 +62,67 @@ router.post('/', auth, async (req, res) => {
     
     // Check user's coin balance
     const user = await User.findById(req.user.id);
-    if (user.walletBalance < calculatedTotal) {
+    const userCoinsBalance = user.coinsBalance || 0;
+    
+    if (userCoinsBalance < calculatedTotal) {
       // Revert stock changes
       for (const item of items) {
         const product = await Product.findById(item.product);
         product.stock += item.quantity;
         await product.save();
       }
-      return res.status(400).json({ error: 'Insufficient coins' });
+      return res.status(400).json({ 
+        error: `Insufficient coins. You have ${userCoinsBalance} coins but need ${calculatedTotal} coins.` 
+      });
     }
+
+    // Generate unique order ID
+    const orderId = `ORD-${new Date().getFullYear()}-${Date.now()}`;
     
     // Create order
     const order = new Order({
-      customer: {
-        user: req.user.id,
-        name: customer.name,
-        phone: customer.phone,
-        email: customer.email,
-        address: customer.address
-      },
-      items: orderItems,
+      orderId,
+      customer: req.user.id,
+      vendor: orderItems[0].vendor, // Assuming single vendor for now
+      items: orderItems.map(item => ({
+        product: item.product,
+        quantity: item.quantity,
+        price: item.price,
+        totalPrice: item.price * item.quantity
+      })),
       totalAmount: calculatedTotal,
-      paymentMethod: paymentMethod || 'coins',
+      finalAmount: calculatedTotal,
+      shippingAddress: {
+        fullName: customer.name,
+        phone: customer.phone,
+        street: customer.address.street,
+        city: customer.address.city,
+        state: customer.address.state,
+        zipCode: customer.address.pincode,
+        country: 'India'
+      },
+      paymentMethod: 'wallet',
+      paymentStatus: 'completed',
       notes: notes || ''
     });
     
     await order.save();
     
     // Deduct coins from user
-    user.walletBalance -= calculatedTotal;
+    user.coinsBalance = (user.coinsBalance || 0) - calculatedTotal;
     await user.save();
+
+    // Create transaction record
+    const { Transaction } = require('../schemas/Transaction');
+    const transaction = new Transaction({
+      user: req.user.id,
+      type: 'debit',
+      amount: calculatedTotal,
+      description: `Purchase order ${orderId}`,
+      orderId: order._id,
+      status: 'completed'
+    });
+    await transaction.save();
     
     // Transfer coins to vendors
     const vendorPayouts = {};
@@ -111,7 +142,14 @@ router.post('/', auth, async (req, res) => {
       }
     }
     
-    res.json({ success: true, order });
+    res.json({ 
+      success: true, 
+      order,
+      orderId: order.orderId,
+      message: 'Order placed successfully',
+      coinsDeducted: calculatedTotal,
+      remainingBalance: user.coinsBalance
+    });
   } catch (error) {
     console.error('Error creating order:', error);
     res.status(500).json({ error: 'Failed to create order' });
