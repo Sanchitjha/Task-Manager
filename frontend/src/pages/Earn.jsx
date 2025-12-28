@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
+import { usePWA } from '../hooks/usePWA';
+import { offlineStorage } from '../utils/offlineStorage';
 
 export default function Earn() {
 	const { user, setUser } = useAuth();
+	const { isOnline } = usePWA();
 	const [videos, setVideos] = useState([]);
 	const [selectedVideo, setSelectedVideo] = useState(null);
 	const [watchTime, setWatchTime] = useState(0);
@@ -13,6 +16,7 @@ export default function Earn() {
 	const [message, setMessage] = useState({ type: '', text: '' });
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [highestWatchedTime, setHighestWatchedTime] = useState(0);
+	const [offlineMode, setOfflineMode] = useState(!navigator.onLine);
 	
 	const playerRef = useRef(null);
 	const intervalRef = useRef(null);
@@ -35,11 +39,41 @@ export default function Earn() {
 
 	const fetchVideos = async () => {
 		try {
-			const response = await api.get('/videos');
-			setVideos(response.data);
+			if (isOnline) {
+				const response = await api.get('/videos');
+				setVideos(response.data);
+				// Cache videos for offline use
+				await offlineStorage.cacheVideos(response.data);
+			} else {
+				// Load cached videos when offline
+				const cachedVideos = await offlineStorage.getCachedVideos();
+				if (cachedVideos.length > 0) {
+					// Mark videos as cached for offline viewing
+					const videosWithCacheFlag = cachedVideos.map(video => ({
+						...video,
+						cachedOffline: true
+					}));
+					setVideos(videosWithCacheFlag);
+					setMessage({ type: 'info', text: 'Loaded cached videos. You can watch previously loaded content offline!' });
+				} else {
+					setMessage({ type: 'warning', text: 'No videos available offline. Please connect to internet to load videos.' });
+				}
+			}
 		} catch (error) {
 			console.error('Failed to fetch videos:', error);
-			setMessage({ type: 'error', text: 'Failed to load videos' });
+			// Try to load cached videos on error
+			const cachedVideos = await offlineStorage.getCachedVideos();
+			if (cachedVideos.length > 0) {
+				// Mark videos as cached for offline viewing
+				const videosWithCacheFlag = cachedVideos.map(video => ({
+					...video,
+					cachedOffline: true
+				}));
+				setVideos(videosWithCacheFlag);
+				setMessage({ type: 'warning', text: 'Using cached videos. Some features may be limited offline.' });
+			} else {
+				setMessage({ type: 'error', text: 'Failed to load videos and no cached content available.' });
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -47,10 +81,23 @@ export default function Earn() {
 
 	const fetchBalance = async () => {
 		try {
-			const response = await api.get('/wallet/balance');
-			setCoinsBalance(response.data.coinsBalance || 0);
+			if (isOnline) {
+				const response = await api.get('/wallet/balance');
+				setCoinsBalance(response.data.coinsBalance || 0);
+			} else {
+				// Use cached profile data when offline
+				const cachedProfile = await offlineStorage.getCachedUserProfile();
+				if (cachedProfile) {
+					setCoinsBalance(cachedProfile.coinsBalance || 0);
+				}
+			}
 		} catch (error) {
 			console.error('Failed to fetch balance:', error);
+			// Try to get balance from cached profile
+			const cachedProfile = await offlineStorage.getCachedUserProfile();
+			if (cachedProfile) {
+				setCoinsBalance(cachedProfile.coinsBalance || 0);
+			}
 		}
 	};
 
@@ -108,24 +155,61 @@ export default function Earn() {
 			const timeToSave = Math.floor(highestWatchedTime); // Save highest watched time, not current time
 			
 			try {
-				// Submit watch time to backend
-				const response = await api.post(`/videos/${selectedVideo._id}/watch`, {
-					watchTime: timeToSave
-				});
-				
-				setMessage({ 
-					type: 'success', 
-					text: `✅ Progress saved! You can resume from ${formatTime(timeToSave)} next time. Remember: no skipping allowed!` 
-				});
+				if (isOnline) {
+					// Online: Submit to backend
+					const response = await api.post(`/videos/${selectedVideo._id}/watch`, {
+						watchTime: timeToSave
+					});
+					
+					// Cache the progress locally
+					await offlineStorage.saveVideoProgress(selectedVideo._id, {
+						watchTime: timeToSave,
+						watched: false,
+						lastUpdated: new Date().toISOString()
+					});
+					
+					setMessage({ 
+						type: 'success', 
+						text: `✅ Progress saved! You can resume from ${formatTime(timeToSave)} next time. Remember: no skipping allowed!` 
+					});
+				} else {
+					// Offline: Save locally for sync later
+					await offlineStorage.saveVideoProgress(selectedVideo._id, {
+						watchTime: timeToSave,
+						watched: false,
+						lastUpdated: new Date().toISOString(),
+						pendingSync: true
+					});
+					
+					setMessage({ 
+						type: 'info', 
+						text: `📱 Progress saved offline at ${formatTime(timeToSave)}. Will sync when online!` 
+					});
+				}
 				
 				// Refresh videos to update progress
 				fetchVideos();
 			} catch (error) {
 				console.error('Failed to save progress:', error);
-				setMessage({ 
-					type: 'error', 
-					text: 'Failed to save progress. Please try again.' 
-				});
+				// Try to save offline as fallback
+				try {
+					await offlineStorage.saveVideoProgress(selectedVideo._id, {
+						watchTime: timeToSave,
+						watched: false,
+						lastUpdated: new Date().toISOString(),
+						pendingSync: true
+					});
+					
+					setMessage({ 
+						type: 'warning', 
+						text: 'Saved progress offline. Will sync when connection is restored.' 
+					});
+				} catch (offlineError) {
+					setMessage({ 
+						type: 'error', 
+						text: 'Failed to save progress. Please try again.' 
+					});
+				}
 			}
 		}
 		
@@ -148,57 +232,211 @@ export default function Earn() {
 
 	const submitWatchTime = async (video, time) => {
 		try {
-			const response = await api.post(`/videos/${video._id}/watch`, {
-				watchTime: time
-			});
-
-			// Handle completion-based rewards
-			if (response.data.coinsAwarded > 0) {
-				const { coinsAwarded, progressPercent } = response.data;
-				
-				// Show completion message
-				setMessage({ 
-					type: 'success', 
-					text: `🎆 CONGRATULATIONS! You watched the full video (${progressPercent}%) and earned ${coinsAwarded} coins! 🎆` 
+			if (isOnline) {
+				// Online: Submit to backend
+				const response = await api.post(`/videos/${video._id}/watch`, {
+					watchTime: time
 				});
-				
-				setCoinsBalance(response.data.totalCoins);
-				
-				// Update user context
-				setUser({ ...user, coinsBalance: response.data.totalCoins });
-				
-				// Refresh videos to update progress
-				fetchVideos();
-				
-				// Clear selected video after completion
-				setTimeout(() => {
-					setSelectedVideo(null);
-					setWatchTime(0);
-					setHighestWatchedTime(0);
-					setIsPlaying(false);
-				}, 3000);
+
+				// Handle completion-based rewards
+				if (response.data.coinsAwarded > 0) {
+					const { coinsAwarded, progressPercent } = response.data;
+					
+					// Cache the completion
+					await offlineStorage.saveVideoProgress(video._id, {
+						watchTime: time,
+						watched: true,
+						completed: true,
+						watchedAt: new Date().toISOString(),
+						coinsEarned: coinsAwarded
+					});
+					
+					// Update cached user profile
+					const cachedProfile = await offlineStorage.getCachedUserProfile();
+					if (cachedProfile) {
+						await offlineStorage.cacheUserProfile({
+							...cachedProfile,
+							coinsBalance: response.data.totalCoins
+						});
+					}
+					
+					// Show completion message
+					setMessage({ 
+						type: 'success', 
+						text: `🎆 CONGRATULATIONS! You watched the full video (${progressPercent}%) and earned ${coinsAwarded} coins! 🎆` 
+					});
+					
+					setCoinsBalance(response.data.totalCoins);
+				} else {
+					// Save progress for non-completion
+					await offlineStorage.saveVideoProgress(video._id, {
+						watchTime: time,
+						watched: false,
+						lastUpdated: new Date().toISOString()
+					});
+					
+					// Show progress update
+					const progressPercent = response.data.progressPercent || 0;
+					const requiredPercent = response.data.requiredPercent || 95;
+					
+					setMessage({ 
+						type: 'info', 
+						text: `Progress: ${progressPercent}% (Need ${requiredPercent}% to earn coins)` 
+					});
+				}
 			} else {
-				// Show progress update
-				const progressPercent = response.data.progressPercent || 0;
-				const requiredPercent = response.data.requiredPercent || 95;
+				// Offline: Save for background sync
+				const progressPercent = Math.min((time / video.duration) * 100, 100);
+				const requiredPercent = 95;
+				const coinsAwarded = progressPercent >= requiredPercent ? Math.ceil(video.duration / 60) * 5 : 0;
 				
-				setMessage({ 
-					type: 'info', 
-					text: `Progress: ${progressPercent}% (Need ${requiredPercent}% to earn coins)` 
+				await offlineStorage.saveVideoProgress(video._id, {
+					watchTime: time,
+					watched: coinsAwarded > 0,
+					completed: coinsAwarded > 0,
+					watchedAt: coinsAwarded > 0 ? new Date().toISOString() : null,
+					coinsEarned: coinsAwarded,
+					pendingSync: true
 				});
-			}
+				
+				if (coinsAwarded > 0) {
+					// Update local balance
+					setCoinsBalance(prev => prev + coinsAwarded);
+					
+					// Update cached profile
+					const cachedProfile = await offlineStorage.getCachedUserProfile();
+					if (cachedProfile) {
+						await offlineStorage.cacheUserProfile({
+							...cachedProfile,
+							coinsBalance: (cachedProfile.coinsBalance || 0) + coinsAwarded
+						});
+					}
+					
+					setMessage({ 
+						type: 'success', 
+						text: `🎆 Video completed offline! Earned ${coinsAwarded} coins. Will sync when online! 🎆` 
+					});
+				} else {
+					setMessage({ 
+						type: 'info', 
+						text: `Progress: ${Math.floor(progressPercent)}% saved offline (Need ${requiredPercent}% to earn coins)` 
+					});
+				}
+				}
+				
+				// Update user context and refresh when online
+				if (isOnline) {
+					setUser({ ...user, coinsBalance: response.data.totalCoins });
+					
+					// Refresh videos to update progress
+					fetchVideos();
+					
+					// Clear selected video after completion
+					if (response.data.coinsAwarded > 0) {
+						setTimeout(() => {
+							setSelectedVideo(null);
+							setWatchTime(0);
+							setHighestWatchedTime(0);
+							setIsPlaying(false);
+						}, 3000);
+					}
+				} else {
+					// Refresh from cache when offline
+					fetchVideos();
+					
+					// Clear selected video after offline completion
+					const progressPercent = Math.min((time / video.duration) * 100, 100);
+					if (progressPercent >= 95) {
+						setTimeout(() => {
+							setSelectedVideo(null);
+							setWatchTime(0);
+							setHighestWatchedTime(0);
+							setIsPlaying(false);
+						}, 3000);
+					}
+				}
 
-			// Stop the timer if video is completed
-			if (response.data.watchRecord?.completed && intervalRef.current) {
-				clearInterval(intervalRef.current);
-				intervalRef.current = null;
-				setIsPlaying(false);
-			}
+				// Stop the timer if video is completed
+				const isCompleted = isOnline 
+					? response.data.watchRecord?.completed 
+					: Math.min((time / video.duration) * 100, 100) >= 95;
+					
+				if (isCompleted && intervalRef.current) {
+					clearInterval(intervalRef.current);
+					intervalRef.current = null;
+					setIsPlaying(false);
+				}
 		} catch (error) {
 			console.error('Failed to submit watch time:', error);
-			setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to track watch progress' });
+			
+			// Try to save offline as fallback
+			try {
+				await offlineStorage.saveVideoProgress(video._id, {
+					watchTime: time,
+					watched: false,
+					lastUpdated: new Date().toISOString(),
+					pendingSync: true
+				});
+				setMessage({ type: 'warning', text: 'Progress saved offline. Will sync when connection restored.' });
+			} catch (offlineError) {
+				setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to track watch progress' });
+			}
 		}
 	};
+
+	// Background sync for pending offline data
+	const syncOfflineData = async () => {
+		if (!isOnline) return;
+		
+		try {
+			// Get all pending video progress
+			const allProgress = await offlineStorage.getAllVideoProgress();
+			const pendingSync = allProgress.filter(progress => progress.pendingSync);
+			
+			if (pendingSync.length === 0) return;
+			
+			console.log(`Syncing ${pendingSync.length} pending video progress records...`);
+			
+			for (const progress of pendingSync) {
+				try {
+					// Sync to server
+					await api.post(`/videos/${progress.videoId}/watch`, {
+						watchTime: progress.watchTime
+					});
+					
+					// Remove pending sync flag
+					await offlineStorage.saveVideoProgress(progress.videoId, {
+						...progress,
+						pendingSync: false,
+						syncedAt: new Date().toISOString()
+					});
+					
+					console.log(`Synced progress for video ${progress.videoId}`);
+				} catch (syncError) {
+					console.error(`Failed to sync progress for video ${progress.videoId}:`, syncError);
+				}
+			}
+			
+			// Refresh data after sync
+			fetchVideos();
+			fetchBalance();
+			
+		} catch (error) {
+			console.error('Background sync failed:', error);
+		}
+	};
+
+	// Effect to handle background sync when coming online
+	useEffect(() => {
+		if (isOnline) {
+			// Small delay to ensure connection is stable
+			const syncTimeout = setTimeout(() => {
+				syncOfflineData();
+			}, 1000);
+			
+			return () => clearTimeout(syncTimeout);
+		}
+	}, [isOnline]);
 
 	// Setup YouTube player tracking
 	useEffect(() => {
@@ -424,6 +662,17 @@ export default function Earn() {
 		<div className="container mx-auto p-4">
 			<h1 className="text-3xl font-bold mb-6">Earn Coins by Watching Videos</h1>
 
+			{/* Connection Status */}
+			{!isOnline && (
+				<div className="mb-4 p-3 rounded-lg bg-yellow-100 text-yellow-800 border border-yellow-300">
+					<div className="flex items-center">
+						<span className="text-lg mr-2">📱</span>
+						<span className="font-medium">Offline Mode:</span>
+						<span className="ml-2">You can watch cached videos and earn coins. Progress will sync when online.</span>
+					</div>
+				</div>
+			)}
+
 			{/* Status Messages */}
 			{message.text && (
 				<div className={`mb-4 p-4 rounded-lg ${
@@ -574,6 +823,11 @@ export default function Earn() {
 														<span className="text-xs text-yellow-600 font-medium">
 															(Must watch 95%)
 														</span>
+														{!isOnline && video.cachedOffline && (
+															<span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+																📱 Available Offline
+															</span>
+														)}
 													</div>
 													{video.progress && video.progress.watchTime > 0 && (
 														<div className="mt-2">
