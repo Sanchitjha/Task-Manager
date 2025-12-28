@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotification } from '../contexts/NotificationContext';
 import api from '../lib/api';
 
 export default function Checkout() {
   const { user } = useAuth();
+  const { addNotification } = useNotification();
   const navigate = useNavigate();
   const [cart, setCart] = useState([]);
   const [userBalance, setUserBalance] = useState(0);
@@ -101,12 +103,20 @@ export default function Checkout() {
 
   const placeOrder = async () => {
     if (!isFormValid()) {
-      alert('Please fill in all required fields');
+      addNotification('Please fill in all required fields', 'warning');
       return;
     }
 
     if (!canAfford) {
-      alert('Insufficient coins');
+      addNotification('Insufficient coins. Please earn more coins to complete this purchase.', 'warning');
+      navigate('/earn');
+      return;
+    }
+
+    // Double-check stock availability before placing order
+    const stockCheck = await checkStockAvailability();
+    if (!stockCheck.available) {
+      addNotification(stockCheck.message, 'error');
       return;
     }
 
@@ -117,28 +127,65 @@ export default function Checkout() {
         items: cart.map(item => ({
           product: item._id,
           quantity: item.quantity,
-          price: item.price
+          price: item.price,
+          totalPrice: item.price * item.quantity
         })),
-        customer: customerInfo,
+        customer: {
+          name: customerInfo.name,
+          phone: customerInfo.phone,
+          email: customerInfo.email,
+          address: customerInfo.address
+        },
         totalAmount: getCartTotal(),
-        paymentMethod: 'coins'
+        finalAmount: getCartTotal(),
+        paymentMethod: 'wallet',
+        notes: customerInfo.notes
       };
 
       const res = await api.post('/orders', orderData);
       
       if (res.data.success) {
-        // Clear cart
+        // Clear cart completely
+        setCart([]);
         localStorage.removeItem('shopCart');
         
-        // Redirect to success page or order confirmation
-        alert('Order placed successfully! Your coins have been deducted.');
-        navigate('/orders'); // You might want to create an orders page
+        // Show success message
+        addNotification(`🎉 Order placed successfully! Order ID: ${res.data.orderId}. ${getCartTotal()} coins deducted.`, 'success', 5000);
+        
+        // Navigate to orders page to see the placed order
+        navigate('/orders');
       }
     } catch (e) {
       console.error('Failed to place order:', e);
-      alert('Failed to place order. Please try again.');
+      const errorMessage = e.response?.data?.error || 'Failed to place order. Please try again.';
+      addNotification(`❌ Order Failed: ${errorMessage}`, 'error', 5000);
+      
+      // Reload balance in case it changed
+      loadUserBalance();
     } finally {
       setOrderLoading(false);
+    }
+  };
+
+  const checkStockAvailability = async () => {
+    try {
+      for (const cartItem of cart) {
+        const res = await api.get(`/products/${cartItem._id}`);
+        const product = res.data;
+        
+        if (product.stock < cartItem.quantity) {
+          return {
+            available: false,
+            message: `Sorry, ${cartItem.title} only has ${product.stock} items left in stock. Please update your cart.`
+          };
+        }
+      }
+      return { available: true };
+    } catch (error) {
+      return {
+        available: false,
+        message: 'Unable to verify stock availability. Please try again.'
+      };
     }
   };
 
