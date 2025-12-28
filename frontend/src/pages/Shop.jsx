@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotification } from '../contexts/NotificationContext';
 import api from '../lib/api';
 
 export default function Shop() {
   const { user } = useAuth();
+  const { addNotification } = useNotification();
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,13 +67,28 @@ export default function Shop() {
   };
 
   const addToCart = (product, quantity = 1) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    if (product.stock < quantity) {
+      addNotification(`Sorry, only ${product.stock} items available in stock`, 'warning');
+      return;
+    }
+
     const existingItem = cart.find(item => item._id === product._id);
     let updatedCart;
     
     if (existingItem) {
+      const newQuantity = existingItem.quantity + quantity;
+      if (newQuantity > product.stock) {
+        addNotification(`Cannot add more items. Maximum ${product.stock} available`, 'warning');
+        return;
+      }
       updatedCart = cart.map(item =>
         item._id === product._id
-          ? { ...item, quantity: item.quantity + quantity }
+          ? { ...item, quantity: newQuantity }
           : item
       );
     } else {
@@ -80,6 +97,10 @@ export default function Shop() {
     
     setCart(updatedCart);
     localStorage.setItem('shopCart', JSON.stringify(updatedCart));
+    
+    // Show success feedback
+    setError('');
+    addNotification(`🛒 ${product.title} added to cart! (Qty: ${quantity})`, 'success');
   };
 
   const getCartItemCount = () => {
@@ -97,13 +118,14 @@ export default function Shop() {
     }
     
     if (userBalance < product.price) {
-      alert('Insufficient coins! Please earn more coins to purchase this item.');
+      addNotification(`💰 Insufficient coins! You need ${product.price - userBalance} more coins to buy this item.`, 'warning', 4000);
       return;
     }
     
     // Add to cart and go to checkout
     addToCart(product, 1);
-    navigate('/checkout');
+    addNotification('🚀 Added to cart! Redirecting to checkout...', 'success');
+    setTimeout(() => navigate('/checkout'), 1000);
   };
 
   const featuredCategories = [
@@ -277,22 +299,46 @@ export default function Shop() {
                     </Link>
                     
                     {product.stock > 0 && (
-                      <>
+                    <div className="space-y-2">
+                      {/* Add to Cart with Quantity */}
+                      <div className="flex items-center space-x-2">
+                        <select 
+                          className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                          id={`quantity-${product._id}`}
+                          defaultValue="1"
+                        >
+                          {[...Array(Math.min(product.stock, 10))].map((_, i) => (
+                            <option key={i + 1} value={i + 1}>
+                              {i + 1}
+                            </option>
+                          ))}
+                        </select>
                         <button
-                          onClick={() => addToCart(product)}
+                          onClick={() => {
+                            const quantity = parseInt(document.getElementById(`quantity-${product._id}`).value);
+                            addToCart(product, quantity);
+                          }}
                           className="bg-orange-100 text-orange-700 px-3 py-2 rounded text-sm hover:bg-orange-200 transition"
                         >
-                          Add to Cart
+                          🛒 Add to Cart
                         </button>
-                        <button
-                          onClick={() => handleQuickBuy(product)}
-                          className="bg-orange-600 text-white px-3 py-2 rounded text-sm hover:bg-orange-700 transition"
-                          disabled={userBalance < product.price}
-                        >
-                          Buy Now
-                        </button>
-                      </>
-                    )}
+                      </div>
+                      
+                      {/* Buy Now Button */}
+                      <button
+                        onClick={() => handleQuickBuy(product)}
+                        className={`w-full py-2 rounded text-sm font-medium transition ${
+                          userBalance >= product.price
+                            ? 'bg-orange-600 text-white hover:bg-orange-700'
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        }`}
+                        disabled={userBalance < product.price}
+                        title={userBalance < product.price ? `Need ${product.price - userBalance} more coins` : 'Buy now with coins'}
+                      >
+                        {userBalance >= product.price ? '⚡ Buy Now' : '💰 Insufficient Coins'}
+                      </button>
+                    </div>
+                  )}
                   </div>
                 </div>
               </div>
@@ -303,11 +349,35 @@ export default function Shop() {
 
       {/* Floating Cart Summary */}
       {getCartItemCount() > 0 && (
-        <div className="fixed bottom-4 right-4 bg-orange-600 text-white p-4 rounded-lg shadow-lg">
-          <div className="text-sm">
-            {getCartItemCount()} items • {getCartTotal()} coins
+        <div className="fixed bottom-4 right-4 bg-white border-2 border-orange-600 rounded-lg shadow-lg p-4 max-w-sm">
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-semibold text-gray-900">🛒 Cart</span>
+            <Link to="/cart" className="text-orange-600 hover:text-orange-700">
+              <span className="text-sm">View Cart →</span>
+            </Link>
           </div>
-          <Link to="/cart" className="text-xs underline">View Cart</Link>
+          <div className="text-sm text-gray-600">
+            <div>{getCartItemCount()} {getCartItemCount() === 1 ? 'item' : 'items'}</div>
+            <div className="font-bold text-orange-600">{getCartTotal()} coins total</div>
+          </div>
+          <div className="mt-3 flex space-x-2">
+            <Link 
+              to="/cart" 
+              className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded text-center text-sm hover:bg-gray-200 transition"
+            >
+              Edit Cart
+            </Link>
+            <Link 
+              to="/checkout" 
+              className={`flex-1 px-3 py-2 rounded text-center text-sm font-medium transition ${
+                userBalance >= getCartTotal()
+                  ? 'bg-orange-600 text-white hover:bg-orange-700'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              {userBalance >= getCartTotal() ? 'Checkout' : 'Need More Coins'}
+            </Link>
+          </div>
         </div>
       )}
     </div>
