@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
+import InstallPrompt from './components/InstallPrompt';
+import OfflineIndicator from './components/OfflineIndicator';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Earn from './pages/Earn';
@@ -30,6 +32,7 @@ function App() {
 	return (
 		<AuthProvider>
 			<Router>
+				<OfflineIndicator />
 				<Navbar />
 				<Routes>
 					<Route path="/" element={<Home />} />
@@ -142,6 +145,7 @@ function App() {
 						</ProtectedRoute>
 					} />
 				</Routes>
+				<InstallPrompt />
 			</Router>
 		</AuthProvider>
 	);
