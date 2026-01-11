@@ -8,6 +8,19 @@ const userSchema = new Schema(
 		phone: { type: String }, // Optional phone number (no verification required)
 		isEmailVerified: { type: Boolean, default: false }, // Email verification status
 		profileImage: { type: String, default: null },
+		
+		// Vendor-specific fields
+		vendorAddress: {
+			businessName: { type: String },
+			street: { type: String },
+			city: { type: String },
+			state: { type: String },
+			zipCode: { type: String },
+			country: { type: String, default: 'India' },
+			gstNumber: { type: String },
+			contactNumber: { type: String }
+		},
+		
 		role: { type: String, enum: ['admin', 'subadmin', 'client', 'vendor'], default: 'client' },
 		coinsBalance: { type: Number, default: 0 }, // Earned coins (not yet redeemed)
 		walletBalance: { type: Number, default: 0 }, // Redeemed money
