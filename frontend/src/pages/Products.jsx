@@ -53,7 +53,7 @@ export default function Products() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {items.map((p) => (
-                  <div key={p._id} className="bg-white rounded-lg shadow-sm hover:shadow-lg transition border overflow-hidden">
+                  <div key={p._id} className="bg-white rounded-lg shadow-sm hover:shadow-lg transition border overflow-hidden relative">
                     <div className="aspect-w-1 aspect-h-1">
                       {p.images && p.images[0] ? (
                         <img 
@@ -67,16 +67,49 @@ export default function Products() {
                         </div>
                       )}
                     </div>
+                    
+                    {/* Discount Badge */}
+                    {p.discountPercentage > 0 && (
+                      <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
+                        {p.discountPercentage}% OFF
+                      </div>
+                    )}
+                    
                     <div className="p-4">
                       <h2 className="font-semibold text-gray-900 mb-1 line-clamp-2">{p.title}</h2>
                       <p className="text-sm text-gray-600 mb-2">{p.category}</p>
+                      
+                      {/* Pricing Information */}
+                      <div className="mb-3 space-y-1">
+                        {p.discountPercentage > 0 ? (
+                          <>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-lg font-bold text-green-600">₹{p.finalPrice}</span>
+                              <span className="text-sm text-gray-500 line-through">₹{p.originalPrice}</span>
+                            </div>
+                            <div className="text-sm text-orange-600 font-semibold">
+                              {p.coinPrice} coins
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-lg font-bold text-gray-900">₹{p.originalPrice || p.finalPrice}</div>
+                            <div className="text-sm text-orange-600 font-semibold">
+                              {p.coinPrice} coins
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      
                       <div className="flex items-center justify-between">
-                        <span className="text-lg font-bold text-orange-600">{p.price} coins</span>
+                        <span className="text-xs text-gray-500">
+                          Stock: {p.stock || 0}
+                        </span>
                         <Link
                           to={`/product/${p._id}`}
                           className="bg-orange-600 text-white px-3 py-1 rounded text-sm hover:bg-orange-700 transition"
                         >
-                          View
+                          View Details
                         </Link>
                       </div>
                     </div>
