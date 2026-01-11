@@ -113,5 +113,3 @@ function showUpdateNotification() {
     }
   }, 10000);
 }
-  });
-}
