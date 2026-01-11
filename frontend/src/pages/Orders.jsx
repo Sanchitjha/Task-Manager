@@ -16,7 +16,7 @@ export default function Orders() {
   const loadOrders = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/orders/my-orders');
+      const response = await api.get('/orders/my');
       setOrders(response.data.orders || []);
     } catch (error) {
       console.error('Failed to load orders:', error);
@@ -27,21 +27,29 @@ export default function Orders() {
 
   const downloadReceipt = async (orderId) => {
     try {
-      const response = await api.get(`/orders/${orderId}/receipt`);
-      if (response.data.receiptUrl) {
-        // Open receipt in new tab
-        window.open(`http://localhost:5000${response.data.receiptUrl}`, '_blank');
-      }
+      const response = await api.get(`/orders/${orderId}/receipt`, {
+        responseType: 'blob'
+      });
+      
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `receipt-${orderId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Failed to download receipt:', error);
-      alert('Receipt not available');
+      alert('Failed to download receipt. Please try again.');
     }
   };
 
   const getStatusColor = (status) => {
     const colors = {
+      pending: 'bg-yellow-100 text-yellow-800',
       confirmed: 'bg-blue-100 text-blue-800',
-      processing: 'bg-yellow-100 text-yellow-800',
       shipped: 'bg-purple-100 text-purple-800',
       delivered: 'bg-green-100 text-green-800',
       cancelled: 'bg-red-100 text-red-800'
@@ -213,143 +221,6 @@ export default function Orders() {
                       </div>
                     </div>
                   )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
-          <p className="text-gray-600 mt-2">Track and manage your orders</p>
-        </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
-            {error}
-          </div>
-        )}
-
-        {orders.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="text-6xl mb-6">📦</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">No Orders Yet</h2>
-            <p className="text-gray-600 mb-8">Start shopping to place your first order</p>
-            <Link
-              to="/shop"
-              className="bg-orange-600 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition"
-            >
-              Start Shopping
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {orders.map((order) => (
-              <div key={order._id} className="bg-white rounded-lg shadow-sm border overflow-hidden">
-                <div className="p-6">
-                  {/* Order Header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        Order #{order.orderNumber}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        Placed on {new Date(order.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                    </span>
-                  </div>
-
-                  {/* Order Items */}
-                  <div className="border-t border-gray-200 pt-4">
-                    <div className="grid gap-4">
-                      {order.items.map((item, index) => (
-                        <div key={index} className="flex items-center space-x-4">
-                          <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                            {item.product.images && item.product.images[0] ? (
-                              <img
-                                src={`http://localhost:5000${item.product.images[0]}`}
-                                alt={item.product.title}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <span className="text-gray-400 text-xl">📦</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-medium text-gray-900">{item.product.title}</h4>
-                            <p className="text-sm text-gray-600">{item.product.category}</p>
-                            <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium text-gray-900">
-                              {item.price * item.quantity} coins
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {item.price} coins each
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Order Footer */}
-                  <div className="border-t border-gray-200 pt-4 mt-4">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-gray-600">
-                        {order.trackingNumber && (
-                          <p>Tracking: {order.trackingNumber}</p>
-                        )}
-                        {order.deliveredAt && (
-                          <p>Delivered: {new Date(order.deliveredAt).toLocaleDateString()}</p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-gray-900">
-                          Total: {order.totalAmount} coins
-                        </p>
-                        <button className="text-orange-600 hover:text-orange-700 text-sm font-medium mt-1">
-                          View Details
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Delivery Address */}
-                  <div className="border-t border-gray-200 pt-4 mt-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Delivery Address</h4>
-                    <div className="text-sm text-gray-600">
-                      <p>{order.customer.name}</p>
-                      <p>{order.customer.phone}</p>
-                      <p>
-                        {order.customer.address.street}, {order.customer.address.city}
-                      </p>
-                      <p>
-                        {order.customer.address.state} - {order.customer.address.pincode}
-                      </p>
-                    </div>
-                  </div>
                 </div>
               </div>
             ))}
