@@ -1,10 +1,294 @@
 const express = require('express');
-const { Order } = require('../schemas/Order');
+const mongoose = require('mongoose');
 const { Product } = require('../schemas/Product');
+const { Order } = require('../schemas/Order');
 const { User } = require('../schemas/User');
+const { Transaction } = require('../schemas/Transaction');
 const { auth } = require('../middleware/auth');
+const { ReceiptGenerator } = require('../lib/receiptGenerator');
 
 const router = express.Router();
+
+// Create new order with coin payment and receipt generation
+router.post('/', auth, async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
+  try {
+    const user = req.user;
+    const { items, shippingAddress, notes } = req.body;
+    
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Items array is required' });
+    }
+
+    let orderItems = [];
+    let totalOriginalAmount = 0;
+    let totalDiscountAmount = 0;
+    let totalFinalAmount = 0;
+    let totalCoinsUsed = 0;
+    let vendorId = null;
+    let coinConversionRate = 1;
+
+    // Process each item and calculate totals
+    for (const item of items) {
+      const product = await Product.findById(item.productId).session(session);
+      if (!product) {
+        throw new Error(`Product ${item.productId} not found`);
+      }
+      
+      if (!product.isPublished) {
+        throw new Error(`Product ${product.title} is not available`);
+      }
+      
+      if (product.stock < item.quantity) {
+        throw new Error(`Insufficient stock for ${product.title}. Available: ${product.stock}`);
+      }
+
+      // Set vendor (all items should be from same vendor for this order)
+      if (!vendorId) {
+        vendorId = product.vendor;
+        coinConversionRate = product.coinConversionRate || 1;
+      } else if (vendorId.toString() !== product.vendor.toString()) {
+        throw new Error('All items in an order must be from the same vendor');
+      }
+
+      const quantity = parseInt(item.quantity);
+      const originalPrice = product.originalPrice || 0;
+      const discountAmount = Math.round((originalPrice * product.discountPercentage) / 100);
+      const finalPrice = originalPrice - discountAmount;
+      const coinPrice = Math.ceil(finalPrice / coinConversionRate);
+
+      const itemTotal = {
+        product: product._id,
+        productSnapshot: {
+          title: product.title,
+          description: product.description,
+          originalPrice: originalPrice,
+          discountPercentage: product.discountPercentage,
+          finalPrice: finalPrice,
+          coinPrice: coinPrice,
+          images: product.images
+        },
+        quantity: quantity,
+        unitOriginalPrice: originalPrice,
+        unitDiscountAmount: discountAmount,
+        unitFinalPrice: finalPrice,
+        unitCoinPrice: coinPrice,
+        totalOriginalPrice: originalPrice * quantity,
+        totalDiscountAmount: discountAmount * quantity,
+        totalFinalPrice: finalPrice * quantity,
+        totalCoinsPaid: coinPrice * quantity
+      };
+
+      orderItems.push(itemTotal);
+      
+      totalOriginalAmount += itemTotal.totalOriginalPrice;
+      totalDiscountAmount += itemTotal.totalDiscountAmount;
+      totalFinalAmount += itemTotal.totalFinalPrice;
+      totalCoinsUsed += itemTotal.totalCoinsPaid;
+
+      // Reduce product stock
+      product.stock -= quantity;
+      await product.save({ session });
+    }
+
+    // Check if user has enough coins
+    if (user.coinsBalance < totalCoinsUsed) {
+      throw new Error(`Insufficient coins. Required: ${totalCoinsUsed}, Available: ${user.coinsBalance}`);
+    }
+
+    // Generate order ID
+    const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+    // Create order
+    const order = new Order({
+      orderId,
+      customer: user._id,
+      vendor: vendorId,
+      items: orderItems,
+      totalOriginalAmount,
+      totalDiscountAmount,
+      totalFinalAmount,
+      totalCoinsUsed,
+      coinConversionRate,
+      shippingAddress: shippingAddress || {
+        fullName: user.name,
+        phone: user.phone || '',
+        email: user.email,
+        street: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        country: 'India'
+      },
+      notes,
+      paymentStatus: 'paid',
+      paymentMethod: 'coins',
+      orderStatus: 'confirmed'
+    });
+
+    await order.save({ session });
+
+    // Update user's coin balance
+    user.coinsBalance -= totalCoinsUsed;
+    await user.save({ session });
+
+    // Get vendor for receipt
+    const vendor = await User.findById(vendorId).session(session);
+    
+    // Update vendor's coin balance (transfer coins from customer)
+    if (vendor) {
+      vendor.coinsBalance = (vendor.coinsBalance || 0) + totalCoinsUsed;
+      await vendor.save({ session });
+
+      // Create transaction records
+      await Transaction.create([
+        {
+          userId: user._id,
+          type: 'purchase',
+          amount: -totalCoinsUsed,
+          description: `Order payment: ${orderId}`,
+          metadata: {
+            orderId: order._id,
+            vendorId: vendorId,
+            itemCount: orderItems.length
+          }
+        },
+        {
+          userId: vendorId,
+          type: 'sale',
+          amount: totalCoinsUsed,
+          description: `Order received: ${orderId}`,
+          metadata: {
+            orderId: order._id,
+            customerId: user._id,
+            itemCount: orderItems.length
+          }
+        }
+      ], { session });
+    }
+
+    // Generate receipt
+    try {
+      const receiptData = await ReceiptGenerator.generateReceipt(
+        await order.populate([
+          { path: 'items.product', model: 'Product' },
+          { path: 'customer', model: 'User' },
+          { path: 'vendor', model: 'User' }
+        ]),
+        user,
+        vendor
+      );
+
+      order.receiptGenerated = true;
+      order.receiptUrl = receiptData.receiptUrl;
+      order.receiptNumber = receiptData.receiptNumber;
+      await order.save({ session });
+
+    } catch (receiptError) {
+      console.error('Receipt generation failed:', receiptError);
+      // Don't fail the order if receipt generation fails
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    // Return populated order
+    const populatedOrder = await Order.findById(order._id)
+      .populate('vendor', 'name email vendorAddress')
+      .populate('customer', 'name email')
+      .populate('items.product', 'title images');
+
+    res.status(201).json({
+      success: true,
+      order: populatedOrder,
+      message: `Order placed successfully! ${totalCoinsUsed} coins transferred to vendor.`
+    });
+
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    
+    console.error('Order creation error:', error);
+    res.status(400).json({ 
+      success: false, 
+      message: error.message 
+    });
+  }
+});
+
+// Get user's orders
+router.get('/my-orders', auth, async (req, res, next) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page || '1'));
+    const limit = Math.min(50, parseInt(req.query.limit || '10'));
+    const skip = (page - 1) * limit;
+
+    const filter = { customer: req.user._id };
+    if (req.query.status) {
+      filter.orderStatus = req.query.status;
+    }
+
+    const [orders, total] = await Promise.all([
+      Order.find(filter)
+        .populate('vendor', 'name email vendorAddress')
+        .populate('items.product', 'title images')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Order.countDocuments(filter)
+    ]);
+
+    res.json({
+      success: true,
+      orders,
+      total,
+      page,
+      pages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get vendor's orders
+router.get('/vendor-orders', auth, async (req, res, next) => {
+  try {
+    if (req.user.role !== 'vendor' && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Vendor access required' });
+    }
+
+    const page = Math.max(1, parseInt(req.query.page || '1'));
+    const limit = Math.min(50, parseInt(req.query.limit || '10'));
+    const skip = (page - 1) * limit;
+
+    const filter = { vendor: req.user._id };
+    if (req.query.status) {
+      filter.orderStatus = req.query.status;
+    }
+
+    const [orders, total] = await Promise.all([
+      Order.find(filter)
+        .populate('customer', 'name email phone')
+        .populate('items.product', 'title images')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Order.countDocuments(filter)
+    ]);
+
+    res.json({
+      success: true,
+      orders,
+      total,
+      page,
+      pages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Get all orders (admin only)
 router.get('/', auth, async (req, res) => {
@@ -13,244 +297,132 @@ router.get('/', auth, async (req, res) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
     
-    const orders = await Order.find()
-      .populate('customer', 'name email phone')
-      .populate('vendor', 'name email')
-      .populate('items.product', 'title price category')
-      .sort({ createdAt: -1 });
+    const page = Math.max(1, parseInt(req.query.page || '1'));
+    const limit = Math.min(50, parseInt(req.query.limit || '20'));
+    const skip = (page - 1) * limit;
+
+    const filter = {};
+    if (req.query.status) {
+      filter.orderStatus = req.query.status;
+    }
+
+    const [orders, total] = await Promise.all([
+      Order.find(filter)
+        .populate('customer', 'name email phone')
+        .populate('vendor', 'name email')
+        .populate('items.product', 'title originalPrice finalPrice')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Order.countDocuments(filter)
+    ]);
     
-    res.json({ success: true, orders });
+    res.json({ 
+      success: true, 
+      orders,
+      total,
+      page,
+      pages: Math.ceil(total / limit) 
+    });
   } catch (error) {
     console.error('Error fetching orders:', error);
     res.status(500).json({ error: 'Failed to fetch orders' });
   }
 });
 
-// Create new order
-router.post('/', auth, async (req, res) => {
+// Get specific order details
+router.get('/:orderId', auth, async (req, res, next) => {
   try {
-    const { items, customer, totalAmount, paymentMethod, notes } = req.body;
-    
-    // Validate items and check stock
-    const orderItems = [];
-    let calculatedTotal = 0;
-    
-    for (const item of items) {
-      const product = await Product.findById(item.product);
-      if (!product) {
-        return res.status(400).json({ error: `Product not found: ${item.product}` });
-      }
-      
-      if (product.stock < item.quantity) {
-        return res.status(400).json({ error: `Insufficient stock for ${product.title}` });
-      }
-      
-      const itemTotal = product.price * item.quantity;
-      calculatedTotal += itemTotal;
-      
-      orderItems.push({
-        product: product._id,
-        quantity: item.quantity,
-        price: product.price,
-        vendor: product.vendor
-      });
-      
-      // Update product stock
-      product.stock -= item.quantity;
-      await product.save();
-    }
-    
-    // Check user's coin balance
-    const user = await User.findById(req.user.id);
-    const userCoinsBalance = user.coinsBalance || 0;
-    
-    if (userCoinsBalance < calculatedTotal) {
-      // Revert stock changes
-      for (const item of items) {
-        const product = await Product.findById(item.product);
-        product.stock += item.quantity;
-        await product.save();
-      }
-      return res.status(400).json({ 
-        error: `Insufficient coins. You have ${userCoinsBalance} coins but need ${calculatedTotal} coins.` 
-      });
-    }
+    const order = await Order.findOne({ orderId: req.params.orderId })
+      .populate('vendor', 'name email vendorAddress')
+      .populate('customer', 'name email phone')
+      .populate('items.product', 'title images description');
 
-    // Generate unique order ID
-    const orderId = `ORD-${new Date().getFullYear()}-${Date.now()}`;
-    
-    // Create order
-    const order = new Order({
-      orderId,
-      customer: req.user.id,
-      vendor: orderItems[0].vendor, // Assuming single vendor for now
-      items: orderItems.map(item => ({
-        product: item.product,
-        quantity: item.quantity,
-        price: item.price,
-        totalPrice: item.price * item.quantity
-      })),
-      totalAmount: calculatedTotal,
-      finalAmount: calculatedTotal,
-      shippingAddress: {
-        fullName: customer.name,
-        phone: customer.phone,
-        street: customer.address.street,
-        city: customer.address.city,
-        state: customer.address.state,
-        zipCode: customer.address.pincode,
-        country: 'India'
-      },
-      paymentMethod: 'wallet',
-      paymentStatus: 'completed',
-      notes: notes || ''
-    });
-    
-    await order.save();
-    
-    // Deduct coins from user
-    user.coinsBalance = (user.coinsBalance || 0) - calculatedTotal;
-    await user.save();
-
-    // Create transaction record
-    const { Transaction } = require('../schemas/Transaction');
-    const transaction = new Transaction({
-      user: req.user.id,
-      type: 'debit',
-      amount: calculatedTotal,
-      description: `Purchase order ${orderId}`,
-      orderId: order._id,
-      status: 'completed'
-    });
-    await transaction.save();
-    
-    // Transfer coins to vendors
-    const vendorPayouts = {};
-    for (const item of orderItems) {
-      if (vendorPayouts[item.vendor]) {
-        vendorPayouts[item.vendor] += item.price * item.quantity;
-      } else {
-        vendorPayouts[item.vendor] = item.price * item.quantity;
-      }
-    }
-    
-    for (const [vendorId, amount] of Object.entries(vendorPayouts)) {
-      const vendor = await User.findById(vendorId);
-      if (vendor) {
-        vendor.walletBalance += amount;
-        await vendor.save();
-      }
-    }
-    
-    res.json({ 
-      success: true, 
-      order,
-      orderId: order.orderId,
-      message: 'Order placed successfully',
-      coinsDeducted: calculatedTotal,
-      remainingBalance: user.coinsBalance
-    });
-  } catch (error) {
-    console.error('Error creating order:', error);
-    res.status(500).json({ error: 'Failed to create order' });
-  }
-});
-
-// Get user's orders
-router.get('/my-orders', auth, async (req, res) => {
-  try {
-    const orders = await Order.find({ 'customer.user': req.user.id })
-      .populate('items.product', 'title price category images')
-      .sort({ createdAt: -1 });
-    
-    res.json({ success: true, orders });
-  } catch (error) {
-    console.error('Error fetching user orders:', error);
-    res.status(500).json({ error: 'Failed to fetch orders' });
-  }
-});
-
-// Get vendor's orders
-router.get('/vendor-orders', auth, async (req, res) => {
-  try {
-    if (req.user.role !== 'vendor' && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Vendor access required' });
-    }
-    
-    const orders = await Order.find({
-      'items.vendor': req.user.id
-    }).populate('customer.user', 'name email phone')
-      .populate('items.product', 'title price category images')
-      .sort({ createdAt: -1 });
-    
-    res.json({ success: true, orders });
-  } catch (error) {
-    console.error('Error fetching vendor orders:', error);
-    res.status(500).json({ error: 'Failed to fetch orders' });
-  }
-});
-
-// Update order status (vendor/admin only)
-router.patch('/:orderId', auth, async (req, res) => {
-  try {
-    const { status, trackingNumber } = req.body;
-    
-    const order = await Order.findById(req.params.orderId);
     if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ message: 'Order not found' });
     }
-    
-    // Check if user can update this order
-    const canUpdate = req.user.role === 'admin' || 
-                     order.items.some(item => item.vendor.toString() === req.user.id);
-    
-    if (!canUpdate) {
-      return res.status(403).json({ error: 'Not authorized to update this order' });
+
+    // Check if user has access to this order
+    const isCustomer = order.customer._id.toString() === req.user._id.toString();
+    const isVendor = order.vendor._id.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isCustomer && !isVendor && !isAdmin) {
+      return res.status(403).json({ message: 'Access denied' });
     }
-    
-    order.status = status;
-    if (trackingNumber) {
-      order.trackingNumber = trackingNumber;
-    }
-    
-    if (status === 'delivered') {
-      order.deliveredAt = new Date();
-    }
-    
-    await order.save();
-    
+
     res.json({ success: true, order });
   } catch (error) {
-    console.error('Error updating order:', error);
-    res.status(500).json({ error: 'Failed to update order' });
+    next(error);
   }
 });
 
-// Get order details
-router.get('/:orderId', auth, async (req, res) => {
+// Update order status (vendor only)
+router.put('/:orderId/status', auth, async (req, res, next) => {
   try {
-    const order = await Order.findById(req.params.orderId)
-      .populate('customer.user', 'name email phone')
-      .populate('items.product', 'title price category images')
-      .populate('items.vendor', 'name email');
+    const { status } = req.body;
+    const validStatuses = ['confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
     
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const order = await Order.findOne({ orderId: req.params.orderId });
     if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ message: 'Order not found' });
     }
-    
-    // Check if user can view this order
-    const canView = req.user.role === 'admin' || 
-                   order.customer.user.toString() === req.user.id ||
-                   order.items.some(item => item.vendor._id.toString() === req.user.id);
-    
-    if (!canView) {
-      return res.status(403).json({ error: 'Not authorized to view this order' });
+
+    // Check if user is vendor of this order or admin
+    const isVendor = order.vendor.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isVendor && !isAdmin) {
+      return res.status(403).json({ message: 'Access denied' });
     }
-    
+
+    order.orderStatus = status;
+    order.statusHistory.push({
+      status,
+      timestamp: new Date(),
+      note: req.body.note || `Status updated to ${status}`
+    });
+
+    await order.save();
+
     res.json({ success: true, order });
   } catch (error) {
-    console.error('Error fetching order:', error);
-    res.status(500).json({ error: 'Failed to fetch order' });
+    next(error);
+  }
+});
+
+// Download receipt
+router.get('/:orderId/receipt', auth, async (req, res, next) => {
+  try {
+    const order = await Order.findOne({ orderId: req.params.orderId });
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Check if user has access to this order
+    const isCustomer = order.customer.toString() === req.user._id.toString();
+    const isVendor = order.vendor.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isCustomer && !isVendor && !isAdmin) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    if (!order.receiptGenerated || !order.receiptUrl) {
+      return res.status(404).json({ message: 'Receipt not available' });
+    }
+
+    res.json({
+      success: true,
+      receiptUrl: order.receiptUrl,
+      receiptNumber: order.receiptNumber
+    });
+  } catch (error) {
+    next(error);
   }
 });
 
