@@ -9,7 +9,18 @@ const CATEGORY_OPTIONS = [
 export default function ProductCreate() {
   const { user } = useAuth();
   const [form, setForm] = useState({
-    title: '', description: '', price: '', stock: '', category: 'General', sku: '', weight: '', dimensions: '', tags: '', isPublished: true
+    title: '', 
+    description: '', 
+    originalPrice: '', 
+    discountPercentage: '0',
+    coinConversionRate: '1',
+    stock: '', 
+    category: 'General', 
+    sku: '', 
+    weight: '', 
+    dimensions: '', 
+    tags: '', 
+    isPublished: true
   });
   const [images, setImages] = useState([]); // File objects
   const [previews, setPreviews] = useState([]); // preview URLs
@@ -45,16 +56,24 @@ export default function ProductCreate() {
   };
 
   const validate = () => {
-    if (!form.title || !form.price) {
-      setError('Title and price are required');
+    if (!form.title || !form.originalPrice) {
+      setError('Title and original price are required');
       return false;
     }
-    if (Number(form.price) <= 0) {
-      setError('Price must be greater than zero');
+    if (Number(form.originalPrice) <= 0) {
+      setError('Original price must be greater than zero');
       return false;
     }
     if (form.stock && Number(form.stock) < 0) {
       setError('Stock cannot be negative');
+      return false;
+    }
+    if (Number(form.discountPercentage) < 0 || Number(form.discountPercentage) > 100) {
+      setError('Discount percentage must be between 0 and 100');
+      return false;
+    }
+    if (Number(form.coinConversionRate) <= 0) {
+      setError('Coin conversion rate must be greater than zero');
       return false;
     }
     return true;
@@ -71,7 +90,9 @@ export default function ProductCreate() {
       const payload = {
         title: form.title,
         description: form.description,
-        price: Number(form.price),
+        originalPrice: Number(form.originalPrice),
+        discountPercentage: Number(form.discountPercentage) || 0,
+        coinConversionRate: Number(form.coinConversionRate) || 1,
         stock: Number(form.stock) || 0,
         category: form.category,
         sku: form.sku,
@@ -96,7 +117,20 @@ export default function ProductCreate() {
       }
 
       setSuccess('Product created successfully');
-      setForm({ title: '', description: '', price: '', stock: '', category: 'General', sku: '', weight: '', dimensions: '', tags: '', isPublished: true });
+      setForm({ 
+        title: '', 
+        description: '', 
+        originalPrice: '', 
+        discountPercentage: '0',
+        coinConversionRate: '1',
+        stock: '', 
+        category: 'General', 
+        sku: '', 
+        weight: '', 
+        dimensions: '', 
+        tags: '', 
+        isPublished: true 
+      });
       setImages([]);
     } catch (err) {
       console.error(err);
@@ -127,9 +161,41 @@ export default function ProductCreate() {
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Price (INR)</label>
-                <input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="0.00" className="w-full mt-1 p-2 border rounded" />
+                <label className="block text-sm font-medium text-gray-700">Original Price (₹)</label>
+                <input 
+                  type="number" 
+                  value={form.originalPrice} 
+                  onChange={(e) => setForm({ ...form, originalPrice: e.target.value })} 
+                  placeholder="0.00" 
+                  className="w-full mt-1 p-2 border rounded" 
+                />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Discount (%)</label>
+                <input 
+                  type="number" 
+                  value={form.discountPercentage} 
+                  onChange={(e) => setForm({ ...form, discountPercentage: e.target.value })} 
+                  placeholder="0" 
+                  min="0" 
+                  max="100"
+                  className="w-full mt-1 p-2 border rounded" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Coin Rate (₹/coin)</label>
+                <input 
+                  type="number" 
+                  step="0.1"
+                  value={form.coinConversionRate} 
+                  onChange={(e) => setForm({ ...form, coinConversionRate: e.target.value })} 
+                  placeholder="1.0" 
+                  className="w-full mt-1 p-2 border rounded" 
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Stock</label>
                 <input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} placeholder="0" className="w-full mt-1 p-2 border rounded" />
@@ -141,6 +207,30 @@ export default function ProductCreate() {
                 </select>
               </div>
             </div>
+
+            {/* Pricing Preview */}
+            {form.originalPrice && (
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <h3 className="font-semibold text-blue-900 mb-2">💰 Pricing Preview</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-600">Original Price: <span className="font-semibold">₹{form.originalPrice}</span></p>
+                    {form.discountPercentage > 0 && (
+                      <p className="text-green-600">
+                        After {form.discountPercentage}% discount: <span className="font-semibold">₹{(form.originalPrice - (form.originalPrice * form.discountPercentage / 100)).toFixed(2)}</span>
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-orange-600">
+                      Coin Price: <span className="font-semibold">
+                        {Math.ceil((form.originalPrice - (form.originalPrice * (form.discountPercentage || 0) / 100)) / (form.coinConversionRate || 1))} coins
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-3 gap-3">
               <div>
