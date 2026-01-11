@@ -14,13 +14,21 @@ router.post('/', auth, async (req, res, next) => {
       return res.status(403).json({ message: 'Vendor access required' });
     }
 
-    const { title, description, price, stock, category, isPublished, sku, weight, dimensions, tags } = req.body;
-    if (!title || typeof price === 'undefined') return res.status(400).json({ message: 'Title and price required' });
+    const { 
+      title, description, originalPrice, discountPercentage, coinConversionRate, 
+      stock, category, isPublished, sku, weight, dimensions, tags 
+    } = req.body;
+    
+    if (!title || typeof originalPrice === 'undefined') {
+      return res.status(400).json({ message: 'Title and original price required' });
+    }
 
     const product = await Product.create({
       title,
       description,
-      price: Number(price),
+      originalPrice: Number(originalPrice),
+      discountPercentage: Number(discountPercentage) || 0,
+      coinConversionRate: Number(coinConversionRate) || 1,
       stock: Number(stock) || 0,
       category: category || 'general',
       isPublished: typeof isPublished !== 'undefined' ? !!isPublished : true,
@@ -75,11 +83,17 @@ router.put('/:id', auth, async (req, res, next) => {
       return res.status(403).json({ message: 'Not allowed to update this product' });
     }
 
-    const fields = ['title', 'description', 'price', 'stock', 'category', 'isPublished', 'sku', 'weight', 'dimensions', 'tags'];
+    const fields = [
+      'title', 'description', 'originalPrice', 'discountPercentage', 'coinConversionRate',
+      'stock', 'category', 'isPublished', 'sku', 'weight', 'dimensions', 'tags'
+    ];
+    
     fields.forEach((f) => {
       if (typeof req.body[f] !== 'undefined') {
         if (f === 'tags') {
           product.tags = Array.isArray(req.body.tags) ? req.body.tags : (typeof req.body.tags === 'string' ? req.body.tags.split(',').map(t => t.trim()).filter(Boolean) : []);
+        } else if (['originalPrice', 'discountPercentage', 'coinConversionRate'].includes(f)) {
+          product[f] = Number(req.body[f]);
         } else {
           product[f] = req.body[f];
         }
