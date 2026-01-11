@@ -1,8 +1,414 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useNotification } from '../contexts/NotificationContext';
 import api from '../lib/api';
+
+export default function Shop() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [cart, setCart] = useState([]);
+  const [userBalance, setUserBalance] = useState(0);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  useEffect(() => {
+    loadProducts();
+    loadUserBalance();
+    loadCart();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/products', {
+        params: {
+          category: selectedCategory === 'all' ? undefined : selectedCategory
+        }
+      });
+      setProducts(res.data.items || []);
+      
+      // Extract unique categories
+      const uniqueCategories = [...new Set(res.data.items.map(p => p.category))];
+      setCategories(uniqueCategories);
+    } catch (e) {
+      console.error('Failed to load products:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadUserBalance = async () => {
+    try {
+      if (user) {
+        const res = await api.get('/users/me');
+        setUserBalance(res.data.user?.coinsBalance || 0);
+      }
+    } catch (e) {
+      console.error('Failed to load balance:', e);
+    }
+  };
+
+  const loadCart = () => {
+    const savedCart = localStorage.getItem('shopCart');
+    if (savedCart) {
+      setCart(JSON.parse(savedCart));
+    }
+  };
+
+  const addToCart = (product, quantity = 1) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    if (product.stock < quantity) {
+      alert(`Sorry, only ${product.stock} items available in stock`);
+      return;
+    }
+
+    const existingItem = cart.find(item => item._id === product._id);
+    let updatedCart;
+    
+    if (existingItem) {
+      const newQuantity = existingItem.quantity + quantity;
+      if (newQuantity > product.stock) {
+        alert(`Cannot add more items. Maximum ${product.stock} available`);
+        return;
+      }
+      updatedCart = cart.map(item =>
+        item._id === product._id
+          ? { ...item, quantity: newQuantity }
+          : item
+      );
+    } else {
+      updatedCart = [...cart, { ...product, quantity }];
+    }
+    
+    setCart(updatedCart);
+    localStorage.setItem('shopCart', JSON.stringify(updatedCart));
+    alert(`${product.title} added to cart!`);
+  };
+
+  const removeFromCart = (productId) => {
+    const updatedCart = cart.filter(item => item._id !== productId);
+    setCart(updatedCart);
+    localStorage.setItem('shopCart', JSON.stringify(updatedCart));
+  };
+
+  const updateCartQuantity = (productId, newQuantity) => {
+    if (newQuantity <= 0) {
+      removeFromCart(productId);
+      return;
+    }
+    
+    const updatedCart = cart.map(item =>
+      item._id === productId 
+        ? { ...item, quantity: Math.min(newQuantity, item.stock) }
+        : item
+    );
+    setCart(updatedCart);
+    localStorage.setItem('shopCart', JSON.stringify(updatedCart));
+  };
+
+  const getCartTotal = () => {
+    return cart.reduce((total, item) => total + (item.coinPrice * item.quantity), 0);
+  };
+
+  const handleCheckout = async () => {
+    if (!user || cart.length === 0) return;
+    
+    const totalCoins = getCartTotal();
+    if (userBalance < totalCoins) {
+      alert(`Insufficient coins! You need ${totalCoins} coins but have only ${userBalance} coins.`);
+      return;
+    }
+
+    setIsCheckingOut(true);
+    
+    try {
+      const orderData = {
+        items: cart.map(item => ({
+          productId: item._id,
+          quantity: item.quantity
+        })),
+        shippingAddress: {
+          fullName: user.name,
+          phone: user.phone || '',
+          email: user.email,
+          street: '',
+          city: '',
+          state: '',
+          zipCode: '',
+          country: 'India'
+        }
+      };
+
+      const response = await api.post('/orders', orderData);
+      
+      if (response.data.success) {
+        // Clear cart
+        setCart([]);
+        localStorage.removeItem('shopCart');
+        
+        // Update user balance
+        await loadUserBalance();
+        
+        alert(`Order placed successfully! Order ID: ${response.data.order.orderId}\n${response.data.message}`);
+        navigate('/orders');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert(error.response?.data?.message || 'Failed to place order');
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center">
+        <div className="text-center p-8">
+          <h2 className="text-2xl font-bold mb-4">Login Required</h2>
+          <p className="text-gray-600 mb-4">Please login to access the shop</p>
+          <Link to="/login" className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700">
+            Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">🛍️ Coin Shop</h1>
+              <p className="text-gray-600">Buy products with your coins</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="bg-orange-100 px-4 py-2 rounded-lg">
+                <span className="text-orange-800 font-semibold">💰 {userBalance} coins</span>
+              </div>
+              <div className="relative">
+                <button 
+                  onClick={() => document.getElementById('cart-modal').showModal()}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                >
+                  <span>🛒 Cart ({cart.length})</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Category Filter */}
+        <div className="mb-8">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedCategory('all')}
+              className={`px-4 py-2 rounded-lg ${
+                selectedCategory === 'all' 
+                  ? 'bg-orange-600 text-white' 
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              All Products
+            </button>
+            {categories.map(category => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-4 py-2 rounded-lg capitalize ${
+                  selectedCategory === category 
+                    ? 'bg-orange-600 text-white' 
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Products Grid */}
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {products.map((product) => (
+              <div key={product._id} className="bg-white rounded-lg shadow-sm hover:shadow-lg transition border relative overflow-hidden">
+                {/* Discount Badge */}
+                {product.discountPercentage > 0 && (
+                  <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold z-10">
+                    {product.discountPercentage}% OFF
+                  </div>
+                )}
+                
+                {/* Product Image */}
+                <div className="aspect-w-1 aspect-h-1">
+                  {product.images && product.images[0] ? (
+                    <img 
+                      src={`http://localhost:5000${product.images[0]}`} 
+                      alt={product.title} 
+                      className="w-full h-48 object-cover" 
+                    />
+                  ) : (
+                    <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                      <span className="text-gray-400 text-4xl">📦</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-4">
+                  <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">{product.title}</h3>
+                  <p className="text-sm text-gray-600 mb-2 capitalize">{product.category}</p>
+                  
+                  {/* Pricing Display */}
+                  <div className="mb-3">
+                    {product.discountPercentage > 0 ? (
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg font-bold text-green-600">₹{product.finalPrice}</span>
+                          <span className="text-sm text-gray-500 line-through">₹{product.originalPrice}</span>
+                        </div>
+                        <div className="text-orange-600 font-bold">
+                          💰 {product.coinPrice} coins
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <div className="text-lg font-bold text-gray-900">₹{product.originalPrice || product.finalPrice}</div>
+                        <div className="text-orange-600 font-bold">
+                          💰 {product.coinPrice} coins
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                    <span>Stock: {product.stock}</span>
+                    <span>Rate: 1₹ = {product.coinConversionRate} coins</span>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => addToCart(product)}
+                      disabled={product.stock === 0}
+                      className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition ${
+                        product.stock === 0
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-orange-600 text-white hover:bg-orange-700'
+                      }`}
+                    >
+                      {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Cart Modal */}
+      <dialog id="cart-modal" className="modal">
+        <div className="modal-box max-w-2xl">
+          <h3 className="text-lg font-bold mb-4">🛒 Shopping Cart</h3>
+          
+          {cart.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <div className="text-4xl mb-2">🛒</div>
+              <p>Your cart is empty</p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {cart.map((item) => (
+                  <div key={item._id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                    <img 
+                      src={item.images?.[0] ? `http://localhost:5000${item.images[0]}` : '/placeholder.png'} 
+                      alt={item.title}
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                    <div className="flex-1">
+                      <h4 className="font-semibold">{item.title}</h4>
+                      <p className="text-sm text-gray-600">
+                        ₹{item.finalPrice} • {item.coinPrice} coins each
+                      </p>
+                      <div className="flex items-center space-x-2 mt-2">
+                        <button
+                          onClick={() => updateCartQuantity(item._id, item.quantity - 1)}
+                          className="bg-gray-200 px-2 py-1 rounded text-sm"
+                        >
+                          -
+                        </button>
+                        <span className="px-3 py-1 bg-white rounded">{item.quantity}</span>
+                        <button
+                          onClick={() => updateCartQuantity(item._id, item.quantity + 1)}
+                          className="bg-gray-200 px-2 py-1 rounded text-sm"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">{item.coinPrice * item.quantity} coins</p>
+                      <button
+                        onClick={() => removeFromCart(item._id)}
+                        className="text-red-500 text-sm hover:underline"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="border-t pt-4 mt-4">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-lg font-bold">Total: {getCartTotal()} coins</span>
+                  <span className="text-sm text-gray-600">Balance: {userBalance} coins</span>
+                </div>
+                
+                <button
+                  onClick={handleCheckout}
+                  disabled={isCheckingOut || getCartTotal() > userBalance}
+                  className={`w-full py-3 px-4 rounded-lg font-semibold transition ${
+                    isCheckingOut || getCartTotal() > userBalance
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  {isCheckingOut ? 'Processing...' : getCartTotal() > userBalance ? 'Insufficient Coins' : 'Place Order'}
+                </button>
+              </div>
+            </>
+          )}
+          
+          <div className="modal-action">
+            <form method="dialog">
+              <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
+    </div>
+  );
+}
 
 export default function Shop() {
   const { user } = useAuth();
