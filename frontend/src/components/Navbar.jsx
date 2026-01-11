@@ -53,6 +53,15 @@ export default function Navbar() {
 										🛍️ Shop
 									</Link>
 								)}
+								{/* Orders Link - For clients and vendors */}
+								{(user.role === 'client' || user.role === 'vendor' || user.role === 'admin') && (
+									<Link 
+										to="/orders" 
+										className="text-gray-700 hover:text-blue-600 font-medium transition bg-blue-100 px-3 py-1 rounded"
+									>
+										📋 Orders
+									</Link>
+								)}
 								{/* Products Link - Not for Sub-Admins */}
 								{user.role !== 'subadmin' && (
 									<Link 
