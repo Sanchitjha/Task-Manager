@@ -14,6 +14,8 @@ const adminRouter = require('./routes/admin');
 const productsRouter = require('./routes/products');
 const vendorRouter = require('./routes/vendor');
 const ordersRouter = require('./routes/orders');
+const subscriptionsRouter = require('./routes/subscriptions');
+const { initSubscriptionCron } = require('./lib/subscriptionCron');
 
 const app = express();
 
@@ -37,6 +39,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/vendor', vendorRouter);
 app.use('/api/orders', ordersRouter);
+app.use('/api/subscriptions', subscriptionsRouter);
 
 app.use((err, _req, res, _next) => {
 	const status = err.status || 500;
@@ -46,7 +49,11 @@ app.use((err, _req, res, _next) => {
 const port = process.env.PORT || 5000;
 connectMongo()
 	.then(() => {
-		app.listen(port, () => console.log(`API listening on ${port}`));
+		app.listen(port, () => {
+			console.log(`API listening on ${port}`);
+			// Initialize subscription cron jobs
+			initSubscriptionCron();
+		});
 	})
 	.catch((error) => {
 		console.error('Mongo connection failed', error);
