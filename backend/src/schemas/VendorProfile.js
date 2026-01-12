@@ -31,6 +31,12 @@ const vendorProfileSchema = new Schema(
       ifscCode: String,
       bankName: String
     },
+    bankDetails: {
+      accountName: String,
+      accountNumber: String,
+      bankName: String,
+      ifscCode: String
+    },
     walletBalance: { type: Number, default: 0 },
     
     // Statistics
