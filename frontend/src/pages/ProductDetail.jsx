@@ -296,10 +296,9 @@ export default function ProductDetail() {
                       </button>
                       <button
                         onClick={buyNow}
-                        disabled={!canAfford}
-                        className="w-full bg-orange-600 text-white py-3 rounded-lg font-medium hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                        className="w-full bg-orange-600 text-white py-3 rounded-lg font-medium hover:bg-orange-700 transition"
                       >
-                        Buy Now
+                        {!canAfford ? '🪙 Insufficient Coins - Buy Now' : 'Buy Now'}
                       </button>
                     </div>
                   </div>
