@@ -434,24 +434,19 @@ export default function Checkout() {
               {/* Place Order Button */}
               <button
                 onClick={placeOrder}
-                disabled={!canAfford || !isFormValid() || orderLoading}
-                className={`w-full py-3 rounded-lg font-medium transition ${
-                  canAfford && isFormValid() && !orderLoading
-                    ? 'bg-orange-600 text-white hover:bg-orange-700'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
+                className="w-full py-3 rounded-lg font-medium transition bg-orange-600 text-white hover:bg-orange-700"
               >
                 {orderLoading ? (
                   <div className="flex items-center justify-center space-x-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Placing Order...</span>
+                    <span>⏳ Placing Order...</span>
                   </div>
                 ) : !canAfford ? (
-                  'Insufficient Coins'
+                  '🪙 Place Order (Insufficient Coins)'
                 ) : !isFormValid() ? (
-                  'Please Fill Required Fields'
+                  '📝 Place Order (Fill Required Fields)'
                 ) : (
-                  'Place Order'
+                  '✅ Place Order'
                 )}
               </button>
 
