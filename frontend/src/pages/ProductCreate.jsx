@@ -93,7 +93,7 @@ export default function ProductCreate() {
 
     setLoading(true);
     try {
-      const payload = {
+      const productData = {
         title: form.title,
         description: form.description,
         originalPrice: Number(form.originalPrice),
@@ -104,8 +104,11 @@ export default function ProductCreate() {
         sku: form.sku,
         weight: form.weight,
         dimensions: form.dimensions,
-        tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-        isPuproductId = res.data.product._id;
+        tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : []
+      };
+
+      const res = await api.post('/products', productData);
+      const productId = res.data.product._id;
 
       if (images.length) {
         const formData = new FormData();
