@@ -89,10 +89,38 @@ export default function Admin() {
 					</div>
 				</button>
 
+				<button
+					onClick={() => navigate('/admin/subscriptions')}
+					className="bg-white rounded-lg shadow-md p-8 text-left hover:shadow-lg transition group"
+				>
+					<div className="flex items-center justify-between">
+						<div>
+							<h2 className="text-2xl font-semibold mb-2 group-hover:text-green-600">
+								💳 Subscriptions
+							</h2>
+							<p className="text-gray-600">
+								Manage product subscriptions and vendor payments
+							</p>
+						</div>
+						<div className="text-3xl group-hover:translate-x-2 transition-transform">
+							→
+						</div>
+					</div>
+				</button>
+			</div>
+
+			<div className="grid md:grid-cols-2 gap-6">
 				<div className="bg-white rounded-lg shadow-md p-8">
 					<h2 className="text-2xl font-semibold mb-2">👥 User Management</h2>
 					<p className="text-gray-600">
 						View and manage user accounts (Coming Soon)
+					</p>
+				</div>
+				
+				<div className="bg-white rounded-lg shadow-md p-8">
+					<h2 className="text-2xl font-semibold mb-2">⚙️ Settings</h2>
+					<p className="text-gray-600">
+						System settings and configurations (Coming Soon)
 					</p>
 				</div>
 			</div>
