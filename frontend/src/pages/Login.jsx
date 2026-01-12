@@ -166,15 +166,22 @@ export default function Login() {
 	};
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-brand-50 to-white flex items-center justify-center">
-			<div className="max-w-md w-full mx-4">
-				<div className="card">
+		<div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-accent-50 flex items-center justify-center p-4 relative overflow-hidden">
+			{/* Animated background circles */}
+			<div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-brand-300 to-accent-300 rounded-full blur-3xl opacity-20 animate-float"></div>
+			<div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-accent-300 to-brand-300 rounded-full blur-3xl opacity-20 animate-float" style={{ animationDelay: '2s' }}></div>
+			
+			<div className="max-w-md w-full mx-4 relative z-10 animate-scale-in">
+				<div className="card-glass shadow-2xl">
 					<div className="text-center mb-8">
-						<h1 className="text-3xl font-bold text-brand-800 mb-2">
-							{isLogin ? 'Welcome Back' : 
-							 currentStep === 'otp' ? 'Verify Email' : 'Create Account'}
+						<div className="text-5xl mb-4 animate-bounce-slow">⚡</div>
+						<h1 className="text-4xl font-extrabold mb-2">
+							<span className="text-gradient-hero">
+								{isLogin ? 'Welcome Back' : 
+								 currentStep === 'otp' ? 'Verify Email' : 'Create Account'}
+							</span>
 						</h1>
-						<p className="text-gray-600">
+						<p className="text-gray-600 text-lg">
 							{isLogin ? 'Sign in to your account' : 
 							 currentStep === 'otp' ? 'Enter the OTP sent to your email' : 'Join The MANAGER platform'}
 						</p>
