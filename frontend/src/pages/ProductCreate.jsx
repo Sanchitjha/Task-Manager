@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api, { productsAPI } from '../lib/api';
 
@@ -8,6 +9,7 @@ const CATEGORY_OPTIONS = [
 
 export default function ProductCreate() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     title: '', 
     description: '', 
@@ -60,6 +62,10 @@ export default function ProductCreate() {
       setError('Title and original price are required');
       return false;
     }
+    if (images.length === 0) {
+      setError('At least one product image is required');
+      return false;
+    }
     if (Number(form.originalPrice) <= 0) {
       setError('Original price must be greater than zero');
       return false;
@@ -99,35 +105,23 @@ export default function ProductCreate() {
         weight: form.weight,
         dimensions: form.dimensions,
         tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-        isPublished: !!form.isPublished
-      };
-
-      const res = await productsAPI.create(payload);
-      const id = res.data.product._id;
+        isPuproductId = res.data.product._id;
 
       if (images.length) {
         const formData = new FormData();
         images.forEach((f) => formData.append('images', f));
-        await api.post(`/products/${id}/images`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          onUploadProgress: (p) => {
-            // could show progress; kept minimal for now
-          }
+        await api.post(`/products/${productId}/images`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
         });
       }
 
-      setSuccess('Product created successfully');
-      setForm({ 
-        title: '', 
-        description: '', 
-        originalPrice: '', 
-        discountPercentage: '0',
-        coinConversionRate: '1',
-        stock: '', 
-        category: 'General', 
-        sku: '', 
-        weight: '', 
-        dimensions: '', 
+      setSuccess('Product created! Redirecting to subscription payment...');
+      
+      // Redirect to subscription payment page
+      setTimeout(() => {
+        navigate(`/subscription/payment/${productId}`);
+      }, 1500);
+      '', 
         tags: '', 
         isPublished: true 
       });
