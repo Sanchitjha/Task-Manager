@@ -28,6 +28,9 @@ import SellerInventory from './pages/SellerInventory';
 import SellerOrders from './pages/SellerOrders';
 import SellerReviews from './pages/SellerReviews';
 import SellerProfile from './pages/SellerProfile';
+import SellerAnalytics from './pages/SellerAnalytics';
+import SellerWallet from './pages/SellerWallet';
+import ProductEdit from './pages/ProductEdit';
 
 function App() {
 	return (
@@ -97,6 +100,26 @@ function App() {
 					<Route path="/seller/profile" element={
 						<ProtectedRoute>
 							<SellerProfile />
+						</ProtectedRoute>
+					} />
+					<Route path="/seller/analytics" element={
+						<ProtectedRoute>
+							<SellerAnalytics />
+						</ProtectedRoute>
+					} />
+					<Route path="/seller/wallet" element={
+						<ProtectedRoute>
+							<SellerWallet />
+						</ProtectedRoute>
+					} />
+					<Route path="/seller/products/:id/edit" element={
+						<ProtectedRoute>
+							<ProductEdit />
+						</ProtectedRoute>
+					} />
+					<Route path="/vendor/products/:id/edit" element={
+						<ProtectedRoute>
+							<ProductEdit />
 						</ProtectedRoute>
 					} />
 					
