@@ -12,15 +12,6 @@ export default function SellerWallet() {
     transactions: []
   });
   const [loading, setLoading] = useState(true);
-  const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [withdrawing, setWithdrawing] = useState(false);
-  const [bankDetails, setBankDetails] = useState({
-    accountName: '',
-    accountNumber: '',
-    bankName: '',
-    ifscCode: ''
-  });
-  const [showWithdrawForm, setShowWithdrawForm] = useState(false);
 
   useEffect(() => {
     loadWalletData();
@@ -31,58 +22,10 @@ export default function SellerWallet() {
       setLoading(true);
       const response = await api.get('/vendor/wallet');
       setWalletData(response.data);
-      if (response.data.bankDetails) {
-        setBankDetails(response.data.bankDetails);
-      }
     } catch (error) {
       console.error('Failed to load wallet:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleWithdraw = async () => {
-    const amount = parseFloat(withdrawAmount);
-    if (!amount || amount <= 0) {
-      alert('Please enter a valid amount');
-      return;
-    }
-    if (amount > walletData.balance) {
-      alert('Insufficient balance');
-      return;
-    }
-    if (amount < 100) {
-      alert('Minimum withdrawal amount is 100 coins');
-      return;
-    }
-    if (!bankDetails.accountNumber) {
-      alert('Please add your bank details first');
-      return;
-    }
-
-    try {
-      setWithdrawing(true);
-      await api.post('/vendor/wallet/withdraw', {
-        amount,
-        bankDetails
-      });
-      alert('Withdrawal request submitted successfully! It will be processed within 2-3 business days.');
-      setWithdrawAmount('');
-      setShowWithdrawForm(false);
-      loadWalletData();
-    } catch (error) {
-      alert(error.response?.data?.message || 'Failed to process withdrawal');
-    } finally {
-      setWithdrawing(false);
-    }
-  };
-
-  const saveBankDetails = async () => {
-    try {
-      await api.post('/vendor/wallet/bank-details', bankDetails);
-      alert('Bank details saved successfully!');
-    } catch (error) {
-      alert('Failed to save bank details');
     }
   };
 
@@ -99,7 +42,7 @@ export default function SellerWallet() {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">💰 Seller Wallet</h1>
-          <p className="text-gray-600 mt-1">Manage your earnings and withdrawals</p>
+          <p className="text-gray-600 mt-1">Track your earnings from sales</p>
         </div>
         <Link
           to="/seller/dashboard"
@@ -109,17 +52,23 @@ export default function SellerWallet() {
         </Link>
       </div>
 
+      {/* Info Banner */}
+      <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h3 className="font-bold text-blue-900 mb-2">💡 About Coin Earnings</h3>
+        <p className="text-sm text-blue-800">
+          Coins earned from sales represent customer discounts. These coins stay in the system to provide value to your customers. 
+          Track your sales performance and customer satisfaction through your earnings metrics.
+        </p>
+      </div>
+
       {/* Balance Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
-          <div className="text-sm mb-2 opacity-90">Available Balance</div>
+          <div className="text-sm mb-2 opacity-90">Total Coins Earned</div>
           <div className="text-4xl font-bold">{walletData.balance} 🪙</div>
-          <button
-            onClick={() => setShowWithdrawForm(!showWithdrawForm)}
-            className="mt-4 px-4 py-2 bg-white text-green-600 rounded hover:bg-green-50 font-medium w-full"
-          >
-            Withdraw Funds
-          </button>
+          <div className="mt-4 text-sm opacity-90">
+            From completed sales
+          </div>
         </div>
         <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-lg p-6 text-white">
           <div className="text-sm mb-2 opacity-90">Pending Earnings</div>
@@ -129,84 +78,13 @@ export default function SellerWallet() {
           </div>
         </div>
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
-          <div className="text-sm mb-2 opacity-90">Total Earnings</div>
+          <div className="text-sm mb-2 opacity-90">Lifetime Earnings</div>
           <div className="text-4xl font-bold">{walletData.totalEarnings} 🪙</div>
           <div className="mt-4 text-sm opacity-90">
-            All-time earnings
+            All-time sales revenue
           </div>
         </div>
       </div>
-
-      {/* Withdraw Form */}
-      {showWithdrawForm && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-bold mb-4">💸 Withdraw Funds</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <input
-              type="text"
-              placeholder="Account Holder Name"
-              value={bankDetails.accountName}
-              onChange={(e) => setBankDetails({ ...bankDetails, accountName: e.target.value })}
-              className="border border-gray-300 rounded px-3 py-2"
-            />
-            <input
-              type="text"
-              placeholder="Account Number"
-              value={bankDetails.accountNumber}
-              onChange={(e) => setBankDetails({ ...bankDetails, accountNumber: e.target.value })}
-              className="border border-gray-300 rounded px-3 py-2"
-            />
-            <input
-              type="text"
-              placeholder="Bank Name"
-              value={bankDetails.bankName}
-              onChange={(e) => setBankDetails({ ...bankDetails, bankName: e.target.value })}
-              className="border border-gray-300 rounded px-3 py-2"
-            />
-            <input
-              type="text"
-              placeholder="IFSC Code"
-              value={bankDetails.ifscCode}
-              onChange={(e) => setBankDetails({ ...bankDetails, ifscCode: e.target.value })}
-              className="border border-gray-300 rounded px-3 py-2"
-            />
-          </div>
-          <button
-            onClick={saveBankDetails}
-            className="mb-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-          >
-            Save Bank Details
-          </button>
-          <div className="border-t pt-4">
-            <label className="block text-sm font-medium mb-2">
-              Withdrawal Amount (Min: 100 coins)
-            </label>
-            <input
-              type="number"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-              placeholder="Enter amount"
-              className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
-              min="100"
-              max={walletData.balance}
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleWithdraw}
-                className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
-              >
-                {withdrawing ? 'Processing...' : 'Submit Withdrawal Request'}
-              </button>
-              <button
-                onClick={() => setShowWithdrawForm(false)}
-                className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Transaction History */}
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -231,14 +109,14 @@ export default function SellerWallet() {
                     </td>
                     <td className="py-3">
                       <span className={`px-2 py-1 rounded text-xs ${
-                        transaction.type === 'credit' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        transaction.type === 'sale' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                       }`}>
                         {transaction.type}
                       </span>
                     </td>
                     <td className="py-3">{transaction.description}</td>
                     <td className="py-3 text-right font-semibold">
-                      {transaction.type === 'credit' ? '+' : '-'}{transaction.amount} 🪙
+                      +{transaction.amount} 🪙
                     </td>
                     <td className="py-3">
                       <span className={`px-2 py-1 rounded text-xs ${
@@ -261,15 +139,26 @@ export default function SellerWallet() {
         )}
       </div>
 
-      {/* Info Box */}
-      <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="font-bold text-blue-900 mb-2">💡 Withdrawal Information</h3>
-        <ul className="text-sm text-blue-800 space-y-1">
-          <li>• Minimum withdrawal amount: 100 coins</li>
-          <li>• Withdrawals are processed within 2-3 business days</li>
-          <li>• Make sure your bank details are correct before submitting</li>
-          <li>• Earnings from orders are added after delivery confirmation</li>
-        </ul>
+      {/* Quick Actions */}
+      <div className="mt-8 flex gap-4 justify-center">
+        <Link
+          to="/seller/inventory"
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          📦 Manage Inventory
+        </Link>
+        <Link
+          to="/seller/orders"
+          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+        >
+          📋 View Orders
+        </Link>
+        <Link
+          to="/seller/analytics"
+          className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+        >
+          📊 View Analytics
+        </Link>
       </div>
     </div>
   );
