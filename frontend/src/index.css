@@ -3,9 +3,159 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: light; }
+:root { 
+  color-scheme: light;
+  --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-2: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+  --gradient-3: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
 
-body { @apply bg-brand-50 text-gray-900; }
+* {
+  scroll-behavior: smooth;
+}
 
-.btn-primary { @apply inline-flex items-center gap-2 rounded-md bg-brand-600 text-white px-4 py-2 hover:bg-blue-600 transition; }
-.card { @apply bg-white shadow-sm rounded-xl p-5 border border-gray-100; }
+body { 
+  @apply bg-gradient-to-br from-brand-50 via-white to-accent-50 text-gray-900;
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Enhanced Button Styles */
+.btn-primary { 
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-700 text-white px-6 py-3 font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 hover:from-brand-700 hover:to-brand-800;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-white text-brand-600 px-6 py-3 font-semibold border-2 border-brand-600 hover:bg-brand-50 hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg;
+}
+
+.btn-accent {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent-500 to-accent-600 text-white px-6 py-3 font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 hover:from-accent-600 hover:to-accent-700;
+}
+
+.btn-success {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300;
+}
+
+.btn-danger {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300;
+}
+
+/* Enhanced Card Styles */
+.card { 
+  @apply bg-white/90 backdrop-blur-sm shadow-card rounded-2xl p-6 border border-gray-100 hover:shadow-card-hover transition-all duration-300 hover:scale-[1.02];
+}
+
+.card-gradient {
+  @apply bg-gradient-to-br from-white to-brand-50 shadow-card rounded-2xl p-6 border border-brand-100 hover:shadow-card-hover transition-all duration-300 hover:scale-[1.02];
+}
+
+.card-glass {
+  @apply bg-white/70 backdrop-blur-md shadow-xl rounded-2xl p-6 border border-white/20 hover:shadow-2xl transition-all duration-300;
+}
+
+/* Input Styles */
+.input-field {
+  @apply w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-100 transition-all duration-300 outline-none bg-white;
+}
+
+.input-error {
+  @apply border-red-500 focus:border-red-500 focus:ring-red-100;
+}
+
+/* Badge Styles */
+.badge {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold;
+}
+
+.badge-primary {
+  @apply badge bg-brand-100 text-brand-700;
+}
+
+.badge-success {
+  @apply badge bg-green-100 text-green-700;
+}
+
+.badge-warning {
+  @apply badge bg-yellow-100 text-yellow-700;
+}
+
+.badge-danger {
+  @apply badge bg-red-100 text-red-700;
+}
+
+.badge-accent {
+  @apply badge bg-accent-100 text-accent-700;
+}
+
+/* Gradient Text */
+.text-gradient {
+  @apply bg-gradient-to-r from-brand-600 to-accent-600 bg-clip-text text-transparent;
+}
+
+.text-gradient-hero {
+  @apply bg-gradient-to-r from-brand-500 via-accent-500 to-pink-500 bg-clip-text text-transparent;
+}
+
+/* Loading Animations */
+.loading-spinner {
+  @apply animate-spin rounded-full border-4 border-gray-200 border-t-brand-600;
+}
+
+/* Shimmer Effect */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Hover Effects */
+.hover-lift {
+  @apply transition-all duration-300 hover:transform hover:-translate-y-2 hover:shadow-xl;
+}
+
+.hover-glow {
+  @apply transition-all duration-300 hover:shadow-glow;
+}
+
+/* Page Animations */
+.page-enter {
+  @apply animate-fade-in;
+}
+
+.page-slide-up {
+  @apply animate-slide-up;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gradient-to-b from-brand-400 to-brand-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply from-brand-500 to-brand-700;
+}
+
+/* Selection Color */
+::selection {
+  @apply bg-brand-200 text-brand-900;
+}
+
+/* Focus Visible */
+*:focus-visible {
+  @apply outline-none ring-4 ring-brand-200 ring-offset-2;
+}
