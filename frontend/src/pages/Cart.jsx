@@ -249,14 +249,9 @@ export default function Cart() {
               {/* Checkout Button */}
               <button
                 onClick={() => navigate('/checkout')}
-                disabled={!canAfford}
-                className={`w-full py-3 rounded-lg font-medium transition ${
-                  canAfford
-                    ? 'bg-orange-600 text-white hover:bg-orange-700'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
+                className="w-full py-3 rounded-lg font-medium transition bg-orange-600 text-white hover:bg-orange-700"
               >
-                {canAfford ? 'Proceed to Checkout' : 'Insufficient Coins'}
+                {canAfford ? '✅ Proceed to Checkout' : '🪙 Proceed to Checkout (Need More Coins)'}
               </button>
 
               {!canAfford && (
