@@ -1,6 +1,10 @@
 # Wallet Transaction Flow Documentation
 
-## ✅ Transaction System is ACTIVE and WORKING
+## ✅ Transaction System - ACTIVE and WORKING
+
+### 🎯 Purpose: Customer Discount System
+
+**Important:** Coins are used exclusively to provide discounts to customers. Vendors earn coins as a metric of sales performance, but **cannot withdraw them as real money**. The system tracks vendor earnings for analytics and performance monitoring only.
 
 ### 🔄 How Coin Transfer Works
 
@@ -63,27 +67,18 @@ The Transaction schema now supports:
 #### Available Endpoints:
 
 1. **GET `/api/vendor/wallet`**
-   - Returns current balance
+   - Returns current balance (coins earned from sales)
    - Shows pending earnings (orders in processing)
    - Lists total lifetime earnings
-   - Displays transaction history
-   - Includes saved bank details
+   - Displays transaction history (sales and refunds)
 
-2. **POST `/api/vendor/wallet/withdraw`**
-   - Minimum: 100 coins
-   - Requires bank details
-   - Creates withdrawal transaction (pending status)
-   - Deducts coins from vendor balance
-
-3. **POST `/api/vendor/wallet/bank-details`**
-   - Saves bank account information
-   - Required for withdrawals
-
-4. **GET `/api/vendor/analytics`**
+2. **GET `/api/vendor/analytics`**
    - Time-based analytics (week/month/year)
    - Total revenue in coins
    - Top-selling products
    - Recent orders summary
+
+**Note:** Withdrawal functionality has been removed. Coins serve as a performance metric and customer discount mechanism only.
 
 ### 5. Frontend Pages
 
@@ -93,11 +88,13 @@ The Transaction schema now supports:
 - Redeem coins to wallet balance (100 coins = ₹1)
 
 #### Vendor Wallet (`/seller/wallet`)
-- Shows available balance
+- Shows earned coins from sales (performance metric)
 - Displays pending earnings from processing orders
 - Shows total lifetime earnings
-- Withdrawal system with bank details
-- Complete transaction history
+- Complete transaction history (sales and refunds)
+- Analytics links for detailed business insights
+
+**Note:** Vendors track earnings but cannot withdraw. Coins remain in the system to provide customer discounts.
 
 #### Vendor Analytics (`/seller/analytics`)
 - Revenue tracking
@@ -168,14 +165,20 @@ Final State:
 - ❌ Database error → Full rollback, no partial transactions
 - ❌ Invalid order data → Validation error, no processing
 
-### 10. Future Enhancements
+### 10. System Design Philosophy
 
-Possible improvements:
-- [ ] Commission system (platform fee)
-- [ ] Escrow for disputed orders
-- [ ] Automated vendor payouts
-- [ ] Multi-currency support
-- [ ] Loyalty rewards/cashback
+**Coin Economy:**
+- Clients earn coins by watching videos
+- Clients spend coins to get discounts on products
+- Vendors receive coins as a sales performance metric
+- Coins stay in the system to maintain the discount economy
+- Vendors benefit from increased sales volume due to coin-based discounts
+
+**Why No Vendor Withdrawals:**
+- Coins are a customer loyalty/discount mechanism, not real currency
+- Vendors earn regular revenue from product sales (set in prices)
+- Coin system encourages customer engagement and repeat purchases
+- Keeps the discount ecosystem sustainable
 
 ---
 
@@ -184,10 +187,11 @@ Possible improvements:
 **The wallet transaction system is FULLY FUNCTIONAL:**
 
 ✅ Coins transfer from client to vendor on purchase
-✅ Both parties see transaction records
+✅ Both parties see transaction records  
 ✅ Atomic operations ensure data consistency
 ✅ Complete audit trail maintained
-✅ Vendor can withdraw earnings
-✅ Analytics track all revenue
+✅ Vendor earnings tracked for analytics
+✅ **Coins provide customer discounts, not withdrawable cash**
+✅ System encourages customer engagement through coin-earning
 
-**All transactions are logged and traceable in the database.**
+**Purpose:** Create a sustainable discount ecosystem where customers earn and spend coins, vendors track performance, and everyone benefits from increased engagement and sales.
