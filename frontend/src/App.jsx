@@ -31,6 +31,9 @@ import SellerProfile from './pages/SellerProfile';
 import SellerAnalytics from './pages/SellerAnalytics';
 import SellerWallet from './pages/SellerWallet';
 import ProductEdit from './pages/ProductEdit';
+import ProductSubscriptionPayment from './pages/ProductSubscriptionPayment';
+import AdminSubscriptions from './pages/AdminSubscriptions';
+import VendorSubscriptions from './pages/VendorSubscriptions';
 
 function App() {
 	return (
@@ -102,6 +105,11 @@ function App() {
 							<SellerProfile />
 						</ProtectedRoute>
 					} />
+					<Route path="/seller/subscriptions" element={
+						<ProtectedRoute>
+							<VendorSubscriptions />
+						</ProtectedRoute>
+					} />
 					<Route path="/seller/analytics" element={
 						<ProtectedRoute>
 							<SellerAnalytics />
@@ -120,6 +128,16 @@ function App() {
 					<Route path="/vendor/products/:id/edit" element={
 						<ProtectedRoute>
 							<ProductEdit />
+						</ProtectedRoute>
+					} />
+					<Route path="/subscription/payment/:productId" element={
+						<ProtectedRoute>
+							<ProductSubscriptionPayment />
+						</ProtectedRoute>
+					} />
+					<Route path="/admin/subscriptions" element={
+						<ProtectedRoute adminOnly>
+							<AdminSubscriptions />
 						</ProtectedRoute>
 					} />
 					
