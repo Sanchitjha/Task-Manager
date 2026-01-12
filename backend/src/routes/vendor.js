@@ -3,6 +3,8 @@ const { VendorProfile } = require('../schemas/VendorProfile');
 const { Order } = require('../schemas/Order');
 const { VendorReview } = require('../schemas/VendorReview');
 const { Product } = require('../schemas/Product');
+const { Transaction } = require('../schemas/Transaction');
+const { User } = require('../schemas/User');
 const { auth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -199,6 +201,237 @@ router.patch('/orders/:id/status', auth, async (req, res, next) => {
 
     await order.save();
     res.json({ success: true, order });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ===== WALLET ROUTES =====
+
+// Get vendor wallet data
+router.get('/wallet', auth, async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (user.role !== 'vendor' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Vendor access required' });
+    }
+
+    // Get current balance from user
+    const vendor = await User.findById(user._id);
+    const balance = vendor.coinsBalance || 0;
+
+    // Get pending earnings (orders that are confirmed but not yet delivered)
+    const pendingOrders = await Order.find({
+      vendor: user._id,
+      orderStatus: { $in: ['confirmed', 'processing', 'shipped'] },
+      paymentStatus: 'paid'
+    });
+    const pendingEarnings = pendingOrders.reduce((sum, order) => sum + (order.totalCoinsUsed || 0), 0);
+
+    // Get total earnings (all completed transactions)
+    const saleTransactions = await Transaction.find({
+      userId: user._id,
+      type: 'sale',
+      status: 'completed'
+    });
+    const totalEarnings = saleTransactions.reduce((sum, tx) => sum + tx.amount, 0);
+
+    // Get recent transactions
+    const transactions = await Transaction.find({
+      userId: user._id,
+      type: { $in: ['sale', 'withdrawal', 'refund'] }
+    })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean();
+
+    // Get bank details from vendor profile
+    const profile = await VendorProfile.findOne({ user: user._id });
+    const bankDetails = profile?.bankDetails || null;
+
+    res.json({
+      success: true,
+      balance,
+      pendingEarnings,
+      totalEarnings,
+      transactions,
+      bankDetails
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Submit withdrawal request
+router.post('/wallet/withdraw', auth, async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (user.role !== 'vendor' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Vendor access required' });
+    }
+
+    const { amount, bankDetails } = req.body;
+    
+    if (!amount || amount < 100) {
+      return res.status(400).json({ message: 'Minimum withdrawal amount is 100 coins' });
+    }
+
+    const vendor = await User.findById(user._id);
+    if (vendor.coinsBalance < amount) {
+      return res.status(400).json({ message: 'Insufficient balance' });
+    }
+
+    if (!bankDetails || !bankDetails.accountNumber) {
+      return res.status(400).json({ message: 'Bank details are required' });
+    }
+
+    // Deduct coins from balance
+    vendor.coinsBalance -= amount;
+    await vendor.save();
+
+    // Create withdrawal transaction
+    await Transaction.create({
+      userId: user._id,
+      type: 'withdrawal',
+      amount: -amount,
+      description: `Withdrawal request for ${amount} coins`,
+      status: 'pending',
+      metadata: {
+        bankDetails
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Withdrawal request submitted successfully',
+      newBalance: vendor.coinsBalance
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Save bank details
+router.post('/wallet/bank-details', auth, async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (user.role !== 'vendor' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Vendor access required' });
+    }
+
+    const { accountName, accountNumber, bankName, ifscCode } = req.body;
+
+    let profile = await VendorProfile.findOne({ user: user._id });
+    if (!profile) {
+      profile = new VendorProfile({
+        user: user._id,
+        storeName: user.name + "'s Store"
+      });
+    }
+
+    profile.bankDetails = {
+      accountName,
+      accountNumber,
+      bankName,
+      ifscCode
+    };
+
+    await profile.save();
+
+    res.json({ success: true, message: 'Bank details saved successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ===== ANALYTICS ROUTES =====
+
+// Get vendor analytics
+router.get('/analytics', auth, async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (user.role !== 'vendor' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Vendor access required' });
+    }
+
+    const range = req.query.range || 'week'; // week, month, year
+    
+    // Calculate date range
+    const now = new Date();
+    let startDate = new Date();
+    if (range === 'week') {
+      startDate.setDate(now.getDate() - 7);
+    } else if (range === 'month') {
+      startDate.setMonth(now.getMonth() - 1);
+    } else if (range === 'year') {
+      startDate.setFullYear(now.getFullYear() - 1);
+    }
+
+    // Get orders in range
+    const orders = await Order.find({
+      vendor: user._id,
+      createdAt: { $gte: startDate },
+      paymentStatus: 'paid'
+    }).populate('items.product', 'title');
+
+    const totalRevenue = orders.reduce((sum, order) => sum + (order.totalCoinsUsed || 0), 0);
+    const totalOrders = orders.length;
+
+    // Get products
+    const products = await Product.find({ vendor: user._id });
+    const totalProducts = products.length;
+
+    // Get reviews
+    const reviews = await VendorReview.find({ vendor: user._id });
+    const averageRating = reviews.length > 0 
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length 
+      : 0;
+
+    // Calculate top products
+    const productSales = {};
+    orders.forEach(order => {
+      order.items.forEach(item => {
+        const productId = item.product?._id?.toString() || item.product?.toString();
+        if (!productSales[productId]) {
+          productSales[productId] = {
+            _id: productId,
+            name: item.productSnapshot?.title || 'Unknown',
+            salesCount: 0,
+            revenue: 0
+          };
+        }
+        productSales[productId].salesCount += item.quantity;
+        productSales[productId].revenue += item.totalCoinsPaid || 0;
+      });
+    });
+
+    const topProducts = Object.values(productSales)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+
+    // Recent orders
+    const recentOrders = orders
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 10)
+      .map(order => ({
+        _id: order._id,
+        customerName: order.shippingAddress?.fullName || 'Unknown',
+        itemCount: order.items.length,
+        total: order.totalCoinsUsed,
+        status: order.orderStatus,
+        createdAt: order.createdAt
+      }));
+
+    res.json({
+      success: true,
+      totalRevenue,
+      totalOrders,
+      totalProducts,
+      averageRating,
+      topProducts,
+      recentOrders,
+      salesTrend: [] // Could be implemented for chart data
+    });
   } catch (error) {
     next(error);
   }
