@@ -256,15 +256,10 @@ export default function Shop() {
                     </div>
                     <button
                       onClick={handleCheckout}
-                      disabled={isCheckingOut || userBalance < getCartCoinTotal()}
-                      className={`w-full mt-3 py-2 px-4 rounded ${
-                        userBalance >= getCartCoinTotal() && !isCheckingOut
-                          ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      }`}
+                      className="w-full mt-3 py-2 px-4 rounded bg-orange-500 hover:bg-orange-600 text-white"
                     >
-                      {isCheckingOut ? 'Processing...' : 
-                       userBalance < getCartCoinTotal() ? 'Insufficient Coins' : 'Checkout'}
+                      {isCheckingOut ? '⏳ Processing...' : 
+                       userBalance < getCartCoinTotal() ? '🪙 Checkout (Need More Coins)' : '✅ Checkout'}
                     </button>
                   </div>
                 </div>
