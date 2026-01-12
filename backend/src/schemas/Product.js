@@ -9,11 +9,17 @@ const productSchema = new Schema(
     images: [{ type: String }], // Stored as upload paths like /uploads/products/...
     vendor: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     category: { type: String, default: 'general' },
-    isPublished: { type: Boolean, default: true },
+    isPublished: { type: Boolean, default: false }, // Changed to false - requires subscription payment
     sku: { type: String, default: null },
     weight: { type: String, default: null },
     dimensions: { type: String, default: null },
-    tags: [{ type: String }]
+    tags: [{ type: String }],
+    
+    // Subscription Management
+    requiresSubscription: { type: Boolean, default: true },
+    currentSubscription: { type: Schema.Types.ObjectId, ref: 'ProductSubscription' },
+    subscriptionExpiry: { type: Date },
+    subscriptionHistory: [{ type: Schema.Types.ObjectId, ref: 'ProductSubscription' }]
   },
   { timestamps: true }
 );
