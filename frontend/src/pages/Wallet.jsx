@@ -180,10 +180,9 @@ export default function Wallet() {
 					</button>
 					<button
 						onClick={() => setShowRedeemModal(true)}
-						disabled={coinsBalance < 100}
-						className="px-6 py-3 bg-green-500 text-white rounded-md hover:bg-green-600 transition font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+						className="px-6 py-3 bg-green-500 text-white rounded-md hover:bg-green-600 transition font-medium"
 					>
-						💰 Redeem Coins
+						{coinsBalance < 100 ? '🪙 Redeem Coins (Need 100 Min)' : '💰 Redeem Coins'}
 					</button>
 				</div>
 				<p className="text-sm text-gray-500 mt-3 text-center">
