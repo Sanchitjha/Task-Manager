@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: the-manager-api
+    env: node
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        value: mongodb+srv://showcase:showcasejha@cluster0.stusub5.mongodb.net/taskmanager?retryWrites=true&w=majority&appName=Cluster0
+      - key: JWT_SECRET
+        value: cabcdefghkdkkd
+      - key: CORS_ORIGIN
+        value: https://task-manager-rouge-eta.vercel.app
