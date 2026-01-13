@@ -124,7 +124,15 @@ export default function ProductCreate() {
       setTimeout(() => {
         navigate(`/subscription/payment/${productId}`);
       }, 1500);
-      '', 
+      
+      setFormData({
+        title: '',
+        description: '',
+        originalPrice: '',
+        discountPercentage: '',
+        finalPrice: '',
+        coinPrice: '',
+        category: '',
         tags: '', 
         isPublished: true 
       });
