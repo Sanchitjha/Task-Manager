@@ -353,7 +353,7 @@ export default function AdminVideos() {
 										<button
 											type="button"
 											onClick={detectVideoInfo}
-											className=\"px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600\"
+											className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
 										>
 											{detecting ? '🔍 Detecting...' : formData.url ? '🔍 Detect Video Info' : '⚠️ Enter URL First'}
 										</button>
