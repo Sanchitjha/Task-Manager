@@ -9,117 +9,15 @@ export default function Login() {
 		password: '',
 		name: '',
 		phone: '',
-		otp: '',
 		role: 'client'
 	});
 	const [isLogin, setIsLogin] = useState(true); // Changed to true so login form shows by default
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
-	const [currentStep, setCurrentStep] = useState('register'); // 'register', 'otp', 'complete'
-	const [otpSent, setOtpSent] = useState(false);
-	const [emailAddress, setEmailAddress] = useState('');
 
 	const { login, register } = useAuth();
 	const navigate = useNavigate();
-
-	// Send Email OTP for verification
-	const sendEmailOTP = async (e) => {
-		e.preventDefault();
-		if (!formData.email.trim()) {
-			setError('Email address is required');
-			return;
-		}
-
-		setLoading(true);
-		setError('');
-		setSuccess('');
-
-		try {
-			console.log('🔍 Sending OTP to:', formData.email);
-			console.log('🌐 API URL:', `${api.defaults.baseURL}/auth/send-email-otp`);
-			
-			const response = await api.post('/auth/send-email-otp', {
-				email: formData.email
-			});
-
-			console.log('✅ OTP Response:', response.data);
-
-			if (response.data.success) {
-				let successMessage = 'OTP sent successfully! Check your email inbox.';
-				
-				// Show OTP in development mode
-				if (response.data.developmentOTP) {
-					successMessage = `Development Mode: Your OTP is ${response.data.developmentOTP}`;
-					
-					// Auto-fill OTP in development for easier testing
-					setFormData({ ...formData, otp: response.data.developmentOTP });
-				}
-				
-				setSuccess(successMessage);
-				setOtpSent(true);
-				setCurrentStep('otp');
-				setEmailAddress(response.data.email);
-			}
-		} catch (error) {
-			console.error('❌ OTP Error:', error);
-			console.error('❌ Error Response:', error.response?.data);
-			setError(error.response?.data?.message || 'Failed to send OTP');
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	// Verify Email OTP and complete registration
-	const verifyEmailOTPAndRegister = async (e) => {
-		e.preventDefault();
-		if (!formData.otp || !formData.name || !formData.password) {
-			setError('OTP, name, and password are required');
-			return;
-		}
-
-		setLoading(true);
-		setError('');
-
-		try {
-			console.log('🔍 Verifying OTP:', {
-				email: emailAddress,
-				otp: formData.otp,
-				name: formData.name,
-				phone: formData.phone,
-				role: formData.role
-			});
-			
-			const response = await api.post('/auth/verify-email-otp-register', {
-				email: emailAddress,
-				otp: formData.otp,
-				name: formData.name,
-				password: formData.password,
-				phone: formData.phone || null, // Optional phone number
-				role: formData.role
-			});
-
-			console.log('✅ Verification Response:', response.data);
-
-			if (response.data.success) {
-				setSuccess('Registration completed successfully! Email verified. You can now login.');
-				setTimeout(() => {
-					setIsLogin(true);
-					setCurrentStep('register');
-					setOtpSent(false);
-					setFormData({ email: '', password: '', name: '', phone: '', otp: '', role: 'client' });
-					setError('');
-					setSuccess('');
-				}, 2000);
-			}
-		} catch (error) {
-			console.error('❌ Verification Error:', error);
-			console.error('❌ Error Response:', error.response?.data);
-			setError(error.response?.data?.message || 'Failed to verify OTP');
-		} finally {
-			setLoading(false);
-		}
-	};
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
@@ -177,13 +75,11 @@ export default function Login() {
 						<div className="text-5xl mb-4 animate-bounce-slow">⚡</div>
 						<h1 className="text-4xl font-extrabold mb-2">
 							<span className="text-gradient-hero">
-								{isLogin ? 'Welcome Back' : 
-								 currentStep === 'otp' ? 'Verify Email' : 'Create Account'}
+								{isLogin ? 'Welcome Back' : 'Create Account'}
 							</span>
 						</h1>
 						<p className="text-gray-600 text-lg">
-							{isLogin ? 'Sign in to your account' : 
-							 currentStep === 'otp' ? 'Enter the OTP sent to your email' : 'Join The MANAGER platform'}
+							{isLogin ? 'Sign in to your account' : 'Join The MANAGER platform'}
 						</p>
 					</div>
 
@@ -228,9 +124,9 @@ export default function Login() {
 						</form>
 					)}
 
-					{/* Registration Step 1: Email Address */}
-					{!isLogin && currentStep === 'register' && (
-						<form onSubmit={sendEmailOTP} className="space-y-6">
+					{/* Registration Form */}
+					{!isLogin && (
+						<form onSubmit={handleSubmit} className="space-y-6">
 							<div>
 								<label className="block text-sm font-medium mb-2">
 									Email Address <span className="text-red-500">*</span>
@@ -244,68 +140,6 @@ export default function Login() {
 									required
 									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
 								/>
-								<p className="text-xs text-gray-500 mt-1">
-									We'll send a verification OTP to your email address
-								</p>
-							</div>
-
-							{error && (
-								<div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-md text-sm">
-									{error}
-								</div>
-							)}
-
-							{success && (
-								<div className="bg-green-50 border border-green-200 text-green-600 px-3 py-2 rounded-md text-sm">
-									{success}
-								</div>
-							)}
-
-							<button
-								type="submit"
-								disabled={loading}
-								className="btn-primary w-full"
-							>
-								{loading ? 'Sending OTP...' : 'Send Email OTP'}
-							</button>
-						</form>
-					)}
-
-					{/* Registration Step 2: Email OTP Verification */}
-					{!isLogin && currentStep === 'otp' && (
-						<form onSubmit={verifyEmailOTPAndRegister} className="space-y-6">
-							{/* Development OTP Display */}
-							{formData.otp && (
-								<div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-									<div className="flex items-center">
-										<svg className="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-											<path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-										</svg>
-										<div>
-											<p className="text-yellow-800 font-medium">Development Mode</p>
-											<p className="text-yellow-700 text-sm">OTP auto-filled: <strong>{formData.otp}</strong></p>
-										</div>
-									</div>
-								</div>
-							)}
-
-							<div>
-								<label className="block text-sm font-medium mb-2">
-									Enter Email OTP <span className="text-red-500">*</span>
-								</label>
-								<input
-									type="text"
-									name="otp"
-									value={formData.otp}
-									onChange={handleChange}
-									placeholder="Enter 6-digit OTP"
-									maxLength={6}
-									required
-									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600 text-center text-xl tracking-wider"
-								/>
-								<p className="text-xs text-gray-500 mt-1">
-									OTP sent to: <strong>{emailAddress}</strong>
-								</p>
 							</div>
 
 							<div>
@@ -348,9 +182,6 @@ export default function Login() {
 									placeholder="+1234567890 or 1234567890"
 									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
 								/>
-								<p className="text-xs text-gray-500 mt-1">
-									Phone number can be added to your profile (no verification required)
-								</p>
 							</div>
 
 							<div>
@@ -380,27 +211,13 @@ export default function Login() {
 								</div>
 							)}
 
-							<div className="flex space-x-3">
-								<button
-									type="button"
-									onClick={() => {
-										setCurrentStep('register');
-										setOtpSent(false);
-										setError('');
-										setSuccess('');
-									}}
-									className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-								>
-									← Back
-								</button>
-								<button
-									type="submit"
-									disabled={loading}
-									className="flex-1 btn-primary"
-								>
-									{loading ? 'Verifying...' : 'Complete Registration'}
-								</button>
-							</div>
+							<button
+								type="submit"
+								disabled={loading}
+								className="btn-primary w-full"
+							>
+								{loading ? 'Creating Account...' : 'Create Account'}
+							</button>
 						</form>
 					)}
 
@@ -409,11 +226,9 @@ export default function Login() {
 							type="button"
 							onClick={() => {
 								setIsLogin(!isLogin);
-								setCurrentStep('register');
-								setOtpSent(false);
 								setError('');
 								setSuccess('');
-								setFormData({ email: '', password: '', name: '', phone: '', otp: '', role: 'client' });
+								setFormData({ email: '', password: '', name: '', phone: '', role: 'client' });
 							}}
 							className="text-brand-600 hover:underline"
 						>

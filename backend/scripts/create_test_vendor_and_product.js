@@ -4,32 +4,20 @@
     const email = 'vendor_test@example.com';
     const password = 'TestPass123!';
     const name = 'Test Vendor';
-    // send email otp
-    let res = await fetch(`${base}/auth/send-email-otp`,{
+    
+    // Register vendor directly
+    let res = await fetch(`${base}/auth/register`,{
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ email, password, name, role: 'vendor' })
     });
-    const sendJson = await res.json();
-    console.log('send-email-otp response:', sendJson);
-    const otp = sendJson.developmentOTP || sendJson.otp || null;
-    if(!otp){
-      console.error('No development OTP returned. Aborting.');
+    const registerJson = await res.json();
+    console.log('register response:', registerJson);
+    if(!registerJson.id){
+      console.error('Registration failed', registerJson);
       process.exit(1);
     }
-    console.log('Using OTP:', otp);
-    // verify and register
-    res = await fetch(`${base}/auth/verify-email-otp-register`,{
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, otp, name, password, phone: '+911234567890', role: 'vendor' })
-    });
-    const verifyJson = await res.json();
-    console.log('verify response:', verifyJson);
-    if(!verifyJson.success){
-      console.error('Verify failed', verifyJson);
-      process.exit(1);
-    }
+    
     // login
     res = await fetch(`${base}/auth/login`,{
       method: 'POST',

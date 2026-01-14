@@ -25,11 +25,6 @@ const userSchema = new Schema(
 		coinsBalance: { type: Number, default: 0 }, // Earned coins (not yet redeemed)
 		walletBalance: { type: Number, default: 0 }, // Redeemed money
 		
-		// Email OTP verification fields
-		emailOtpCode: { type: String }, // Current email OTP code
-		emailOtpExpiry: { type: Date }, // Email OTP expiration time
-		emailOtpAttempts: { type: Number, default: 0 }, // Number of email OTP attempts
-		
 		// Sub-admin specific fields
 		isApproved: { type: Boolean, default: true }, // false for sub-admins until approved
 		approvedBy: { type: Schema.Types.ObjectId, ref: 'User' }, // Admin who approved
