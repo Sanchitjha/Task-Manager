@@ -75,6 +75,8 @@ api.updateProfile = async (userId, data) => {
 export const authAPI = {
     login: (email, password) => api.post('/auth/login', { email, password }),
     register: (name, email, password, role) => api.post('/auth/register', { name, email, password, role }),
+    sendEmailOTP: (email) => api.post('/auth/send-email-otp', { email }),
+    verifyEmailOTP: (email, otpCode, name, password) => api.post('/auth/verify-email-otp', { email, otpCode, name, password }),
 };
 
 

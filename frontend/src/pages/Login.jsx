@@ -25,32 +25,67 @@ export default function Login() {
 		setError('');
 
 		try {
-			let result;
 			if (isLogin) {
-				console.log('Submitting login with:', formData.email); // Debug
-				result = await login(formData.email, formData.password);
-				console.log('Login result:', result); // Debug
-			} else {
-				result = await register(formData.name, formData.email, formData.password, formData.role);
-			}
-
-			if (result.success) {
-				// Special handling for sub-admin pending approval
-				if (result.pendingApproval) {
-					setError(''); // Clear any previous errors
-					alert('Sub-admin account created successfully! Your account is pending admin approval. You will be able to login once approved.');
-					setIsLogin(true); // Switch to login view
-					setFormData({ email: '', password: '', name: '', role: 'client' });
-					return;
+				console.log('Submitting login with:', formData.email);
+				const result = await login(formData.email, formData.password);
+				console.log('Login result:', result);
+				
+				if (result.success) {
+					navigate('/');
+				} else {
+					setError(result.error || 'Login failed');
 				}
-				navigate('/');
 			} else {
-				setError(result.error || 'Authentication failed');
-				console.error('Auth failed:', result); // Debug
+				// Registration flow
+				if (!showOTPStep) {
+					// Step 1: Send OTP
+					if (formData.role === 'client' || formData.role === 'vendor') {
+						const response = await api.post('/auth/send-email-otp', { email: formData.email });
+						if (response.data.success) {
+							setOtpSent(true);
+							setShowOTPStep(true);
+							setError('');
+						} else {
+							setError(response.data.message || 'Failed to send OTP');
+						}
+					} else {
+						// Direct registration for sub-admin/admin
+						const endpoint = formData.role === 'subadmin' ? '/auth/register-subadmin' : '/auth/register-admin';
+						const response = await api.post(endpoint, {
+							name: formData.name,
+							email: formData.email,
+							password: formData.password,
+							role: formData.role
+						});
+						
+						if (formData.role === 'subadmin') {
+							alert('Sub-admin account created successfully! Your account is pending admin approval.');
+							setIsLogin(true);
+							setFormData({ email: '', password: '', name: '', role: 'client', otp: '' });
+						} else {
+							navigate('/');
+						}
+					}
+				} else {
+					// Step 2: Verify OTP and complete registration
+					const response = await api.post('/auth/verify-email-otp', {
+						email: formData.email,
+						otpCode: formData.otp,
+						name: formData.name,
+						password: formData.password
+					});
+					
+					if (response.data.success && response.data.token) {
+						localStorage.setItem('token', response.data.token);
+						navigate('/');
+					} else {
+						setError(response.data.message || 'OTP verification failed');
+					}
+				}
 			}
 		} catch (err) {
-			console.error('Unexpected error:', err); // Debug
-			setError(err.message || 'An unexpected error occurred');
+			console.error('Error:', err);
+			setError(err.response?.data?.message || err.message || 'An error occurred');
 		} finally {
 			setLoading(false);
 		}
@@ -61,6 +96,13 @@ export default function Login() {
 			...formData,
 			[e.target.name]: e.target.value
 		});
+	};
+	
+	const resetRegistration = () => {
+		setShowOTPStep(false);
+		setOtpSent(false);
+		setFormData({ ...formData, otp: '' });
+		setError('');
 	};
 
 	return (
@@ -184,6 +226,34 @@ export default function Login() {
 								/>
 							</div>
 
+							{showOTPStep && (
+								<div>
+									<label className="block text-sm font-medium mb-2">
+										Email Verification Code <span className="text-red-500">*</span>
+									</label>
+									<input
+										type="text"
+										name="otp"
+										value={formData.otp}
+										onChange={handleChange}
+										required
+										maxLength="6"
+										placeholder="Enter 6-digit OTP"
+										className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600 text-center tracking-widest"
+									/>
+									<p className="text-sm text-gray-600 mt-1">
+										Check your email for the verification code. Check console logs in development mode.
+									</p>
+									<button
+										type="button"
+										onClick={resetRegistration}
+										className="text-sm text-blue-600 hover:text-blue-800 mt-2"
+									>
+										← Change email or resend
+									</button>
+								</div>
+							)}
+
 							<div>
 								<label className="block text-sm font-medium mb-2">Role</label>
 								<select
@@ -216,7 +286,10 @@ export default function Login() {
 								disabled={loading}
 								className="btn-primary w-full"
 							>
-								{loading ? 'Creating Account...' : 'Create Account'}
+								{loading ? 
+									(showOTPStep ? 'Verifying...' : 'Sending OTP...') : 
+									(showOTPStep ? 'Verify OTP & Create Account' : 'Send Verification Code')
+								}
 							</button>
 						</form>
 					)}
@@ -227,8 +300,9 @@ export default function Login() {
 							onClick={() => {
 								setIsLogin(!isLogin);
 								setError('');
-								setSuccess('');
-								setFormData({ email: '', password: '', name: '', phone: '', role: 'client' });
+								setShowOTPStep(false);
+								setOtpSent(false);
+								setFormData({ email: '', password: '', name: '', role: 'client', otp: '' });
 							}}
 							className="text-brand-600 hover:underline"
 						>
