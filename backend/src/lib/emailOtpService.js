@@ -23,18 +23,18 @@ class EmailOTPService {
     // Send OTP via Email using SendGrid
     static async sendEmailOTP(email, otpCode, userName = 'User') {
         try {
-            // In development mode, just log to console
+            console.log(`📧 Attempting to send OTP to ${email}: ${otpCode}`);
+            
+            // In development mode, just log to console and return success
             if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_API_KEY.startsWith('SG.')) {
-                console.log(`\n📧 MOCK EMAIL SENT TO ${email}:`);
+                console.log(`\n📧 DEVELOPMENT MODE - EMAIL SENT TO ${email}:`);
                 console.log(`🔐 Your email verification code is: ${otpCode}`);
                 console.log(`⏰ Valid for 10 minutes\n`);
                 
-                // Simulate network delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
+                // Return success immediately without network delay
                 return { 
                     success: true, 
-                    message: 'Development mode: OTP sent to console',
+                    message: 'OTP sent successfully (Development mode)',
                     developmentMode: true,
                     otp: otpCode
                 };
