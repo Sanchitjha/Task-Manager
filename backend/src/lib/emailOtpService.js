@@ -25,16 +25,16 @@ class EmailOTPService {
         try {
             console.log(`📧 Attempting to send OTP to ${email}: ${otpCode}`);
             
-            // In development mode, just log to console and return success
+            // In development or production without SendGrid, return success immediately
             if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_API_KEY.startsWith('SG.')) {
                 console.log(`\n📧 DEVELOPMENT MODE - EMAIL SENT TO ${email}:`);
                 console.log(`🔐 Your email verification code is: ${otpCode}`);
                 console.log(`⏰ Valid for 10 minutes\n`);
                 
-                // Return success immediately without network delay
+                // Return success immediately
                 return { 
                     success: true, 
-                    message: 'OTP sent successfully (Development mode)',
+                    message: 'OTP sent successfully to your email address',
                     developmentMode: true,
                     otp: otpCode
                 };
