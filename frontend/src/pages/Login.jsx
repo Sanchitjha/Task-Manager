@@ -16,6 +16,19 @@ export default function Login() {
 	
 	const navigate = useNavigate();
 
+	// Test API connectivity
+	const testAPI = async () => {
+		try {
+			const response = await fetch('https://task-manager-x6vw.onrender.com/health');
+			const data = await response.json();
+			console.log('🔗 API Health Check:', data);
+			return data.status === 'healthy';
+		} catch (err) {
+			console.error('❌ API Health Check Failed:', err);
+			return false;
+		}
+	};
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		setLoading(true);
@@ -43,17 +56,43 @@ export default function Login() {
 			} else {
 				// Registration flow with OTP
 				if (!showOTPStep) {
+					// Test API connectivity first
+					const apiHealthy = await testAPI();
+					if (!apiHealthy) {
+						throw new Error('Backend API is not responding. Please try again later.');
+					}
+					
 					// Send OTP
+					console.log('🔄 Sending OTP request to backend');
+					console.log('📧 Email:', formData.email);
+					
 					const response = await fetch('https://task-manager-x6vw.onrender.com/api/auth/send-email-otp', {
 						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
+						headers: { 
+							'Content-Type': 'application/json',
+							'Accept': 'application/json'
+						},
 						body: JSON.stringify({ email: formData.email })
 					});
 					
+					console.log('📡 Response status:', response.status);
+					
+					if (!response.ok) {
+						const errorText = await response.text();
+						console.error('❌ Error response:', errorText);
+						throw new Error(`HTTP ${response.status}: ${errorText}`);
+					}
+					
 					const data = await response.json();
+					console.log('✅ OTP Response:', data);
+					
 					if (data.success) {
 						setShowOTPStep(true);
 						setError('');
+						// Show development OTP if available
+						if (data.developmentOTP) {
+							alert(`Development Mode - Your OTP is: ${data.developmentOTP}`);
+						}
 					} else {
 						setError(data.message || 'Failed to send OTP');
 					}
@@ -80,7 +119,8 @@ export default function Login() {
 				}
 			}
 		} catch (err) {
-			setError('Network error. Please try again.');
+			console.error('❌ Full error details:', err);
+			setError(`Error: ${err.message}. Check browser console for details.`);
 		} finally {
 			setLoading(false);
 		}
