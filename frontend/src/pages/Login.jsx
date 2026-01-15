@@ -180,10 +180,13 @@ export default function Login() {
 									onChange={handleChange}
 									placeholder="your.email@example.com"
 									required
-									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
-								/>
-							</div>
+							disabled={showOTPStep}
+							className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600 ${showOTPStep ? 'bg-gray-100' : ''}`}
+						/>
+					</div>
 
+					{!showOTPStep && (
+						<>
 							<div>
 								<label className="block text-sm font-medium mb-2">
 									Full Name <span className="text-red-500">*</span>
@@ -197,17 +200,6 @@ export default function Login() {
 									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
 								/>
 							</div>
-
-							<div>
-								<label className="block text-sm font-medium mb-2">
-									Password <span className="text-red-500">*</span>
-								</label>
-								<input
-									type="password"
-									name="password"
-									value={formData.password}
-									onChange={handleChange}
-									required
 									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-600"
 								/>
 							</div>
