@@ -19,10 +19,10 @@ export default function Login() {
 	// Test API connectivity
 	const testAPI = async () => {
 		try {
-			const response = await fetch('https://task-manager-x6vw.onrender.com/health');
+			const response = await fetch('https://task-manager-x6vw.onrender.com');
 			const data = await response.json();
 			console.log('🔗 API Health Check:', data);
-			return data.status === 'healthy';
+			return data.ok === true; // Check for the basic response
 		} catch (err) {
 			console.error('❌ API Health Check Failed:', err);
 			return false;
@@ -56,12 +56,6 @@ export default function Login() {
 			} else {
 				// Registration flow with OTP
 				if (!showOTPStep) {
-					// Test API connectivity first
-					const apiHealthy = await testAPI();
-					if (!apiHealthy) {
-						throw new Error('Backend API is not responding. Please try again later.');
-					}
-					
 					// Send OTP
 					console.log('🔄 Sending OTP request to backend');
 					console.log('📧 Email:', formData.email);
