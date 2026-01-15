@@ -108,8 +108,8 @@ export default function Login() {
 
 	const toggleMode = () => {
 		setIsLogin(!isLogin);
-		setShowOTPStep(false);
 		setError('');
+		setMessage('');
 		setFormData({ email: '', password: '', name: '', role: 'client' });
 	};
 
@@ -189,11 +189,10 @@ export default function Login() {
 						value={formData.email}
 						onChange={handleChange}
 						required
-						disabled={showOTPStep}
 						style={styles.input}
 					/>
 
-					{!isLogin && !showOTPStep && (
+					{!isLogin && (
 						<input
 							type="text"
 							name="name"
@@ -205,19 +204,17 @@ export default function Login() {
 						/>
 					)}
 
-					{(isLogin || !showOTPStep) && (
-						<input
-							type="password"
-							name="password"
-							placeholder="Password *"
-							value={formData.password}
-							onChange={handleChange}
-							required
-							style={styles.input}
+					<input
+						type="password"
+						name="password"
+						placeholder="Password *"
+						value={formData.password}
+						onChange={handleChange}
+						required
+						style={styles.input}
 						/>
-					)}
 
-					{!isLogin && !showOTPStep && (
+					{!isLogin && (
 						<select
 							name="role"
 							value={formData.role}
@@ -245,9 +242,7 @@ export default function Login() {
 							cursor: loading ? 'not-allowed' : 'pointer'
 						}}
 					>
-						{loading ? 'Please wait...' : 
-						 isLogin ? 'Sign In' : 
-						{isLogin ? 'Sign In' : 'Create Account'}
+						{loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
 					</button>
 				</form>
 
