@@ -19,14 +19,32 @@ const { initSubscriptionCron } = require('./lib/subscriptionCron');
 
 const app = express();
 
-app.use(cors({ origin: process.env.CORS_ORIGIN || '*', credentials: true }));
+app.use(cors({ 
+	origin: [
+		'https://task-manager-frontend.vercel.app',
+		'https://www.showcaseretail.in', 
+		'https://showcaseretail.in',
+		'http://localhost:5174',
+		'http://localhost:3000'
+	], 
+	credentials: true 
+}));
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan('dev'));
 app.use('/uploads', express.static('uploads'));
 
 app.get('/', (_req, res) => {
-	res.json({ ok: true, service: 'Manager API' });
+	res.json({ ok: true, service: 'Manager API', timestamp: new Date().toISOString() });
+});
+
+// Health check endpoint
+app.get('/health', (_req, res) => {
+	res.json({ 
+		status: 'healthy', 
+		timestamp: new Date().toISOString(),
+		environment: process.env.NODE_ENV || 'development'
+	});
 });
 
 app.use('/api/auth', authRouter);
