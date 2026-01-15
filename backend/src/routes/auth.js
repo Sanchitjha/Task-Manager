@@ -208,21 +208,29 @@ router.post('/send-email-otp', async (req, res, next) => {
 	try {
 		const { email } = req.body;
 		console.log('🔐 Received OTP request for email:', email);
+		console.log('Request headers:', req.headers);
+		console.log('Request origin:', req.get('origin'));
 		
 		if (!email) {
+			console.log('❌ No email provided');
 			return res.status(400).json({ message: 'Email is required' });
 		}
 		
 		// Validate email format
 		if (!EmailOTPService.isValidEmailFormat(email)) {
+			console.log('❌ Invalid email format:', email);
 			return res.status(400).json({ message: 'Invalid email format' });
 		}
 		
 		// Check if email already exists
 		const existingUser = await User.findOne({ email });
-		if (existingUser) {
+		if (existingUser && !existingUser.isTemporary) {
+			console.log('❌ Email already registered:', email);
 			return res.status(400).json({ message: 'Email is already registered' });
 		}
+		
+		// Delete any existing temporary users for this email
+		await User.deleteMany({ email: email, isTemporary: true });
 		
 		// Generate OTP
 		const otpCode = EmailOTPService.generateOTP();
@@ -234,8 +242,7 @@ router.post('/send-email-otp', async (req, res, next) => {
 		const emailResult = await EmailOTPService.sendEmailOTP(email, otpCode);
 		
 		if (emailResult.success) {
-			// Store OTP in user session or temporary storage
-			// For simplicity, we'll create a temporary user document
+			// Store OTP in temporary user document
 			const tempUser = await User.create({
 				name: 'temp_user_' + Date.now(),
 				email: email,
@@ -253,7 +260,8 @@ router.post('/send-email-otp', async (req, res, next) => {
 			res.json({
 				success: true,
 				message: emailResult.message,
-				tempUserId: tempUser._id
+				tempUserId: tempUser._id,
+				developmentOTP: process.env.NODE_ENV !== 'production' ? otpCode : undefined
 			});
 		} else {
 			console.error('❌ Failed to send OTP email');
@@ -263,7 +271,10 @@ router.post('/send-email-otp', async (req, res, next) => {
 		}
 	} catch (error) {
 		console.error('❌ Error in send-email-otp:', error);
-		next(error);
+		res.status(500).json({ 
+			message: 'Internal server error', 
+			error: error.message 
+		});
 	}
 });
 
