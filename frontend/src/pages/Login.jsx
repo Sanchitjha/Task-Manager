@@ -6,13 +6,12 @@ export default function Login() {
 		email: '',
 		password: '',
 		name: '',
-		role: 'client',
-		otp: ''
+		role: 'client'
 	});
 	const [isLogin, setIsLogin] = useState(true);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
-	const [showOTPStep, setShowOTPStep] = useState(false);
+	const [message, setMessage] = useState('');
 	
 	const navigate = useNavigate();
 
@@ -231,31 +230,6 @@ export default function Login() {
 						</select>
 					)}
 
-					{showOTPStep && (
-						<>
-							<input
-								type="text"
-								name="otp"
-								placeholder="Enter 6-digit verification code"
-								value={formData.otp}
-								onChange={handleChange}
-								required
-								maxLength="6"
-								style={styles.input}
-							/>
-							<p style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
-								Check your email for the verification code
-							</p>
-							<button
-								type="button"
-								onClick={() => setShowOTPStep(false)}
-								style={{ ...styles.link, marginTop: '0', marginBottom: '10px' }}
-							>
-								← Back to form
-							</button>
-						</>
-					)}
-
 					{error && (
 						<div style={styles.error}>
 							{error}
@@ -273,7 +247,7 @@ export default function Login() {
 					>
 						{loading ? 'Please wait...' : 
 						 isLogin ? 'Sign In' : 
-						 showOTPStep ? 'Verify & Create Account' : 'Send Verification Code'}
+						{isLogin ? 'Sign In' : 'Create Account'}
 					</button>
 				</form>
 
