@@ -85,7 +85,7 @@ export default function Login() {
 				if (data.id || data.message) {
 					setMessage('✅ Registration successful! You can now login.');
 					setIsLogin(true);
-					setFormData({ name: '', email: '', password: '', confirmPassword: '', otp: '' });
+					setFormData({ name: '', email: '', password: '', confirmPassword: '' });
 					setError('');
 				} else {
 					setError(data.message || 'Registration failed');
@@ -110,7 +110,7 @@ export default function Login() {
 		setIsLogin(!isLogin);
 		setShowOTPStep(false);
 		setError('');
-		setFormData({ email: '', password: '', name: '', role: 'client', otp: '' });
+		setFormData({ email: '', password: '', name: '', role: 'client' });
 	};
 
 	const styles = {
