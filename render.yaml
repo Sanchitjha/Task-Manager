@@ -1,10 +1,11 @@
 services:
   - type: web
-    name: the-manager-api
+    name: task-manager-api
     env: node
     plan: free
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && npm start
+    buildCommand: "if [ -d backend ]; then cd backend && npm install; else echo 'Backend directory not found' && exit 1; fi"
+    startCommand: "cd backend && npm start"
+    rootDir: "./"
     envVars:
       - key: NODE_ENV
         value: production
