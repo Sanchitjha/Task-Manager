@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import InstallPrompt from './components/InstallPrompt';
 import OfflineIndicator from './components/OfflineIndicator';
+import ErrorBoundary from './components/ErrorBoundary';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Earn from './pages/Earn';
@@ -44,7 +45,11 @@ function App() {
 					<Navbar />
 				<Routes>
 					<Route path="/" element={<Home />} />
-					<Route path="/login" element={<Login />} />
+					<Route path="/login" element={
+						<ErrorBoundary>
+							<Login />
+						</ErrorBoundary>
+					} />
 					<Route path="/products" element={<Products />} />
 					<Route path="/product/:id" element={<ProductDetail />} />
 					<Route path="/cart" element={

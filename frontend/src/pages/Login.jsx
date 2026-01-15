@@ -1,95 +1,279 @@
-// Simple Login component with no external dependencies
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 export default function Login() {
-	return (
-		<div style={{ 
-			minHeight: '100vh', 
-			backgroundColor: '#f5f5f5', 
-			display: 'flex', 
-			alignItems: 'center', 
+	const [formData, setFormData] = useState({
+		email: '',
+		password: '',
+		name: '',
+		role: 'client',
+		otp: ''
+	});
+	const [isLogin, setIsLogin] = useState(true);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState('');
+	const [showOTPStep, setShowOTPStep] = useState(false);
+	
+	const navigate = useNavigate();
+
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+		setLoading(true);
+		setError('');
+
+		try {
+			if (isLogin) {
+				// Simple login attempt
+				const response = await fetch('https://task-manager-x6vw.onrender.com/api/auth/login', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						email: formData.email,
+						password: formData.password
+					})
+				});
+				
+				const data = await response.json();
+				if (data.token) {
+					localStorage.setItem('token', data.token);
+					navigate('/');
+				} else {
+					setError('Login failed');
+				}
+			} else {
+				// Registration flow with OTP
+				if (!showOTPStep) {
+					// Send OTP
+					const response = await fetch('https://task-manager-x6vw.onrender.com/api/auth/send-email-otp', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ email: formData.email })
+					});
+					
+					const data = await response.json();
+					if (data.success) {
+						setShowOTPStep(true);
+						setError('');
+					} else {
+						setError(data.message || 'Failed to send OTP');
+					}
+				} else {
+					// Verify OTP
+					const response = await fetch('https://task-manager-x6vw.onrender.com/api/auth/verify-email-otp', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({
+							email: formData.email,
+							otpCode: formData.otp,
+							name: formData.name,
+							password: formData.password
+						})
+					});
+					
+					const data = await response.json();
+					if (data.success && data.token) {
+						localStorage.setItem('token', data.token);
+						navigate('/');
+					} else {
+						setError(data.message || 'Registration failed');
+					}
+				}
+			}
+		} catch (err) {
+			setError('Network error. Please try again.');
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleChange = (e) => {
+		setFormData({
+			...formData,
+			[e.target.name]: e.target.value
+		});
+	};
+
+	const toggleMode = () => {
+		setIsLogin(!isLogin);
+		setShowOTPStep(false);
+		setError('');
+		setFormData({ email: '', password: '', name: '', role: 'client', otp: '' });
+	};
+
+	const styles = {
+		container: {
+			minHeight: '100vh',
+			display: 'flex',
+			alignItems: 'center',
 			justifyContent: 'center',
-			padding: '1rem'
-		}}>
-			<div style={{
-				maxWidth: '400px',
-				width: '100%',
-				backgroundColor: 'white',
-				borderRadius: '8px',
-				boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-				padding: '2rem'
-			}}>
-				<div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-					<h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-						The Manager
-					</h1>
-					<p style={{ color: '#666' }}>
-						Login or Create Account
-					</p>
-				</div>
+			backgroundColor: '#f5f5f5',
+			padding: '20px'
+		},
+		form: {
+			backgroundColor: 'white',
+			padding: '40px',
+			borderRadius: '8px',
+			boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+			width: '100%',
+			maxWidth: '400px'
+		},
+		title: {
+			fontSize: '24px',
+			fontWeight: 'bold',
+			textAlign: 'center',
+			marginBottom: '30px',
+			color: '#333'
+		},
+		input: {
+			width: '100%',
+			padding: '12px',
+			border: '1px solid #ddd',
+			borderRadius: '4px',
+			marginBottom: '15px',
+			fontSize: '14px'
+		},
+		button: {
+			width: '100%',
+			padding: '12px',
+			backgroundColor: '#007bff',
+			color: 'white',
+			border: 'none',
+			borderRadius: '4px',
+			fontSize: '16px',
+			cursor: 'pointer',
+			marginTop: '10px'
+		},
+		error: {
+			backgroundColor: '#ffebee',
+			color: '#d32f2f',
+			padding: '10px',
+			borderRadius: '4px',
+			marginBottom: '15px',
+			fontSize: '14px'
+		},
+		link: {
+			color: '#007bff',
+			cursor: 'pointer',
+			textDecoration: 'underline',
+			textAlign: 'center',
+			marginTop: '20px',
+			display: 'block'
+		}
+	};
+
+	return (
+		<div style={styles.container}>
+			<div style={styles.form}>
+				<h1 style={styles.title}>
+					{isLogin ? 'Welcome Back' : 'Create Account'}
+				</h1>
 				
-				<div style={{ marginBottom: '1rem' }}>
-					<label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-						Email
-					</label>
-					<input 
+				<form onSubmit={handleSubmit}>
+					<input
 						type="email"
-						style={{
-							width: '100%',
-							padding: '0.75rem',
-							border: '1px solid #ddd',
-							borderRadius: '6px',
-							fontSize: '1rem'
-						}}
-						placeholder="Enter your email"
+						name="email"
+						placeholder="Email Address *"
+						value={formData.email}
+						onChange={handleChange}
+						required
+						disabled={showOTPStep}
+						style={styles.input}
 					/>
-				</div>
-				
-				<div style={{ marginBottom: '1rem' }}>
-					<label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-						Password
-					</label>
-					<input 
-						type="password"
+
+					{!isLogin && !showOTPStep && (
+						<input
+							type="text"
+							name="name"
+							placeholder="Full Name *"
+							value={formData.name}
+							onChange={handleChange}
+							required
+							style={styles.input}
+						/>
+					)}
+
+					{(isLogin || !showOTPStep) && (
+						<input
+							type="password"
+							name="password"
+							placeholder="Password *"
+							value={formData.password}
+							onChange={handleChange}
+							required
+							style={styles.input}
+						/>
+					)}
+
+					{!isLogin && !showOTPStep && (
+						<select
+							name="role"
+							value={formData.role}
+							onChange={handleChange}
+							style={styles.input}
+						>
+							<option value="client">Client</option>
+							<option value="vendor">Vendor</option>
+							<option value="subadmin">Sub-Admin</option>
+						</select>
+					)}
+
+					{showOTPStep && (
+						<>
+							<input
+								type="text"
+								name="otp"
+								placeholder="Enter 6-digit verification code"
+								value={formData.otp}
+								onChange={handleChange}
+								required
+								maxLength="6"
+								style={styles.input}
+							/>
+							<p style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
+								Check your email for the verification code
+							</p>
+							<button
+								type="button"
+								onClick={() => setShowOTPStep(false)}
+								style={{ ...styles.link, marginTop: '0', marginBottom: '10px' }}
+							>
+								← Back to form
+							</button>
+						</>
+					)}
+
+					{error && (
+						<div style={styles.error}>
+							{error}
+						</div>
+					)}
+
+					<button
+						type="submit"
+						disabled={loading}
 						style={{
-							width: '100%',
-							padding: '0.75rem',
-							border: '1px solid #ddd',
-							borderRadius: '6px',
-							fontSize: '1rem'
+							...styles.button,
+							opacity: loading ? 0.7 : 1,
+							cursor: loading ? 'not-allowed' : 'pointer'
 						}}
-						placeholder="Enter your password"
-					/>
-				</div>
-				
-				<button 
-					style={{
-						width: '100%',
-						padding: '0.75rem',
-						backgroundColor: '#007bff',
-						color: 'white',
-						border: 'none',
-						borderRadius: '6px',
-						fontSize: '1rem',
-						cursor: 'pointer',
-						marginBottom: '1rem'
-					}}
-					onClick={() => alert('Login button clicked!')}
-				>
-					Sign In
-				</button>
-				
-				<div style={{ textAlign: 'center' }}>
-					<button 
-						style={{
-							background: 'none',
-							border: 'none',
-							color: '#007bff',
-							cursor: 'pointer',
-							textDecoration: 'underline'
-						}}
-						onClick={() => alert('Registration will be implemented')}
 					>
-						Don't have an account? Sign up
+						{loading ? 'Please wait...' : 
+						 isLogin ? 'Sign In' : 
+						 showOTPStep ? 'Verify & Create Account' : 'Send Verification Code'}
 					</button>
+				</form>
+
+				<div
+					onClick={toggleMode}
+					style={styles.link}
+				>
+					{isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+				</div>
+
+				<div style={styles.link}>
+					<a href="/" style={{ color: '#666', textDecoration: 'none' }}>
+						← Back to Home
+					</a>
 				</div>
 			</div>
 		</div>
