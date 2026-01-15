@@ -54,62 +54,42 @@ export default function Login() {
 					setError('Login failed');
 				}
 			} else {
-				// Registration flow with OTP
-				if (!showOTPStep) {
-					// Send OTP
-					console.log('🔄 Sending OTP request to backend');
-					console.log('📧 Email:', formData.email);
-					
-					const response = await fetch('https://task-manager-x6vw.onrender.com/api/auth/send-email-otp', {
-						method: 'POST',
-						headers: { 
-							'Content-Type': 'application/json',
-							'Accept': 'application/json'
-						},
-						body: JSON.stringify({ email: formData.email })
-					});
-					
-					console.log('📡 Response status:', response.status);
-					
-					if (!response.ok) {
-						const errorText = await response.text();
-						console.error('❌ Error response:', errorText);
-						throw new Error(`HTTP ${response.status}: ${errorText}`);
-					}
-					
-					const data = await response.json();
-					console.log('✅ OTP Response:', data);
-					
-					if (data.success) {
-						setShowOTPStep(true);
-						setError('');
-						// Show development OTP if available
-						if (data.developmentOTP) {
-							alert(`Development Mode - Your OTP is: ${data.developmentOTP}`);
-						}
-					} else {
-						setError(data.message || 'Failed to send OTP');
-					}
+				// Direct Registration (without OTP)
+				console.log('🔄 Registering user directly');
+				console.log('📧 Email:', formData.email);
+				
+				const response = await fetch('https://task-manager-x6vw.onrender.com/api/auth/register', {
+					method: 'POST',
+					headers: { 
+						'Content-Type': 'application/json',
+						'Accept': 'application/json'
+					},
+					body: JSON.stringify({
+						name: formData.name,
+						email: formData.email,
+						password: formData.password,
+						role: 'client'
+					})
+				});
+				
+				console.log('📡 Response status:', response.status);
+				
+				if (!response.ok) {
+					const errorText = await response.text();
+					console.error('❌ Error response:', errorText);
+					throw new Error(`HTTP ${response.status}: ${errorText}`);
+				}
+				
+				const data = await response.json();
+				console.log('✅ Registration Response:', data);
+				
+				if (data.id || data.message) {
+					setMessage('✅ Registration successful! You can now login.');
+					setIsLogin(true);
+					setFormData({ name: '', email: '', password: '', confirmPassword: '', otp: '' });
+					setError('');
 				} else {
-					// Verify OTP
-					const response = await fetch('https://task-manager-x6vw.onrender.com/api/auth/verify-email-otp', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({
-							email: formData.email,
-							otpCode: formData.otp,
-							name: formData.name,
-							password: formData.password
-						})
-					});
-					
-					const data = await response.json();
-					if (data.success && data.token) {
-						localStorage.setItem('token', data.token);
-						navigate('/');
-					} else {
-						setError(data.message || 'Registration failed');
-					}
+					setError(data.message || 'Registration failed');
 				}
 			}
 		} catch (err) {
