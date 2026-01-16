@@ -1,8 +1,8 @@
 const { Schema, model } = require('mongoose');
 
-const vendorReviewSchema = new Schema(
+const partnerReviewSchema = new Schema(
   {
-    vendor: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    partner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     reviewer: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     order: { type: Schema.Types.ObjectId, ref: 'Order' }, // Optional - link to order
     
@@ -27,5 +27,5 @@ const vendorReviewSchema = new Schema(
   { timestamps: true }
 );
 
-const VendorReview = model('VendorReview', vendorReviewSchema);
-module.exports = { VendorReview };
+const PartnerReview = model('PartnerReview', partnerReviewSchema);
+module.exports = { PartnerReview };
