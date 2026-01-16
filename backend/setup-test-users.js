@@ -13,7 +13,7 @@ async function setupUsers() {
             name: String,
             email: { type: String, unique: true },
             password: String,
-            role: { type: String, enum: ['client', 'vendor', 'admin', 'subadmin'], default: 'client' },
+            role: { type: String, enum: ['user', 'Partner', 'admin', 'subadmin'], default: 'user' },
             isApproved: { type: Boolean, default: true },
             isEmailVerified: { type: Boolean, default: true },
             coinsBalance: { type: Number, default: 100 },
@@ -27,17 +27,17 @@ async function setupUsers() {
         // Test users to create
         const testUsers = [
             {
-                name: 'Vendor User',
+                name: 'Partner User',
                 email: 'Jha1947.sj@gmail.com',
                 password: 'Sm@522002',
-                role: 'vendor',
+                role: 'Partner',
                 coinsBalance: 0
             },
             {
-                name: 'Client User',
-                email: 'client@test.com',
+                name: 'User Account',
+                email: 'user@test.com',
                 password: 'password123',
-                role: 'client',
+                role: 'user',
                 coinsBalance: 500
             },
             {
@@ -96,12 +96,12 @@ async function setupUsers() {
         
         console.log('📝 LOGIN CREDENTIALS:');
         console.log('═══════════════════════');
-        console.log('👨‍💼 VENDOR:');
+        console.log('🤝 PARTNER:');
         console.log('  Email: Jha1947.sj@gmail.com');
         console.log('  Password: Sm@522002');
         console.log('');
-        console.log('👤 CLIENT:');
-        console.log('  Email: client@test.com');
+        console.log('👤 USER:');
+        console.log('  Email: user@test.com');
         console.log('  Password: password123');
         console.log('');
         console.log('👑 ADMIN:');
