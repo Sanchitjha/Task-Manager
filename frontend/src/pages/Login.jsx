@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
 	const [formData, setFormData] = useState({
@@ -15,6 +16,14 @@ export default function Login() {
 	const [message, setMessage] = useState('');
 	
 	const navigate = useNavigate();
+	const { login, user } = useAuth();
+
+	// Redirect if already logged in
+	useEffect(() => {
+		if (user) {
+			navigate('/', { replace: true });
+		}
+	}, [user, navigate]);
 
 	// Test API connectivity
 	const testAPI = async () => {
@@ -36,22 +45,12 @@ export default function Login() {
 
 		try {
 			if (isLogin) {
-				// Simple login attempt
-				const response = await fetch('https://task-manager-x6vw.onrender.com/api/auth/login', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						email: formData.email,
-						password: formData.password
-					})
-				});
-				
-				const data = await response.json();
-				if (data.token) {
-					localStorage.setItem('token', data.token);
+				// Use AuthContext login method
+				const result = await login(formData.email, formData.password);
+				if (result.success) {
 					navigate('/');
 				} else {
-					setError('Login failed');
+					setError(result.error || 'Login failed');
 				}
 			} else {
 				// Direct Registration
