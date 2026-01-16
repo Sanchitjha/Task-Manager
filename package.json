@@ -1,6 +1,6 @@
 {
   "name": "the-manager",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Modern Rewards Platform - Watch videos, earn coins, redeem discounts",
   "scripts": {
     "build": "echo 'Building The Manager...' && npm install && cd backend && npm install && echo 'Build completed successfully'",

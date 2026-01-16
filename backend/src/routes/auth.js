@@ -206,8 +206,4 @@ router.get('/me', auth, async (req, res, next) => {
 		next(e); 
 	}
 });
-		
-	} catch (error) {
-});
-
 module.exports = router;
