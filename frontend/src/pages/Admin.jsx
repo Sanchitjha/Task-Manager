@@ -45,8 +45,8 @@ export default function Admin() {
 					<div className="text-gray-600 mt-2">Active Videos</div>
 				</div>
 				<div className="bg-white rounded-lg shadow-md p-6 text-center">
-					<div className="text-4xl font-bold text-orange-600">{users.filter(u => u.role === 'vendor').length}</div>
-					<div className="text-gray-600 mt-2">Active Vendors</div>
+				<div className="text-4xl font-bold text-orange-600">{users.filter(u => u.role === 'Partner').length}</div>
+				<div className="text-gray-600 mt-2">Active Partners</div>
 				</div>
 			</div>
 
