@@ -18,42 +18,42 @@ async function testWalletTransaction() {
     await mongoose.connect(mongoUri);
     console.log('✅ Connected to MongoDB\n');
 
-    // Find or create test client
-    let client = await User.findOne({ email: 'client@test.com' });
-    if (!client) {
-      console.log('⚠️  Test client not found. Creating...');
-      client = await User.create({
-        name: 'Test Client',
-        email: 'client@test.com',
+    // Find or create test user
+    let user = await User.findOne({ email: 'user@test.com' });
+    if (!user) {
+      console.log('⚠️  Test user not found. Creating...');
+      user = await User.create({
+        name: 'Test User',
+        email: 'user@test.com',
         password: 'hashedpassword',
-        role: 'client',
+        role: 'user',
         coinsBalance: 1000 // Start with 1000 coins
       });
-      console.log('✅ Created test client with 1000 coins\n');
+      console.log('✅ Created test user with 1000 coins\n');
     }
 
-    // Find or create test vendor
-    let vendor = await User.findOne({ email: 'vendor@test.com' });
-    if (!vendor) {
-      console.log('⚠️  Test vendor not found. Creating...');
-      vendor = await User.create({
-        name: 'Test Vendor',
-        email: 'vendor@test.com',
+    // Find or create test Partner
+    let partner = await User.findOne({ email: 'partner@test.com' });
+    if (!partner) {
+      console.log('⚠️  Test Partner not found. Creating...');
+      partner = await User.create({
+        name: 'Test Partner',
+        email: 'partner@test.com',
         password: 'hashedpassword',
-        role: 'vendor',
+        role: 'Partner',
         coinsBalance: 0
       });
-      console.log('✅ Created test vendor with 0 coins\n');
+      console.log('✅ Created test Partner with 0 coins\n');
     }
 
     // Find or create test product
-    let product = await Product.findOne({ vendor: vendor._id });
+    let product = await Product.findOne({ vendor: partner._id });
     if (!product) {
       console.log('⚠️  Test product not found. Creating...');
       product = await Product.create({
         title: 'Test Product',
         description: 'A test product for transaction verification',
-        vendor: vendor._id,
+        vendor: partner._id,
         originalPrice: 100,
         discountPercentage: 0,
         coinConversionRate: 1,
@@ -66,8 +66,8 @@ async function testWalletTransaction() {
 
     console.log('📊 BEFORE TRANSACTION:');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log(`Client (${client.email}): ${client.coinsBalance} coins`);
-    console.log(`Vendor (${vendor.email}): ${vendor.coinsBalance} coins`);
+    console.log(`User (${user.email}): ${user.coinsBalance} coins`);
+    console.log(`Partner (${partner.email}): ${partner.coinsBalance} coins`);
     console.log('');
 
     // Simulate order creation (simplified version)
