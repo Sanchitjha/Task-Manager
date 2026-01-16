@@ -2,7 +2,7 @@
 
 ## 🎉 Features Implemented
 
-### 1. **Client Features**
+### 1. **User Features**
 - ✅ Watch YouTube videos and earn coins
 - ✅ Track video watch progress
 - ✅ Automatic coin rewards when completing 90% of video
@@ -47,7 +47,7 @@
 
 ## 🚀 How to Use
 
-### For Clients:
+### For Users:
 
 1. **Earn Coins:**
    - Navigate to "Earn" page
@@ -144,7 +144,7 @@ Videos are embedded using YouTube's iframe API with:
 ## 🔒 Security Features
 
 - JWT authentication required for all operations
-- Role-based access control (client/admin/subadmin)
+- Role-based access control (user/admin/subadmin)
 - Video watch progress tied to user account
 - One reward per video per user
 - Minimum redemption amount to prevent abuse
@@ -182,7 +182,7 @@ Videos are embedded using YouTube's iframe API with:
 
 ## 🐛 Testing Checklist
 
-### Client Testing:
+### User Testing:
 - [ ] Can view active videos
 - [ ] Can watch videos and see timer
 - [ ] Coins awarded after completing video
