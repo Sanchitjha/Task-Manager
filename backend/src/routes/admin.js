@@ -21,7 +21,7 @@ router.get('/subadmins/pending', auth, adminOnly, async (req, res, next) => {
 	} catch (e) { next(e); }
 });
 
-// Get all sub-admins with their client count (Admin only)
+// Get all sub-admins with their user count (Admin only)
 router.get('/subadmins', auth, adminOnly, async (req, res, next) => {
 	try {
 		const subadmins = await User.find({ role: 'subadmin' })
@@ -29,11 +29,11 @@ router.get('/subadmins', auth, adminOnly, async (req, res, next) => {
 			.populate('approvedBy', 'name email')
 			.sort({ createdAt: -1 });
 		
-		// Get client count for each sub-admin
+		// Get user count for each sub-admin
 		const subadminsWithStats = await Promise.all(
 			subadmins.map(async (subadmin) => {
 				const clientCount = await User.countDocuments({ 
-					role: 'client', 
+					role: 'user', 
 					addedBy: subadmin._id 
 				});
 				
@@ -48,7 +48,7 @@ router.get('/subadmins', auth, adminOnly, async (req, res, next) => {
 	} catch (e) { next(e); }
 });
 
-// Get specific sub-admin details with their clients (Admin only)
+// Get specific sub-admin details with their users (Admin only)
 router.get('/subadmins/:id', auth, adminOnly, async (req, res, next) => {
 	try {
 		const subadmin = await User.findOne({ 
@@ -60,29 +60,29 @@ router.get('/subadmins/:id', auth, adminOnly, async (req, res, next) => {
 			return res.status(404).json({ message: 'Sub-admin not found' });
 		}
 		
-		// Get all clients added by this sub-admin
-		const clients = await User.find({ 
-			role: 'client', 
+		// Get all users added by this sub-admin
+		const users = await User.find({ 
+			role: 'user', 
 			addedBy: subadmin._id 
 		}).select('-password').sort({ createdAt: -1 });
 		
-		// Get statistics for each client
+		// Get statistics for each user
 		const clientsWithStats = await Promise.all(
-			clients.map(async (client) => {
+			users.map(async (user) => {
 				const [videosWatched, totalCoinsEarned, totalRedeemed] = await Promise.all([
-					VideoWatch.countDocuments({ userId: client._id, completed: true }),
+					VideoWatch.countDocuments({ userId: user._id, completed: true }),
 					Transaction.aggregate([
-						{ $match: { userId: client._id, type: 'earn' } },
+						{ $match: { userId: user._id, type: 'earn' } },
 						{ $group: { _id: null, total: { $sum: '$amount' } } }
 					]),
 					Transaction.aggregate([
-						{ $match: { userId: client._id, type: 'redeem' } },
+						{ $match: { userId: user._id, type: 'redeem' } },
 						{ $group: { _id: null, total: { $sum: '$amount' } } }
 					])
 				]);
 				
 				return {
-					...client.toObject(),
+					...user.toObject(),
 					stats: {
 						videosWatched,
 						totalCoinsEarned: totalCoinsEarned[0]?.total || 0,
@@ -94,7 +94,7 @@ router.get('/subadmins/:id', auth, adminOnly, async (req, res, next) => {
 		
 		res.json({
 			subadmin: subadmin.toObject(),
-			clients: clientsWithStats,
+			users: clientsWithStats,
 			totalClients: clientsWithStats.length
 		});
 	} catch (e) { next(e); }
@@ -191,8 +191,8 @@ router.patch('/subadmins/:id', auth, adminOnly, async (req, res, next) => {
 
 // ===== CLIENT MANAGEMENT ROUTES =====
 
-// Add client (Sub-admin or Admin)
-router.post('/clients', auth, adminOrSubadmin, async (req, res, next) => {
+// Add user (Sub-admin or Admin)
+router.post('/users', auth, adminOrSubadmin, async (req, res, next) => {
 	try {
 		const { name, email, password } = req.body;
 		
@@ -202,55 +202,55 @@ router.post('/clients', auth, adminOrSubadmin, async (req, res, next) => {
 		}
 		
 		const hash = await bcrypt.hash(password, 10);
-		const client = await User.create({
+		const user = await User.create({
 			name,
 			email,
 			password: hash,
-			role: 'client',
-			addedBy: req.user._id, // Track who added this client
+			role: 'user',
+			addedBy: req.user._id, // Track who added this user
 			isApproved: true
 		});
 		
 		res.status(201).json({
-			message: 'Client added successfully',
-			client: {
-				_id: client._id,
-				name: client.name,
-				email: client.email,
-				role: client.role
+			message: 'User added successfully',
+			user: {
+				_id: user._id,
+				name: user.name,
+				email: user.email,
+				role: user.role
 			}
 		});
 	} catch (e) { next(e); }
 });
 
-// Get clients (Admin sees all, Sub-admin sees only their clients)
-router.get('/clients', auth, adminOrSubadmin, async (req, res, next) => {
+// Get users (Admin sees all, Sub-admin sees only their users)
+router.get('/users', auth, adminOrSubadmin, async (req, res, next) => {
 	try {
-		const query = { role: 'client' };
+		const query = { role: 'user' };
 		
-		// Sub-admins can only see their own clients
+		// Sub-admins can only see their own users
 		if (req.user.role === 'subadmin') {
 			query.addedBy = req.user._id;
 		}
 		
-		const clients = await User.find(query)
+		const users = await User.find(query)
 			.select('-password')
 			.populate('addedBy', 'name email role')
 			.sort({ createdAt: -1 });
 		
-		// Get statistics for each client
+		// Get statistics for each user
 		const clientsWithStats = await Promise.all(
-			clients.map(async (client) => {
+			users.map(async (user) => {
 				const [videosWatched, totalEarnings] = await Promise.all([
-					VideoWatch.countDocuments({ userId: client._id, completed: true }),
+					VideoWatch.countDocuments({ userId: user._id, completed: true }),
 					Transaction.aggregate([
-						{ $match: { userId: client._id, type: 'earn' } },
+						{ $match: { userId: user._id, type: 'earn' } },
 						{ $group: { _id: null, total: { $sum: '$amount' } } }
 					])
 				]);
 				
 				return {
-					...client.toObject(),
+					...user.toObject(),
 					stats: {
 						videosWatched,
 						totalEarnings: totalEarnings[0]?.total || 0
@@ -263,42 +263,42 @@ router.get('/clients', auth, adminOrSubadmin, async (req, res, next) => {
 	} catch (e) { next(e); }
 });
 
-// Get specific client details
-router.get('/clients/:id', auth, adminOrSubadmin, async (req, res, next) => {
+// Get specific user details
+router.get('/users/:id', auth, adminOrSubadmin, async (req, res, next) => {
 	try {
-		const client = await User.findOne({ 
+		const user = await User.findOne({ 
 			_id: req.params.id, 
-			role: 'client' 
+			role: 'user' 
 		}).select('-password').populate('addedBy', 'name email role');
 		
-		if (!client) {
-			return res.status(404).json({ message: 'Client not found' });
+		if (!user) {
+			return res.status(404).json({ message: 'User not found' });
 		}
 		
-		// Sub-admins can only view their own clients
-		if (req.user.role === 'subadmin' && client.addedBy?.toString() !== req.user._id.toString()) {
+		// Sub-admins can only view their own users
+		if (req.user.role === 'subadmin' && user.addedBy?.toString() !== req.user._id.toString()) {
 			return res.status(403).json({ message: 'Access denied' });
 		}
 		
 		// Get detailed statistics
 		const [videosWatched, transactions, watchHistory] = await Promise.all([
-			VideoWatch.countDocuments({ userId: client._id, completed: true }),
-			Transaction.find({ userId: client._id })
+			VideoWatch.countDocuments({ userId: user._id, completed: true }),
+			Transaction.find({ userId: user._id })
 				.populate('metadata.videoId', 'title')
 				.sort({ createdAt: -1 })
 				.limit(20),
-			VideoWatch.find({ userId: client._id })
+			VideoWatch.find({ userId: user._id })
 				.populate('videoId', 'title coinsReward')
 				.sort({ lastWatchedAt: -1 })
 				.limit(10)
 		]);
 		
 		res.json({
-			client: client.toObject(),
+			user: user.toObject(),
 			stats: {
 				videosWatched,
-				coinsBalance: client.coinsBalance,
-				walletBalance: client.walletBalance
+				coinsBalance: user.coinsBalance,
+				walletBalance: user.walletBalance
 			},
 			recentTransactions: transactions,
 			recentVideos: watchHistory
@@ -306,60 +306,60 @@ router.get('/clients/:id', auth, adminOrSubadmin, async (req, res, next) => {
 	} catch (e) { next(e); }
 });
 
-// Update client (Can only update own clients)
-router.patch('/clients/:id', auth, adminOrSubadmin, async (req, res, next) => {
+// Update user (Can only update own users)
+router.patch('/users/:id', auth, adminOrSubadmin, async (req, res, next) => {
 	try {
 		const { name, email } = req.body;
 		
-		const client = await User.findOne({ 
+		const user = await User.findOne({ 
 			_id: req.params.id, 
-			role: 'client' 
+			role: 'user' 
 		});
 		
-		if (!client) {
-			return res.status(404).json({ message: 'Client not found' });
+		if (!user) {
+			return res.status(404).json({ message: 'User not found' });
 		}
 		
-		// Sub-admins can only update their own clients
-		if (req.user.role === 'subadmin' && client.addedBy?.toString() !== req.user._id.toString()) {
+		// Sub-admins can only update their own users
+		if (req.user.role === 'subadmin' && user.addedBy?.toString() !== req.user._id.toString()) {
 			return res.status(403).json({ message: 'Access denied' });
 		}
 		
-		client.name = name || client.name;
-		client.email = email || client.email;
-		await client.save();
+		user.name = name || user.name;
+		user.email = email || user.email;
+		await user.save();
 		
 		res.json({
-			message: 'Client updated successfully',
-			client: {
-				_id: client._id,
-				name: client.name,
-				email: client.email
+			message: 'User updated successfully',
+			user: {
+				_id: user._id,
+				name: user.name,
+				email: user.email
 			}
 		});
 	} catch (e) { next(e); }
 });
 
-// Delete client (Can only delete own clients)
-router.delete('/clients/:id', auth, adminOrSubadmin, async (req, res, next) => {
+// Delete user (Can only delete own users)
+router.delete('/users/:id', auth, adminOrSubadmin, async (req, res, next) => {
 	try {
-		const client = await User.findOne({ 
+		const user = await User.findOne({ 
 			_id: req.params.id, 
-			role: 'client' 
+			role: 'user' 
 		});
 		
-		if (!client) {
-			return res.status(404).json({ message: 'Client not found' });
+		if (!user) {
+			return res.status(404).json({ message: 'User not found' });
 		}
 		
-		// Sub-admins can only delete their own clients
-		if (req.user.role === 'subadmin' && client.addedBy?.toString() !== req.user._id.toString()) {
+		// Sub-admins can only delete their own users
+		if (req.user.role === 'subadmin' && user.addedBy?.toString() !== req.user._id.toString()) {
 			return res.status(403).json({ message: 'Access denied' });
 		}
 		
 		await User.findByIdAndDelete(req.params.id);
 		
-		res.json({ message: 'Client deleted successfully' });
+		res.json({ message: 'User deleted successfully' });
 	} catch (e) { next(e); }
 });
 
@@ -379,7 +379,7 @@ router.get('/dashboard/stats', auth, adminOnly, async (req, res, next) => {
 			User.countDocuments({ role: 'subadmin' }),
 			User.countDocuments({ role: 'subadmin', isApproved: true }),
 			User.countDocuments({ role: 'subadmin', isApproved: false }),
-			User.countDocuments({ role: 'client' }),
+			User.countDocuments({ role: 'user' }),
 			Transaction.aggregate([
 				{ $match: { type: 'earn' } },
 				{ $group: { _id: null, total: { $sum: '$amount' } } }
@@ -396,7 +396,7 @@ router.get('/dashboard/stats', auth, adminOnly, async (req, res, next) => {
 				approved: approvedSubadmins,
 				pending: pendingSubadmins
 			},
-			clients: {
+			users: {
 				total: totalClients
 			},
 			earnings: {
@@ -417,16 +417,16 @@ router.get('/dashboard/subadmin-stats', auth, adminOrSubadmin, async (req, res, 
 		}
 		
 		const [totalClients, activeClients] = await Promise.all([
-			User.countDocuments({ role: 'client', addedBy: userId }),
+			User.countDocuments({ role: 'user', addedBy: userId }),
 			User.countDocuments({ 
-				role: 'client', 
+				role: 'user', 
 				addedBy: userId,
 				coinsBalance: { $gt: 0 }
 			})
 		]);
 		
 		res.json({
-			clients: {
+			users: {
 				total: totalClients,
 				active: activeClients
 			}
@@ -439,7 +439,7 @@ router.get('/dashboard/subadmin-stats', auth, adminOrSubadmin, async (req, res, 
 // Get all vendors (admin only)
 router.get('/vendors', auth, adminOnly, async (req, res, next) => {
 	try {
-		const vendors = await User.find({ role: 'vendor' })
+		const vendors = await User.find({ role: 'partner' })
 			.select('-password')
 			.sort({ createdAt: -1 });
 		
@@ -447,29 +447,29 @@ router.get('/vendors', auth, adminOnly, async (req, res, next) => {
 	} catch (e) { next(e); }
 });
 
-// Update vendor status (admin only)
+// Update partner status (admin only)
 router.patch('/vendors/:vendorId', auth, adminOnly, async (req, res, next) => {
 	try {
 		const { isActive } = req.body;
 		
-		const vendor = await User.findById(req.params.vendorId);
-		if (!vendor || vendor.role !== 'vendor') {
-			return res.status(404).json({ error: 'Vendor not found' });
+		const partner = await User.findById(req.params.vendorId);
+		if (!partner || partner.role !== 'partner') {
+			return res.status(404).json({ error: 'Partner not found' });
 		}
 		
-		vendor.isActive = isActive;
-		await vendor.save();
+		partner.isActive = isActive;
+		await partner.save();
 		
-		// If deactivating vendor, unpublish their products
+		// If deactivating partner, unpublish their products
 		if (!isActive) {
 			const { Product } = require('../schemas/Product');
 			await Product.updateMany(
-				{ vendor: vendor._id },
+				{ partner: partner._id },
 				{ isPublished: false }
 			);
 		}
 		
-		res.json({ success: true, vendor });
+		res.json({ success: true, partner });
 	} catch (e) { next(e); }
 });
 
@@ -478,7 +478,7 @@ router.get('/products', auth, adminOnly, async (req, res, next) => {
 	try {
 		const { Product } = require('../schemas/Product');
 		const products = await Product.find()
-			.populate('vendor', 'name email')
+			.populate('partner', 'name email')
 			.sort({ createdAt: -1 });
 		
 		res.json({ success: true, products });
@@ -507,7 +507,7 @@ router.get('/orders', auth, adminOnly, async (req, res, next) => {
 		const orders = await Order.find()
 			.populate('customer.user', 'name email phone')
 			.populate('items.product', 'title price category')
-			.populate('items.vendor', 'name email')
+			.populate('items.partner', 'name email')
 			.sort({ createdAt: -1 });
 		
 		res.json({ success: true, orders });
@@ -536,11 +536,11 @@ router.patch('/orders/:orderId', auth, adminOnly, async (req, res, next) => {
 	} catch (e) { next(e); }
 });
 
-// Get vendor management stats (admin only)
-router.get('/vendor-stats', auth, adminOnly, async (req, res, next) => {
+// Get partner management stats (admin only)
+router.get('/partner-stats', auth, adminOnly, async (req, res, next) => {
 	try {
-		const totalVendors = await User.countDocuments({ role: 'vendor' });
-		const activeVendors = await User.countDocuments({ role: 'vendor', isActive: true });
+		const totalVendors = await User.countDocuments({ role: 'partner' });
+		const activeVendors = await User.countDocuments({ role: 'partner', isActive: true });
 		
 		const { Product } = require('../schemas/Product');
 		const totalProducts = await Product.countDocuments();
@@ -626,7 +626,7 @@ router.post('/distribute-coins', auth, adminOnly, async (req, res, next) => {
 router.get('/all-users', auth, adminOnly, async (req, res, next) => {
 	try {
 		const users = await User.find({ 
-			role: { $in: ['client', 'subadmin'] },
+			role: { $in: ['user', 'subadmin'] },
 			isApproved: true 
 		}).select('name email role coinBalance').sort({ name: 1 });
 		
@@ -634,7 +634,7 @@ router.get('/all-users', auth, adminOnly, async (req, res, next) => {
 	} catch (e) { next(e); }
 });
 
-// Sub-admin coin distribution to clients
+// Sub-admin coin distribution to users
 router.post('/subadmin/distribute-coins', auth, async (req, res, next) => {
 	try {
 		if (req.user.role !== 'subadmin') {
@@ -644,7 +644,7 @@ router.post('/subadmin/distribute-coins', auth, async (req, res, next) => {
 		const { clientEmail, amount, description } = req.body;
 		
 		if (!clientEmail || !amount || amount <= 0) {
-			return res.status(400).json({ error: 'Client email and valid amount are required' });
+			return res.status(400).json({ error: 'User email and valid amount are required' });
 		}
 
 		// Check if sub-admin has enough coins
@@ -653,15 +653,15 @@ router.post('/subadmin/distribute-coins', auth, async (req, res, next) => {
 			return res.status(400).json({ error: 'Insufficient coin balance' });
 		}
 
-		// Find the target client and verify it's managed by this sub-admin
+		// Find the target user and verify it's managed by this sub-admin
 		const targetClient = await User.findOne({ 
 			email: clientEmail, 
-			role: 'client',
+			role: 'user',
 			addedBy: req.user._id 
 		});
 		
 		if (!targetClient) {
-			return res.status(404).json({ error: 'Client not found or not managed by you' });
+			return res.status(404).json({ error: 'User not found or not managed by you' });
 		}
 
 		// Transfer coins
