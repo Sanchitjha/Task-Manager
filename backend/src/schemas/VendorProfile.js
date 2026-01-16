@@ -1,6 +1,6 @@
 const { Schema, model } = require('mongoose');
 
-const vendorProfileSchema = new Schema(
+const partnerProfileSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
     storeName: { type: String, required: true, trim: true },
@@ -62,5 +62,5 @@ const vendorProfileSchema = new Schema(
   { timestamps: true }
 );
 
-const VendorProfile = model('VendorProfile', vendorProfileSchema);
-module.exports = { VendorProfile };
+const PartnerProfile = model('PartnerProfile', partnerProfileSchema);
+module.exports = { PartnerProfile };
