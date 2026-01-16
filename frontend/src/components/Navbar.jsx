@@ -24,7 +24,7 @@ export default function Navbar() {
 					{/* Logo with gradient */}
 					<Link to="/" className="group flex items-center gap-2">
 						<div className="text-3xl font-bold text-gradient-hero hover:scale-110 transition-transform duration-300">
-							⚡
+							💼
 						</div>
 						<span className="text-2xl font-extrabold text-gradient group-hover:scale-105 transition-transform duration-300">
 							The MANAGER
