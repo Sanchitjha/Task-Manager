@@ -34,16 +34,16 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: 'Task Manager Pro',
-        short_name: 'TaskManager',
-        description: 'Complete task management with video earning and e-commerce platform',
-        theme_color: '#2563eb',
+        name: 'The Manager - Professional Management Platform',
+        short_name: 'The Manager',
+        description: 'Complete business management platform for streamlined operations and growth',
+        theme_color: '#1f2937',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait-primary',
         scope: '/',
         start_url: '/',
-        categories: ['productivity', 'business', 'entertainment'],
+        categories: ['productivity', 'business', 'utilities'],
         lang: 'en',
         icons: [
           {
