@@ -1,15 +1,15 @@
 {
-  "name": "Task Manager Pro",
-  "short_name": "TaskManager",
-  "description": "Complete task management with video earning and e-commerce platform",
+  "name": "The Manager - Professional Management Platform",
+  "short_name": "The Manager",
+  "description": "Complete business management platform for streamlined operations, performance tracking, and growth",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "theme_color": "#1f2937",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "en",
-  "categories": ["productivity", "business", "entertainment"],
+  "categories": ["productivity", "business", "utilities"],
   "icons": [
     {
       "src": "/pwa-64x64.png",
