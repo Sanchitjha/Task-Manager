@@ -5,18 +5,10 @@ import { useAuth } from '../contexts/AuthContext';
 export default function Login() {
 	const [formData, setFormData] = useState({
 		email: '',
-		password: '',
-		name: '',
-		phone: '',
-		category: ''
+		password: ''
 	});
-	const [currentView, setCurrentView] = useState('choice'); // 'choice', 'login', 'register'
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
-	const [message, setMessage] = useState('');
-	
-	const navigate = useNavigate();
-	const { login, user } = useAuth();
 
 	// Redirect if already logged in
 	useEffect(() => {
@@ -44,55 +36,17 @@ export default function Login() {
 		setError('');
 
 		try {
-			if (currentView === 'login') {
-				// Use AuthContext login method
-				const result = await login(formData.email, formData.password);
-				if (result.success) {
-					// Redirect based on user role
-					if (result.user && result.user.role === 'admin') {
-						navigate('/admin');
-					} else {
-						navigate('/');
-					}
+			// Use AuthContext login method
+			const result = await login(formData.email, formData.password);
+			if (result.success) {
+				// Redirect based on user role
+				if (result.user && result.user.role === 'admin') {
+					navigate('/admin');
 				} else {
-					setError(result.error || 'Login failed');
+					navigate('/');
 				}
-			} else if (currentView === 'register') {
-				// Direct Registration
-				// Validate required fields for registration
-				if (!formData.name || !formData.phone || !formData.category) {
-					setError('Name, phone number, and category are required for registration.');
-					return;
-				}
-				
-				try {
-					const response = await fetch('https://task-manager-x6vw.onrender.com/api/auth/register', {
-						method: 'POST',
-						headers: { 
-							'Content-Type': 'application/json'
-						},
-						body: JSON.stringify({
-							name: formData.name,
-							email: formData.email,
-							password: formData.password,
-							phone: formData.phone,
-							role: formData.category
-						})
-					});
-					
-					const data = await response.json();
-					
-					if (response.ok && (data.id || data.message)) {
-						setMessage('✅ Registration successful! You can now login.');
-						setCurrentView('login');
-						setFormData({ name: '', email: '', password: '', phone: '', category: '' });
-						setError('');
-					} else {
-						setError(data.message || 'Registration failed');
-					}
-				} catch (err) {
-					setError('Registration failed. Please try again.');
-				}
+			} else {
+				setError(result.error || 'Login failed');
 			}
 		} catch (err) {
 			console.error('❌ Full error details:', err);
