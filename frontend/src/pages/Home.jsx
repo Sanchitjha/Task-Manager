@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import TheManagerLogo from '../components/TheManagerLogo';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Home() {
@@ -32,34 +33,7 @@ export default function Home() {
 				<section className="max-w-6xl mx-auto px-4 py-20 text-center animate-slide-up">
 					{/* Floating Badge */}
 					<div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-brand-100 to-accent-100 rounded-full mb-6 animate-bounce-slow">
-						<div className="w-8 h-8 flex items-center justify-center">
-							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" className="w-8 h-8">
-								<defs>
-									<linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-										<stop offset="0%" style={{stopColor:"#FCD34D", stopOpacity:1}} />
-										<stop offset="100%" style={{stopColor:"#F59E0B", stopOpacity:1}} />
-									</linearGradient>
-									<linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-										<stop offset="0%" style={{stopColor:"#8B5CF6", stopOpacity:1}} />
-										<stop offset="100%" style={{stopColor:"#7C3AED", stopOpacity:1}} />
-									</linearGradient>
-									<linearGradient id="suitGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-										<stop offset="0%" style={{stopColor:"#1E3A8A", stopOpacity:1}} />
-										<stop offset="100%" style={{stopColor:"#3730A3", stopOpacity:1}} />
-									</linearGradient>
-								</defs>
-								<ellipse cx="60" cy="60" rx="55" ry="25" fill="url(#goldGradient)" opacity="0.8" transform="rotate(-15 60 60)"/>
-								<ellipse cx="60" cy="60" rx="45" ry="20" fill="url(#purpleGradient)" opacity="0.8" transform="rotate(15 60 60)"/>
-								<g transform="translate(60,35)">
-									<ellipse cx="0" cy="-10" rx="8" ry="10" fill="#2D3748"/>
-									<path d="M-12,5 L-8,-5 L8,-5 L12,5 L12,35 L8,40 L-8,40 L-12,35 Z" fill="url(#suitGradient)"/>
-									<rect x="-6" y="-2" width="12" height="25" fill="#FFFFFF"/>
-									<path d="M-2,-2 L2,-2 L3,20 L0,25 L-3,20 Z" fill="url(#goldGradient)"/>
-									<path d="M-8,-5 L-4,5 L-6,10 L-10,0 Z" fill="url(#suitGradient)" opacity="0.8"/>
-									<path d="M8,-5 L4,5 L6,10 L10,0 Z" fill="url(#suitGradient)" opacity="0.8"/>
-								</g>
-							</svg>
-						</div>
+						<TheManagerLogo width={32} height={32} />
 						<span className="text-sm font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">Professional Management Platform</span>
 					</div>
 
