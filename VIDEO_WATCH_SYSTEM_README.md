@@ -347,7 +347,7 @@ watchRecord.watchTime = Math.min(watchTime, duration);
 
 ## Security Considerations
 
-### 1. **Client-Side Validation**
+### 1. **User-Side Validation**
 - YouTube IFrame API provides secure playback tracking
 - Cannot be easily manipulated via browser dev tools
 - Real-time position monitoring
