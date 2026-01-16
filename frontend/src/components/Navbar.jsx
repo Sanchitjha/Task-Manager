@@ -22,11 +22,11 @@ export default function Navbar() {
 			<div className="container mx-auto px-4">
 				<div className="flex justify-between items-center h-16">
 					{/* Logo with gradient */}
-					<Link to="/" className="group flex items-center gap-2">
-						<div className="text-3xl font-bold text-gradient-hero hover:scale-110 transition-transform duration-300">
-							💼
+					<Link to="/" className="group flex items-center gap-3">
+						<div className="text-3xl font-bold hover:scale-110 transition-transform duration-300">
+							⚡
 						</div>
-						<span className="text-2xl font-extrabold text-gradient group-hover:scale-105 transition-transform duration-300">
+						<span className="text-2xl font-extrabold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
 							The MANAGER
 						</span>
 					</Link>
