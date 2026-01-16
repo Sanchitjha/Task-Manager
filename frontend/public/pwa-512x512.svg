@@ -1,6 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" fill="#2563eb" rx="51.2"/>
-  <text x="50%" y="40%" text-anchor="middle" font-family="Arial, sans-serif" font-size="128" font-weight="bold" fill="#ffffff">TM</text>
-  <text x="50%" y="70%" text-anchor="middle" font-family="Arial, sans-serif" font-size="61.44" fill="#ffffff">PRO</text>
+  <defs>
+    <!-- Lightning Bolt Gradient -->
+    <linearGradient id="boltGradient512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FCD34D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Background -->
+    <radialGradient id="bgGradient512" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F8FAFC;stop-opacity:1" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Circular Background -->
+  <circle cx="256" cy="256" r="256" fill="url(#bgGradient512)"/>
+  
+  <!-- Large Lightning Bolt -->
+  <g transform="translate(256,256)">
+    <path d="M-60,-120 L20,-20 L-20,-20 L60,120 L-20,20 L20,20 Z" 
+          fill="url(#boltGradient512)" 
+          stroke="none"/>
+  </g>
 </svg>
