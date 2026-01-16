@@ -6,6 +6,8 @@ export default function Login() {
 		email: '',
 		password: '',
 		name: '',
+		phone: '',
+		category: '',
 		role: 'client'
 	});
 	const [isLogin, setIsLogin] = useState(true);
@@ -57,6 +59,11 @@ export default function Login() {
 				console.log('🔄 Registering user directly');
 				console.log('📧 Email:', formData.email);
 				
+				// Validate required fields for registration
+				if (!formData.name || !formData.phone || !formData.category) {
+					throw new Error('Name, phone number, and category are required for registration.');
+				}
+				
 				const response = await fetch('https://task-manager-x6vw.onrender.com/api/auth/register', {
 					method: 'POST',
 					headers: { 
@@ -67,6 +74,8 @@ export default function Login() {
 						name: formData.name,
 						email: formData.email,
 						password: formData.password,
+						phone: formData.phone,
+						category: formData.category,
 						role: 'client'
 					})
 				});
@@ -85,7 +94,7 @@ export default function Login() {
 				if (data.id || data.message) {
 					setMessage('✅ Registration successful! You can now login.');
 					setIsLogin(true);
-					setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+					setFormData({ name: '', email: '', password: '', phone: '', category: '', role: 'client' });
 					setError('');
 				} else {
 					setError(data.message || 'Registration failed');
@@ -110,7 +119,7 @@ export default function Login() {
 		setIsLogin(!isLogin);
 		setError('');
 		setMessage('');
-		setFormData({ email: '', password: '', name: '', role: 'client' });
+		setFormData({ email: '', password: '', name: '', phone: '', category: '', role: 'client' });
 	};
 
 	const styles = {
@@ -193,15 +202,40 @@ export default function Login() {
 					/>
 
 					{!isLogin && (
-						<input
-							type="text"
-							name="name"
-							placeholder="Full Name *"
-							value={formData.name}
-							onChange={handleChange}
-							required
-							style={styles.input}
-						/>
+						<>
+							<input
+								type="text"
+								name="name"
+								placeholder="Full Name *"
+								value={formData.name}
+								onChange={handleChange}
+								required
+								style={styles.input}
+							/>
+							<input
+								type="tel"
+								name="phone"
+								placeholder="Phone Number *"
+								value={formData.phone}
+								onChange={handleChange}
+								required
+								style={styles.input}
+							/>
+							<select
+								name="category"
+								value={formData.category}
+								onChange={handleChange}
+								required
+								style={styles.input}
+							>
+								<option value="">Select Category *</option>
+								<option value="Business Owner">Business Owner</option>
+								<option value="Freelancer">Freelancer</option>
+								<option value="Student">Student</option>
+								<option value="Professional">Professional</option>
+								<option value="Other">Other</option>
+							</select>
+						</>
 					)}
 
 					<input
@@ -213,19 +247,6 @@ export default function Login() {
 						required
 						style={styles.input}
 						/>
-
-					{!isLogin && (
-						<select
-							name="role"
-							value={formData.role}
-							onChange={handleChange}
-							style={styles.input}
-						>
-							<option value="client">Client</option>
-							<option value="vendor">Vendor</option>
-							<option value="subadmin">Sub-Admin</option>
-						</select>
-					)}
 
 					{error && (
 						<div style={styles.error}>
