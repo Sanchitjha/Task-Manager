@@ -147,15 +147,48 @@ export default function Login() {
 					)}
 
 					<div style={{
-						padding: '10px',
+						padding: '15px',
 						backgroundColor: '#e3f2fd',
 						color: '#0d47a1',
-						borderRadius: '4px',
+						borderRadius: '8px',
 						fontSize: '12px',
 						marginBottom: '15px',
-						border: '1px solid #90caf9'
+						border: '1px solid #90caf9',
+						display: 'flex',
+						alignItems: 'center',
+						gap: '10px'
 					}}>
-						💡 <strong>Admin Access:</strong> Use your admin credentials to access the admin panel
+						<div style={{ width: '24px', height: '24px', flexShrink: 0 }}>
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="24" height="24">
+								<defs>
+									<linearGradient id="goldGradientLogin" x1="0%" y1="0%" x2="100%" y2="100%">
+										<stop offset="0%" style={{stopColor:"#FCD34D", stopOpacity:1}} />
+										<stop offset="100%" style={{stopColor:"#F59E0B", stopOpacity:1}} />
+									</linearGradient>
+									<linearGradient id="purpleGradientLogin" x1="0%" y1="0%" x2="100%" y2="100%">
+										<stop offset="0%" style={{stopColor:"#8B5CF6", stopOpacity:1}} />
+										<stop offset="100%" style={{stopColor:"#7C3AED", stopOpacity:1}} />
+									</linearGradient>
+									<linearGradient id="suitGradientLogin" x1="0%" y1="0%" x2="100%" y2="100%">
+										<stop offset="0%" style={{stopColor:"#1E3A8A", stopOpacity:1}} />
+										<stop offset="100%" style={{stopColor:"#3730A3", stopOpacity:1}} />
+									</linearGradient>
+								</defs>
+								<ellipse cx="60" cy="60" rx="55" ry="25" fill="url(#goldGradientLogin)" opacity="0.8" transform="rotate(-15 60 60)"/>
+								<ellipse cx="60" cy="60" rx="45" ry="20" fill="url(#purpleGradientLogin)" opacity="0.8" transform="rotate(15 60 60)"/>
+								<g transform="translate(60,35)">
+									<ellipse cx="0" cy="-10" rx="8" ry="10" fill="#2D3748"/>
+									<path d="M-12,5 L-8,-5 L8,-5 L12,5 L12,35 L8,40 L-8,40 L-12,35 Z" fill="url(#suitGradientLogin)"/>
+									<rect x="-6" y="-2" width="12" height="25" fill="#FFFFFF"/>
+									<path d="M-2,-2 L2,-2 L3,20 L0,25 L-3,20 Z" fill="url(#goldGradientLogin)"/>
+									<path d="M-8,-5 L-4,5 L-6,10 L-10,0 Z" fill="url(#suitGradientLogin)" opacity="0.8"/>
+									<path d="M8,-5 L4,5 L6,10 L10,0 Z" fill="url(#suitGradientLogin)" opacity="0.8"/>
+								</g>
+							</svg>
+						</div>
+						<div>
+							<strong>Admin Access:</strong> Use your admin credentials to access the admin panel
+						</div>
 					</div>
 
 					<button
