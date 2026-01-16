@@ -13,7 +13,7 @@ const productSchema = new Schema(
     price: { type: Number, default: 0 }, // Keep for backward compatibility
     stock: { type: Number, default: 0 },
     images: [{ type: String }], // Stored as upload paths like /uploads/products/...
-    vendor: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    partner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     category: { type: String, default: 'general' },
     isPublished: { type: Boolean, default: true },
     sku: { type: String, default: null },
