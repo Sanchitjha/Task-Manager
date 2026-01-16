@@ -6,21 +6,21 @@ export default function Home() {
 	
 	const features = [
 		{
-			icon: '💰',
-			title: 'Earn Coins',
-			description: 'Watch videos and earn coins based on your watch time',
-			gradient: 'from-green-400 to-emerald-500'
-		},
-		{
-			icon: '👛',
-			title: 'Track Wallet',
-			description: 'Monitor your balance and transaction history in real-time',
+			icon: '�',
+			title: 'Analytics Dashboard',
+			description: 'Track performance metrics and business insights in real-time',
 			gradient: 'from-blue-400 to-cyan-500'
 		},
 		{
-			icon: '🎁',
-			title: 'Redeem Rewards',
-			description: 'Use coins for discounts on external purchases',
+			icon: '👥',
+			title: 'Team Management',
+			description: 'Organize teams, assign roles, and monitor productivity',
+			gradient: 'from-green-400 to-emerald-500'
+		},
+		{
+			icon: '🎯',
+			title: 'Goal Tracking',
+			description: 'Set targets, track progress, and achieve business objectives',
 			gradient: 'from-purple-400 to-pink-500'
 		}
 	];
@@ -32,22 +32,22 @@ export default function Home() {
 				<section className="max-w-6xl mx-auto px-4 py-20 text-center animate-slide-up">
 					{/* Floating Badge */}
 					<div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-100 to-accent-100 rounded-full mb-6 animate-bounce-slow">
-						<span className="text-2xl">⚡</span>
-						<span className="text-sm font-bold text-gradient">Modern Rewards Platform</span>
+						<span className="text-2xl">💼</span>
+						<span className="text-sm font-bold text-gradient">Professional Management Platform</span>
 					</div>
 
 					{/* Main Heading */}
 					<h1 className="text-5xl md:text-7xl font-extrabold leading-tight mb-6">
 						<span className="text-gradient-hero">
-							Earn, Track & Redeem
+							Manage, Earn & Grow
 						</span>
 						<br />
-						<span className="text-gray-800">Like Never Before</span>
+						<span className="text-gray-800">Your Business</span>
 					</h1>
 					
 					<p className="mt-6 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-						Watch engaging videos, accumulate coins effortlessly, redeem exciting discounts, 
-						and manage everything seamlessly with our powerful admin panel.
+						Streamline operations, track performance, manage rewards, 
+						and scale your business with our comprehensive management platform.
 					</p>
 
 					{/* CTA Buttons */}
