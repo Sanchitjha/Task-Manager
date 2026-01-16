@@ -62,8 +62,8 @@ router.get('/', auth, async (req, res, next) => {
 			.select('-__v')
 			.sort({ createdAt: -1 });
 		
-		// If user is a client, include watch progress
-		if (req.user.role === 'client') {
+		// If user is a user, include watch progress
+		if (req.user.role === 'user') {
 			const videoIds = videos.map(v => v._id);
 			const watchHistory = await VideoWatch.find({
 				userId: req.user._id,
@@ -316,7 +316,7 @@ router.post('/:id/watch', auth, async (req, res, next) => {
 		const completionThreshold = video.duration * 0.95; // 95% completion required
 		const videoCompleted = watchRecord.watchTime >= completionThreshold;
 		
-		if (req.user.role === 'client' && videoCompleted && !watchRecord.completed && !watchRecord.coinsEarned) {
+		if (req.user.role === 'user' && videoCompleted && !watchRecord.completed && !watchRecord.coinsEarned) {
 			// Calculate total coins based on video duration (5 coins per minute)
 			const totalMinutes = Math.ceil(video.duration / 60);
 			coinsAwarded = totalMinutes * 5;
