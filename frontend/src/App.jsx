@@ -8,6 +8,7 @@ import OfflineIndicator from './components/OfflineIndicator';
 import ErrorBoundary from './components/ErrorBoundary';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Earn from './pages/Earn';
 import Wallet from './pages/Wallet';
 import Shop from './pages/Shop';
@@ -48,6 +49,11 @@ function App() {
 					<Route path="/login" element={
 						<ErrorBoundary>
 							<Login />
+						</ErrorBoundary>
+					} />
+					<Route path="/register" element={
+						<ErrorBoundary>
+							<Register />
 						</ErrorBoundary>
 					} />
 					<Route path="/products" element={<Products />} />
