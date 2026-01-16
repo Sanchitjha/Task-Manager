@@ -4,8 +4,7 @@
   "description": "Modern Rewards Platform - Watch videos, earn coins, redeem discounts",
   "scripts": {
     "build": "npm install",
-    "preinstall": "echo 'Pre-install: checking directories' && ls -la",
-    "postinstall": "echo 'Post-install: setting up backend' && ls -la && if test -d backend; then echo 'Backend found' && cd backend && pwd && npm install; else echo 'Backend not found, listing all:' && find . -name '*backend*'; fi",
+    "postinstall": "if test -d backend; then cd backend && npm install; else echo 'Backend directory not found'; fi",
     "start": "cd backend && npm start",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
