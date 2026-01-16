@@ -69,7 +69,9 @@ export const AuthProvider = ({ children }) => {
 			setUser(userData);
 			// Set authorization header
 			api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-			return { success: true };
+			
+			// Return success with user role for redirect logic
+			return { success: true, user: userData };
 		} catch (error) {
 			console.error('Login error details:', {
 				message: error.message,
