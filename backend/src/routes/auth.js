@@ -2,15 +2,19 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { User } = require('../schemas/User');
-const { auth, adminOnly } = require('../middleware/auth'); 
-const { EmailOTPService } = require('../lib/emailOtpService');
+const { auth, adminOnly } = require('../middleware/auth');
 
 const router = express.Router();
 
 // Register new user (public - only for clients)
 router.post('/register', async (req, res, next) => {
 	try {
-		const { name, email, password, role } = req.body;
+		const { name, email, password, phone, category, role } = req.body;
+		
+		// Validate required fields
+		if (!name || !email || !password || !phone || !category) {
+			return res.status(400).json({ message: 'Name, email, password, phone, and category are required' });
+		}
 		
 		// Only allow client registration through public route
 		// Allow clients and vendors to register publicly
@@ -25,7 +29,9 @@ router.post('/register', async (req, res, next) => {
 		const user = await User.create({ 
 			name, 
 			email, 
-			password: hash, 
+			password: hash,
+			phone,
+			category, 
 			role: role === 'vendor' ? 'vendor' : 'client',
 			isApproved: true 
 		});
@@ -202,155 +208,8 @@ router.get('/me', auth, async (req, res, next) => {
 		next(e); 
 	}
 });
-
-// Send Email OTP (for registration verification)
-router.post('/send-email-otp', async (req, res, next) => {
-	try {
-		const { email } = req.body;
-		console.log('🔐 Received OTP request for email:', email);
-		console.log('Request headers:', req.headers);
-		console.log('Request origin:', req.get('origin'));
-		
-		if (!email) {
-			console.log('❌ No email provided');
-			return res.status(400).json({ message: 'Email is required' });
-		}
-		
-		// Validate email format
-		if (!EmailOTPService.isValidEmailFormat(email)) {
-			console.log('❌ Invalid email format:', email);
-			return res.status(400).json({ message: 'Invalid email format' });
-		}
-		
-		// Check if email already exists
-		const existingUser = await User.findOne({ email });
-		if (existingUser && !existingUser.isTemporary) {
-			console.log('❌ Email already registered:', email);
-			return res.status(400).json({ message: 'Email is already registered' });
-		}
-		
-		// Delete any existing temporary users for this email
-		await User.deleteMany({ email: email, isTemporary: true });
-		
-		// Generate OTP
-		const otpCode = EmailOTPService.generateOTP();
-		const otpExpiry = EmailOTPService.generateOTPExpiry();
-		
-		console.log(`📧 Generated OTP for ${email}: ${otpCode}`);
-		
-		// Send OTP email
-		const emailResult = await EmailOTPService.sendEmailOTP(email, otpCode);
-		
-		if (emailResult.success) {
-			// Store OTP in temporary user document
-			const tempUser = await User.create({
-				name: 'temp_user_' + Date.now(),
-				email: email,
-				password: 'temp_password_' + Date.now(),
-				role: 'client',
-				isApproved: false,
-				isVerified: false,
-				otpCode: otpCode,
-				otpExpiry: otpExpiry,
-				isTemporary: true
-			});
-			
-			console.log('✅ OTP stored for user:', email);
-			
-			res.json({
-				success: true,
-				message: emailResult.message,
-				tempUserId: tempUser._id,
-				developmentOTP: process.env.NODE_ENV !== 'production' ? otpCode : undefined
-			});
-		} else {
-			console.error('❌ Failed to send OTP email');
-			res.status(500).json({ 
-				message: emailResult.message 
-			});
-		}
-	} catch (error) {
-		console.error('❌ Error in send-email-otp:', error);
-		res.status(500).json({ 
-			message: 'Internal server error', 
-			error: error.message 
-		});
-	}
-});
-
-// Verify Email OTP and complete registration
-router.post('/verify-email-otp', async (req, res, next) => {
-	try {
-		const { email, otpCode, name, password } = req.body;
-		console.log('🔍 Verifying OTP for email:', email, 'Code:', otpCode);
-		
-		if (!email || !otpCode || !name || !password) {
-			return res.status(400).json({ message: 'All fields are required' });
-		}
-		
-		// Find temporary user with OTP
-		const tempUser = await User.findOne({ 
-			email: email, 
-			isTemporary: true 
-		});
-		
-		if (!tempUser) {
-			console.log('❌ No temporary user found for:', email);
-			return res.status(400).json({ message: 'OTP not found or expired. Please request a new one.' });
-		}
-		
-		// Check OTP expiry
-		if (new Date() > tempUser.otpExpiry) {
-			console.log('❌ OTP expired for:', email);
-			await User.deleteOne({ _id: tempUser._id });
-			return res.status(400).json({ message: 'OTP expired. Please request a new one.' });
-		}
-		
-		// Verify OTP
-		if (tempUser.otpCode !== otpCode) {
-			console.log('❌ Invalid OTP for:', email, 'Expected:', tempUser.otpCode, 'Got:', otpCode);
-			return res.status(400).json({ message: 'Invalid OTP. Please try again.' });
-		}
-		
-		console.log('✅ OTP verified for:', email);
-		
-		// Hash password and create real user
-		const hashedPassword = await bcrypt.hash(password, 10);
-		
-		const newUser = await User.create({
-			name: name,
-			email: email,
-			password: hashedPassword,
-			role: 'client',
-			isApproved: true,
-			isVerified: true,
-			isTemporary: false
-		});
-		
-		// Delete temporary user
-		await User.deleteOne({ _id: tempUser._id });
-		
-		console.log('✅ User registered successfully:', email);
-		
-		// Generate JWT token for immediate login
-		const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET || 'secret');
-		
-		res.json({
-			success: true,
-			message: 'Registration successful!',
-			token: token,
-			user: {
-				id: newUser._id,
-				name: newUser.name,
-				email: newUser.email,
-				role: newUser.role
-			}
-		});
 		
 	} catch (error) {
-		console.error('❌ Error in verify-email-otp:', error);
-		next(error);
-	}
 });
 
 module.exports = router;

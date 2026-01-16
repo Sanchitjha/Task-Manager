@@ -5,15 +5,13 @@ const userSchema = new Schema(
 		name: { type: String, required: true },
 		email: { type: String, required: true, unique: true },
 		password: { type: String, required: true },
-		phone: { type: String }, // Optional phone number (no verification required)
-		isEmailVerified: { type: Boolean, default: false }, // Email verification status
+		phone: { type: String, required: true },
+		category: { 
+			type: String, 
+			required: true,
+			enum: ['Business Owner', 'Freelancer', 'Student', 'Professional', 'Other']
+		},
 		profileImage: { type: String, default: null },
-		
-		// OTP fields for email verification
-		otpCode: { type: String },
-		otpExpiry: { type: Date },
-		isTemporary: { type: Boolean, default: false }, // For temporary user records during OTP verification
-		isVerified: { type: Boolean, default: false },
 		
 		// Vendor-specific fields
 		vendorAddress: {
