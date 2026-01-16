@@ -48,7 +48,12 @@ export default function Login() {
 				// Use AuthContext login method
 				const result = await login(formData.email, formData.password);
 				if (result.success) {
-					navigate('/');
+					// Redirect based on user role
+					if (result.user && result.user.role === 'admin') {
+						navigate('/admin');
+					} else {
+						navigate('/');
+					}
 				} else {
 					setError(result.error || 'Login failed');
 				}
@@ -241,6 +246,20 @@ export default function Login() {
 					{error && (
 						<div style={styles.error}>
 							{error}
+						</div>
+					)}
+
+					{isLogin && (
+						<div style={{
+							padding: '10px',
+							backgroundColor: '#e3f2fd',
+							color: '#0d47a1',
+							borderRadius: '4px',
+							fontSize: '12px',
+							marginBottom: '15px',
+							border: '1px solid #90caf9'
+						}}>
+							💡 <strong>Admin Access:</strong> Use your admin credentials to access the admin panel
 						</div>
 					)}
 
