@@ -22,7 +22,7 @@ const orderSchema = new Schema(
   {
     orderId: { type: String, unique: true, required: true }, // UNIQUE order ID (e.g., ORD-2025-001234)
     customer: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    partner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    vendor: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     items: [orderItemSchema],
     
     // Order details with pricing breakdown
