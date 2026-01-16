@@ -9,20 +9,20 @@ const { auth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// ===== VENDOR PROFILE ROUTES =====
+// ===== PARTNER PROFILE ROUTES =====
 
-// Get or create vendor profile
+// Get or create Partner profile
 router.get('/profile', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'vendor' && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Vendor access required' });
+    if (user.role !== 'Partner' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Partner access required' });
     }
 
     let profile = await VendorProfile.findOne({ user: user._id }).populate('user', 'name email phone');
     
-    if (!profile && user.role === 'vendor') {
-      // Auto-create profile for new vendor
+    if (!profile && user.role === 'Partner') {
+      // Auto-create profile for new Partner
       profile = await VendorProfile.create({
         user: user._id,
         storeName: user.name + "'s Store",
@@ -37,12 +37,12 @@ router.get('/profile', auth, async (req, res, next) => {
   }
 });
 
-// Update vendor profile
+// Update Partner profile
 router.put('/profile', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'vendor' && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Vendor access required' });
+    if (user.role !== 'Partner' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Partner access required' });
     }
 
     const { storeName, storeDescription, businessCategory, phone, email, address, shippingPolicy, returnPolicy, cancelPolicy } = req.body;
@@ -85,17 +85,17 @@ router.put('/profile', auth, async (req, res, next) => {
   }
 });
 
-// Get vendor dashboard stats
+// Get Partner dashboard stats
 router.get('/stats', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'vendor' && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Vendor access required' });
+    if (user.role !== 'Partner' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Partner access required' });
     }
 
     const profile = await VendorProfile.findOne({ user: user._id });
     
-    // Get orders for this vendor
+    // Get orders for this Partner
     const orders = await Order.find({ vendor: user._id });
     const totalOrders = orders.length;
     const totalRevenue = orders.reduce((sum, o) => sum + (o.paymentStatus === 'completed' ? o.finalAmount : 0), 0);
@@ -129,12 +129,12 @@ router.get('/stats', auth, async (req, res, next) => {
 
 // ===== ORDER MANAGEMENT =====
 
-// Get vendor's orders
+// Get Partner's orders
 router.get('/orders', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'vendor' && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Vendor access required' });
+    if (user.role !== 'Partner' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Partner access required' });
     }
 
     const page = Math.max(1, parseInt(req.query.page || '1'));
@@ -181,7 +181,7 @@ router.get('/orders/:id', auth, async (req, res, next) => {
   }
 });
 
-// Update order status (vendor)
+// Update order status (Partner)
 router.patch('/orders/:id/status', auth, async (req, res, next) => {
   try {
     const user = req.user;
@@ -208,17 +208,17 @@ router.patch('/orders/:id/status', auth, async (req, res, next) => {
 
 // ===== WALLET ROUTES =====
 
-// Get vendor wallet data (for tracking sales only)
+// Get Partner wallet data (for tracking sales only)
 router.get('/wallet', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'vendor' && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Vendor access required' });
+    if (user.role !== 'Partner' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Partner access required' });
     }
 
     // Get current balance from user (coins earned from sales)
-    const vendor = await User.findById(user._id);
-    const balance = vendor.coinsBalance || 0;
+    const partner = await User.findById(user._id);
+    const balance = partner.coinsBalance || 0;
 
     // Get pending earnings (orders that are confirmed but not yet delivered)
     const pendingOrders = await Order.find({
@@ -259,12 +259,12 @@ router.get('/wallet', auth, async (req, res, next) => {
 
 // ===== ANALYTICS ROUTES =====
 
-// Get vendor analytics
+// Get Partner analytics
 router.get('/analytics', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'vendor' && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Vendor access required' });
+    if (user.role !== 'Partner' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Partner access required' });
     }
 
     const range = req.query.range || 'week'; // week, month, year
@@ -352,12 +352,12 @@ router.get('/analytics', auth, async (req, res, next) => {
 
 // ===== REVIEWS =====
 
-// Get vendor reviews
+// Get Partner reviews
 router.get('/reviews', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'vendor' && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Vendor access required' });
+    if (user.role !== 'Partner' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Partner access required' });
     }
 
     const page = Math.max(1, parseInt(req.query.page || '1'));
