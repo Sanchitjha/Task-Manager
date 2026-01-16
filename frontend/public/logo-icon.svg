@@ -1,20 +1,29 @@
-<!-- Simple SVG version of The Manager logo for PWA -->
+<!-- The Manager Lightning Bolt Logo SVG for PWA -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- Background Circle -->
-  <circle cx="256" cy="256" r="256" fill="#1f2937"/>
+  <defs>
+    <!-- Main Lightning Bolt Gradient - Blue to Yellow to Purple -->
+    <linearGradient id="boltGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FCD34D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Background Gradient -->
+    <radialGradient id="bgGradient" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F3F4F6;stop-opacity:1" />
+    </radialGradient>
+  </defs>
   
-  <!-- Business Icon -->
-  <g transform="translate(256,150)">
-    <!-- Suit Body -->
-    <rect x="-40" y="0" width="80" height="120" rx="10" fill="#3b82f6"/>
-    <!-- Tie -->
-    <rect x="-8" y="10" width="16" height="60" fill="#fbbf24"/>
-    <!-- Head -->
-    <circle cx="0" cy="-30" r="25" fill="#374151"/>
+  <!-- Circular Background -->
+  <circle cx="256" cy="256" r="256" fill="url(#bgGradient)"/>
+  
+  <!-- Large Lightning Bolt -->
+  <g transform="translate(256,256)">
+    <!-- Main bolt shape -->
+    <path d="M-60,-120 L20,-20 L-20,-20 L60,120 L-20,20 L20,20 Z" 
+          fill="url(#boltGradient)" 
+          stroke="none" 
+          filter="drop-shadow(0 8px 16px rgba(0,0,0,0.2))"/>
   </g>
-  
-  <!-- Company Name -->
-  <text x="256" y="350" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#ffffff">THE</text>
-  <text x="256" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#fbbf24">MANAGER</text>
-  <text x="256" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#9ca3af">PUBLIC SERVICES</text>
 </svg>
