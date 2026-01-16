@@ -1,0 +1,3 @@
+# Keep this directory in git
+# This file ensures the backend directory is always included in git commits
+# DO NOT DELETE - Required for Render deployment
