@@ -4,11 +4,11 @@
 
 ### 🎯 Purpose: Customer Discount System
 
-**Important:** Coins are used exclusively to provide discounts to customers. Vendors earn coins as a metric of sales performance, but **cannot withdraw them as real money**. The system tracks vendor earnings for analytics and performance monitoring only.
+**Important:** Coins are used exclusively to provide discounts to customers. Partners earn coins as a metric of sales performance, but **cannot withdraw them as real money**. The system tracks Partner earnings for analytics and performance monitoring only.
 
 ### 🔄 How Coin Transfer Works
 
-When a client purchases a product from a vendor, the following transaction flow occurs automatically:
+When a user purchases a product from a Partner, the following transaction flow occurs automatically:
 
 ### 1. Order Creation (`/backend/src/routes/orders.js`)
 
@@ -30,10 +30,10 @@ user.coinsBalance -= totalCoinsUsed;
 await user.save({ session });
 ```
 
-#### Step 2: Add to Vendor
+#### Step 2: Add to Partner
 ```javascript
-vendor.coinsBalance = (vendor.coinsBalance || 0) + totalCoinsUsed;
-await vendor.save({ session });
+partner.coinsBalance = (partner.coinsBalance || 0) + totalCoinsUsed;
+await partner.save({ session });
 ```
 
 #### Step 3: Create Transaction Records
