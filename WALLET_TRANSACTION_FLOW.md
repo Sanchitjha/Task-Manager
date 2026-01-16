@@ -39,13 +39,13 @@ await partner.save({ session });
 #### Step 3: Create Transaction Records
 Two transaction records are created:
 
-**Client Transaction:**
+**User Transaction:**
 - Type: `purchase`
 - Amount: `-totalCoinsUsed` (negative)
 - Description: "Order payment: ORD-xxxxx"
-- Metadata: Contains orderId, vendorId, itemCount
+- Metadata: Contains orderId, partnerId, itemCount
 
-**Vendor Transaction:**
+**Partner Transaction:**
 - Type: `sale`
 - Amount: `+totalCoinsUsed` (positive)
 - Description: "Order received: ORD-xxxxx"
@@ -54,25 +54,25 @@ Two transaction records are created:
 ### 3. Transaction Schema Updates
 
 The Transaction schema now supports:
-- ✅ `purchase` - Client buying products
-- ✅ `sale` - Vendor receiving payment
-- ✅ `earn` - Client earning from videos
+- ✅ `purchase` - User buying products
+- ✅ `sale` - Partner receiving payment
+- ✅ `earn` - User earning from videos
 - ✅ `redeem` - Converting coins to wallet balance
-- ✅ `withdrawal` - Vendor withdrawing funds
-- ✅ `refund` - Returning coins to client
+- ✅ `withdrawal` - Partner withdrawing funds
+- ✅ `refund` - Returning coins to user
 - ✅ `transfer_send` / `transfer_receive` - P2P transfers
 
-### 4. Vendor Wallet Features
+### 4. Partner Wallet Features
 
 #### Available Endpoints:
 
-1. **GET `/api/vendor/wallet`**
+1. **GET `/api/partner/wallet`**
    - Returns current balance (coins earned from sales)
    - Shows pending earnings (orders in processing)
    - Lists total lifetime earnings
    - Displays transaction history (sales and refunds)
 
-2. **GET `/api/vendor/analytics`**
+2. **GET `/api/partner/analytics`**
    - Time-based analytics (week/month/year)
    - Total revenue in coins
    - Top-selling products
@@ -82,21 +82,21 @@ The Transaction schema now supports:
 
 ### 5. Frontend Pages
 
-#### Client Wallet (`/wallet`)
+#### User Wallet (`/wallet`)
 - Shows coins balance and wallet balance
 - Lists all transactions (earn, purchase, redeem)
 - Redeem coins to wallet balance (100 coins = ₹1)
 
-#### Vendor Wallet (`/seller/wallet`)
+#### Partner Wallet (`/seller/wallet`)
 - Shows earned coins from sales (performance metric)
 - Displays pending earnings from processing orders
 - Shows total lifetime earnings
 - Complete transaction history (sales and refunds)
 - Analytics links for detailed business insights
 
-**Note:** Vendors track earnings but cannot withdraw. Coins remain in the system to provide customer discounts.
+**Note:** Partners track earnings but cannot withdraw. Coins remain in the system to provide customer discounts.
 
-#### Vendor Analytics (`/seller/analytics`)
+#### Partner Analytics (`/seller/analytics`)
 - Revenue tracking
 - Order statistics
 - Top products performance
@@ -118,49 +118,49 @@ The Transaction schema now supports:
 
 To verify coin transfers are working:
 
-1. **Create Test Client & Vendor:**
+1. **Create Test User & Partner:**
    ```bash
    cd backend
    node setup-test-users.js
    ```
 
-2. **Give Client Some Coins:**
-   - Client watches videos to earn coins
+2. **Give User Some Coins:**
+   - User watches videos to earn coins
    - OR admin can credit coins directly
 
-3. **Vendor Creates Product:**
-   - Login as vendor
+3. **Partner Creates Product:**
+   - Login as Partner
    - Create product with price
 
-4. **Client Purchases Product:**
+4. **User Purchases Product:****
    - Browse products
    - Add to cart
    - Checkout with coins
 
 5. **Verify Transaction:**
-   - Check client wallet: coins deducted
-   - Check vendor wallet: coins added
+   - Check user wallet: coins deducted
+   - Check Partner wallet: coins added
    - Both should see transaction records
 
 ### 8. Example Transaction Flow
 
 ```
 Initial State:
-- Client: 1000 coins
-- Vendor: 500 coins
+- User: 1000 coins
+- Partner: 500 coins
 
-Client buys product for 200 coins:
-→ Client Transaction: -200 (type: purchase)
-→ Vendor Transaction: +200 (type: sale)
+User buys product for 200 coins:
+→ User Transaction: -200 (type: purchase)
+→ Partner Transaction: +200 (type: sale)
 
 Final State:
-- Client: 800 coins
-- Vendor: 700 coins
+- User: 800 coins
+- Partner: 700 coins
 ```
 
 ### 9. Error Scenarios Handled
 
-- ❌ Insufficient client balance → Order rejected, no deduction
+- ❌ Insufficient user balance → Order rejected, no deduction
 - ❌ Out of stock → Order rejected, no deduction
 - ❌ Database error → Full rollback, no partial transactions
 - ❌ Invalid order data → Validation error, no processing
@@ -168,15 +168,15 @@ Final State:
 ### 10. System Design Philosophy
 
 **Coin Economy:**
-- Clients earn coins by watching videos
-- Clients spend coins to get discounts on products
-- Vendors receive coins as a sales performance metric
+- Users earn coins by watching videos
+- Users spend coins to get discounts on products
+- Partners receive coins as a sales performance metric
 - Coins stay in the system to maintain the discount economy
-- Vendors benefit from increased sales volume due to coin-based discounts
+- Partners benefit from increased sales volume due to coin-based discounts
 
-**Why No Vendor Withdrawals:**
+**Why No Partner Withdrawals:**
 - Coins are a customer loyalty/discount mechanism, not real currency
-- Vendors earn regular revenue from product sales (set in prices)
+- Partners earn regular revenue from product sales (set in prices)
 - Coin system encourages customer engagement and repeat purchases
 - Keeps the discount ecosystem sustainable
 
@@ -186,12 +186,12 @@ Final State:
 
 **The wallet transaction system is FULLY FUNCTIONAL:**
 
-✅ Coins transfer from client to vendor on purchase
+✅ Coins transfer from user to Partner on purchase
 ✅ Both parties see transaction records  
 ✅ Atomic operations ensure data consistency
 ✅ Complete audit trail maintained
-✅ Vendor earnings tracked for analytics
+✅ Partner earnings tracked for analytics
 ✅ **Coins provide customer discounts, not withdrawable cash**
 ✅ System encourages customer engagement through coin-earning
 
-**Purpose:** Create a sustainable discount ecosystem where customers earn and spend coins, vendors track performance, and everyone benefits from increased engagement and sales.
+**Purpose:** Create a sustainable discount ecosystem where customers earn and spend coins, Partners track performance, and everyone benefits from increased engagement and sales.
