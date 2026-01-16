@@ -36,7 +36,7 @@ async function createTestUser() {
     );
     
     console.log('Test users created successfully:');
-    console.log('Client: test@example.com / testpass123 (500 coins)');
+    console.log('User: test@example.com / testpass123 (500 coins)');
     console.log('Vendor: vendor@example.com / testpass123 (1000 coins)');
     
     process.exit(0);
