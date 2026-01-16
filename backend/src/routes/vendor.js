@@ -1,7 +1,7 @@
 const express = require('express');
-const { VendorProfile } = require('../schemas/VendorProfile');
+const { PartnerProfile } = require('../schemas/VendorProfile');
 const { Order } = require('../schemas/Order');
-const { VendorReview } = require('../schemas/VendorReview');
+const { PartnerReview } = require('../schemas/VendorReview');
 const { Product } = require('../schemas/Product');
 const { Transaction } = require('../schemas/Transaction');
 const { User } = require('../schemas/User');
@@ -19,11 +19,11 @@ router.get('/profile', auth, async (req, res, next) => {
       return res.status(403).json({ message: 'Partner access required' });
     }
 
-    let profile = await VendorProfile.findOne({ user: user._id }).populate('user', 'name email phone');
+    let profile = await PartnerProfile.findOne({ user: user._id }).populate('user', 'name email phone');
     
     if (!profile && user.role === 'Partner') {
       // Auto-create profile for new Partner
-      profile = await VendorProfile.create({
+      profile = await PartnerProfile.create({
         user: user._id,
         storeName: user.name + "'s Store",
         email: user.email,
@@ -47,10 +47,10 @@ router.put('/profile', auth, async (req, res, next) => {
 
     const { storeName, storeDescription, businessCategory, phone, email, address, shippingPolicy, returnPolicy, cancelPolicy } = req.body;
 
-    let profile = await VendorProfile.findOne({ user: user._id });
+    let profile = await PartnerProfile.findOne({ user: user._id });
     if (!profile) {
       // Create new profile if doesn't exist
-      profile = new VendorProfile({ 
+      profile = new PartnerProfile({ 
         user: user._id,
         storeName: storeName || (user.name + "'s Store"),
         email: email || user.email,
@@ -93,7 +93,7 @@ router.get('/stats', auth, async (req, res, next) => {
       return res.status(403).json({ message: 'Partner access required' });
     }
 
-    const profile = await VendorProfile.findOne({ user: user._id });
+    const profile = await PartnerProfile.findOne({ user: user._id });
     
     // Get orders for this Partner
     const orders = await Order.find({ vendor: user._id });
@@ -105,7 +105,7 @@ router.get('/stats', auth, async (req, res, next) => {
     const totalProducts = products.length;
     
     // Get reviews
-    const reviews = await VendorReview.find({ vendor: user._id });
+    const reviews = await PartnerReview.find({ vendor: user._id });
     const avgRating = reviews.length > 0 ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1) : 0;
 
     res.json({
