@@ -7,7 +7,7 @@ const { auth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// ===== VENDOR SUBSCRIPTION ROUTES =====
+// ===== PARTNER SUBSCRIPTION ROUTES =====
 
 // Calculate subscription cost (before creating product)
 router.post('/calculate', auth, async (req, res, next) => {
@@ -40,8 +40,8 @@ router.post('/calculate', auth, async (req, res, next) => {
 router.post('/create', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'vendor' && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Vendor access required' });
+    if (user.role !== 'Partner' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Partner access required' });
     }
 
     const { productId, numberOfDays, paymentMethod = 'online', transactionId } = req.body;
@@ -160,12 +160,12 @@ router.post('/:subscriptionId/pay', auth, async (req, res, next) => {
   }
 });
 
-// Get vendor's subscriptions
-router.get('/my-subscriptions', auth, async (req, res, next) => {
+// Get Partner's subscriptions
+router.get('/vendor-subscriptions', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'vendor' && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Vendor access required' });
+    if (user.role !== 'Partner' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Partner access required' });
     }
 
     const status = req.query.status; // active, expired, pending, cancelled
