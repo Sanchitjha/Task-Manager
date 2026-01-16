@@ -8,8 +8,8 @@ const userSchema = new Schema(
 		phone: { type: String, required: true },
 		profileImage: { type: String, default: null },
 		
-		// Vendor-specific fields
-		vendorAddress: {
+		// Partner-specific fields
+		partnerAddress: {
 			businessName: { type: String },
 			street: { type: String },
 			city: { type: String },
@@ -20,7 +20,7 @@ const userSchema = new Schema(
 			contactNumber: { type: String }
 		},
 		
-		role: { type: String, enum: ['admin', 'subadmin', 'client', 'vendor'], default: 'client' },
+		role: { type: String, enum: ['admin', 'subadmin', 'user', 'partner'], default: 'user' },
 		coinsBalance: { type: Number, default: 0 }, // Earned coins (not yet redeemed)
 		walletBalance: { type: Number, default: 0 }, // Redeemed money
 		
@@ -29,8 +29,8 @@ const userSchema = new Schema(
 		approvedBy: { type: Schema.Types.ObjectId, ref: 'User' }, // Admin who approved
 		approvedAt: { type: Date },
 		
-		// Client relationship
-		addedBy: { type: Schema.Types.ObjectId, ref: 'User' }, // Sub-admin who added this client
+		// User relationship
+		addedBy: { type: Schema.Types.ObjectId, ref: 'User' }, // Sub-admin who added this user
 		
 		transferOverride: {
 			sendBlocked: { type: Boolean, default: false },
