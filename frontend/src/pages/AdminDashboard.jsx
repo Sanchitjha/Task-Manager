@@ -43,7 +43,7 @@ export default function AdminDashboard() {
 	const fetchAllUsers = async () => {
 		try {
 			const res = await api.get('/admin/users');
-			setAllUsers(res.data.filter(u => u.role === 'client' || u.role === 'subadmin'));
+			setAllUsers(res.data.filter(u => u.role === 'user' || u.role === 'subadmin'));
 		} catch (error) {
 			showMessage('Failed to load users', 'error');
 		}
