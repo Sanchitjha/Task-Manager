@@ -13,7 +13,7 @@ async function setupUser() {
             name: String,
             email: { type: String, unique: true },
             password: String,
-            role: { type: String, enum: ['client', 'vendor', 'admin', 'subadmin'], default: 'client' },
+            role: { type: String, enum: ['user', 'Partner', 'admin', 'subadmin'], default: 'user' },
             isApproved: { type: Boolean, default: true },
             isEmailVerified: { type: Boolean, default: false },
             coinsBalance: { type: Number, default: 0 },
@@ -37,10 +37,10 @@ async function setupUser() {
             console.log('Creating new user...');
             const hashedPassword = await bcrypt.hash('Sm@522002', 10);
             const user = await User.create({
-                name: 'Vendor User',
+                name: 'Partner User',
                 email: 'Jha1947.sj@gmail.com',
                 password: hashedPassword,
-                role: 'vendor',
+                role: 'Partner',
                 isApproved: true,
                 isEmailVerified: true
             });
