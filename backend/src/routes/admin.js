@@ -32,14 +32,14 @@ router.get('/subadmins', auth, adminOnly, async (req, res, next) => {
 		// Get user count for each sub-admin
 		const subadminsWithStats = await Promise.all(
 			subadmins.map(async (subadmin) => {
-				const clientCount = await User.countDocuments({ 
+				const userCount = await User.countDocuments({ 
 					role: 'user', 
 					addedBy: subadmin._id 
 				});
 				
 				return {
 					...subadmin.toObject(),
-					clientCount
+					userCount
 				};
 			})
 		);
@@ -67,7 +67,7 @@ router.get('/subadmins/:id', auth, adminOnly, async (req, res, next) => {
 		}).select('-password').sort({ createdAt: -1 });
 		
 		// Get statistics for each user
-		const clientsWithStats = await Promise.all(
+		const usersWithStats = await Promise.all(
 			users.map(async (user) => {
 				const [videosWatched, totalCoinsEarned, totalRedeemed] = await Promise.all([
 					VideoWatch.countDocuments({ userId: user._id, completed: true }),
@@ -94,8 +94,8 @@ router.get('/subadmins/:id', auth, adminOnly, async (req, res, next) => {
 		
 		res.json({
 			subadmin: subadmin.toObject(),
-			users: clientsWithStats,
-			totalClients: clientsWithStats.length
+			users: usersWithStats,
+			totalUsers: usersWithStats.length
 		});
 	} catch (e) { next(e); }
 });
@@ -189,7 +189,7 @@ router.patch('/subadmins/:id', auth, adminOnly, async (req, res, next) => {
 	} catch (e) { next(e); }
 });
 
-// ===== CLIENT MANAGEMENT ROUTES =====
+// ===== USER MANAGEMENT ROUTES =====
 
 // Add user (Sub-admin or Admin)
 router.post('/users', auth, adminOrSubadmin, async (req, res, next) => {
@@ -239,7 +239,7 @@ router.get('/users', auth, adminOrSubadmin, async (req, res, next) => {
 			.sort({ createdAt: -1 });
 		
 		// Get statistics for each user
-		const clientsWithStats = await Promise.all(
+		const usersWithStats = await Promise.all(
 			users.map(async (user) => {
 				const [videosWatched, totalEarnings] = await Promise.all([
 					VideoWatch.countDocuments({ userId: user._id, completed: true }),
@@ -259,7 +259,7 @@ router.get('/users', auth, adminOrSubadmin, async (req, res, next) => {
 			})
 		);
 		
-		res.json(clientsWithStats);
+		res.json(usersWithStats);
 	} catch (e) { next(e); }
 });
 
@@ -372,7 +372,7 @@ router.get('/dashboard/stats', auth, adminOnly, async (req, res, next) => {
 			totalSubadmins,
 			approvedSubadmins,
 			pendingSubadmins,
-			totalClients,
+			totalUsers,
 			totalCoinsEarned,
 			totalRedeemed
 		] = await Promise.all([
@@ -397,7 +397,7 @@ router.get('/dashboard/stats', auth, adminOnly, async (req, res, next) => {
 				pending: pendingSubadmins
 			},
 			users: {
-				total: totalClients
+				total: totalUsers
 			},
 			earnings: {
 				totalCoinsEarned: totalCoinsEarned[0]?.total || 0,
@@ -416,7 +416,7 @@ router.get('/dashboard/subadmin-stats', auth, adminOrSubadmin, async (req, res, 
 			return res.status(403).json({ message: 'Sub-admin access required' });
 		}
 		
-		const [totalClients, activeClients] = await Promise.all([
+		const [totalUsers, activeUsers] = await Promise.all([
 			User.countDocuments({ role: 'user', addedBy: userId }),
 			User.countDocuments({ 
 				role: 'user', 
@@ -427,33 +427,33 @@ router.get('/dashboard/subadmin-stats', auth, adminOrSubadmin, async (req, res, 
 		
 		res.json({
 			users: {
-				total: totalClients,
-				active: activeClients
+				total: totalUsers,
+				active: activeUsers
 			}
 		});
 	} catch (e) { next(e); }
 });
 
-// ===== VENDOR MANAGEMENT ROUTES =====
+// ===== PARTNER MANAGEMENT ROUTES =====
 
-// Get all vendors (admin only)
-router.get('/vendors', auth, adminOnly, async (req, res, next) => {
+// Get all Partners (admin only)
+router.get('/partners', auth, adminOnly, async (req, res, next) => {
 	try {
-		const vendors = await User.find({ role: 'partner' })
+		const partners = await User.find({ role: 'Partner' })
 			.select('-password')
 			.sort({ createdAt: -1 });
 		
-		res.json({ success: true, vendors });
+		res.json({ success: true, partners });
 	} catch (e) { next(e); }
 });
 
 // Update partner status (admin only)
-router.patch('/vendors/:vendorId', auth, adminOnly, async (req, res, next) => {
+router.patch('/partners/:partnerId', auth, adminOnly, async (req, res, next) => {
 	try {
 		const { isActive } = req.body;
 		
-		const partner = await User.findById(req.params.vendorId);
-		if (!partner || partner.role !== 'partner') {
+		const partner = await User.findById(req.params.partnerId);
+		if (!partner || partner.role !== 'Partner') {
 			return res.status(404).json({ error: 'Partner not found' });
 		}
 		
@@ -539,8 +539,8 @@ router.patch('/orders/:orderId', auth, adminOnly, async (req, res, next) => {
 // Get partner management stats (admin only)
 router.get('/partner-stats', auth, adminOnly, async (req, res, next) => {
 	try {
-		const totalVendors = await User.countDocuments({ role: 'partner' });
-		const activeVendors = await User.countDocuments({ role: 'partner', isActive: true });
+		const totalPartners = await User.countDocuments({ role: 'Partner' });
+		const activePartners = await User.countDocuments({ role: 'Partner', isActive: true });
 		
 		const { Product } = require('../schemas/Product');
 		const totalProducts = await Product.countDocuments();
@@ -556,10 +556,10 @@ router.get('/partner-stats', auth, adminOnly, async (req, res, next) => {
 		const totalRevenue = completedOrdersData.reduce((sum, order) => sum + order.totalAmount, 0);
 		
 		const stats = {
-			vendors: {
-				total: totalVendors,
-				active: activeVendors,
-				inactive: totalVendors - activeVendors
+			partners: {
+				total: totalPartners,
+				active: activePartners,
+				inactive: totalPartners - activePartners
 			},
 			products: {
 				total: totalProducts,
@@ -641,9 +641,9 @@ router.post('/subadmin/distribute-coins', auth, async (req, res, next) => {
 			return res.status(403).json({ error: 'Only sub-admins can use this endpoint' });
 		}
 
-		const { clientEmail, amount, description } = req.body;
+		const { userEmail, amount, description } = req.body;
 		
-		if (!clientEmail || !amount || amount <= 0) {
+		if (!userEmail || !amount || amount <= 0) {
 			return res.status(400).json({ error: 'User email and valid amount are required' });
 		}
 
@@ -654,35 +654,35 @@ router.post('/subadmin/distribute-coins', auth, async (req, res, next) => {
 		}
 
 		// Find the target user and verify it's managed by this sub-admin
-		const targetClient = await User.findOne({ 
-			email: clientEmail, 
+		const targetUser = await User.findOne({ 
+			email: userEmail, 
 			role: 'user',
 			addedBy: req.user._id 
 		});
 		
-		if (!targetClient) {
+		if (!targetUser) {
 			return res.status(404).json({ error: 'User not found or not managed by you' });
 		}
 
 		// Transfer coins
 		subadmin.coinBalance = (subadmin.coinBalance || 0) - parseInt(amount);
-		targetClient.coinBalance = (targetClient.coinBalance || 0) + parseInt(amount);
+		targetUser.coinBalance = (targetUser.coinBalance || 0) + parseInt(amount);
 		
 		await subadmin.save();
-		await targetClient.save();
+		await targetUser.save();
 
 		// Create transaction records
 		const subadminTransaction = new Transaction({
 			user: subadmin._id,
 			type: 'subadmin_distribution_out',
 			amount: -parseInt(amount),
-			description: description || `Distributed ${amount} coins to ${targetClient.name}`,
+			description: description || `Distributed ${amount} coins to ${targetUser.name}`,
 			status: 'completed',
-			relatedUser: targetClient._id
+			relatedUser: targetUser._id
 		});
 
-		const clientTransaction = new Transaction({
-			user: targetClient._id,
+		const userTransaction = new Transaction({
+			user: targetUser._id,
 			type: 'subadmin_distribution_in',
 			amount: parseInt(amount),
 			description: description || `Received ${amount} coins from sub-admin`,
@@ -691,11 +691,11 @@ router.post('/subadmin/distribute-coins', auth, async (req, res, next) => {
 		});
 
 		await subadminTransaction.save();
-		await clientTransaction.save();
+		await userTransaction.save();
 
 		res.json({ 
 			success: true, 
-			message: `Successfully distributed ${amount} coins to ${targetClient.name}`,
+			message: `Successfully distributed ${amount} coins to ${targetUser.name}`,
 			newBalance: subadmin.coinBalance 
 		});
 
