@@ -32,13 +32,13 @@ export default function Home() {
 				<section className="max-w-6xl mx-auto px-4 py-20 text-center animate-slide-up">
 					{/* Floating Badge */}
 					<div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-100 to-accent-100 rounded-full mb-6 animate-bounce-slow">
-						<span className="text-2xl">💼</span>
-						<span className="text-sm font-bold text-gradient">Professional Management Platform</span>
+						<span className="text-2xl">⚡</span>
+						<span className="text-sm font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">Professional Management Platform</span>
 					</div>
 
 					{/* Main Heading */}
 					<h1 className="text-5xl md:text-7xl font-extrabold leading-tight mb-6">
-						<span className="text-gradient-hero">
+						<span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
 							Manage, Earn & Grow
 						</span>
 						<br />
