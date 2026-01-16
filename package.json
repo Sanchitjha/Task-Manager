@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Modern Rewards Platform - Watch videos, earn coins, redeem discounts",
   "scripts": {
-    "build": "echo 'Building The Manager...' && npm install && cd backend && npm install",
-    "start": "cd backend && npm start",
+    "build": "echo 'Building The Manager...' && npm install && cd backend && npm install && echo 'Build completed successfully'",
+    "start": "echo 'Starting The Manager...' && cd backend && npm start",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev", 
     "dev:frontend": "cd frontend && npm run dev",
