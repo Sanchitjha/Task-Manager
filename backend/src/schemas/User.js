@@ -6,11 +6,6 @@ const userSchema = new Schema(
 		email: { type: String, required: true, unique: true },
 		password: { type: String, required: true },
 		phone: { type: String, required: true },
-		category: { 
-			type: String, 
-			required: true,
-			enum: ['Business Owner', 'Freelancer', 'Student', 'Professional', 'Other']
-		},
 		profileImage: { type: String, default: null },
 		
 		// Vendor-specific fields

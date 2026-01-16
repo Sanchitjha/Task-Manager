@@ -7,8 +7,7 @@ export default function Login() {
 		password: '',
 		name: '',
 		phone: '',
-		category: '',
-		role: 'client'
+		category: ''
 	});
 	const [isLogin, setIsLogin] = useState(true);
 	const [loading, setLoading] = useState(false);
@@ -44,8 +43,7 @@ export default function Login() {
 					body: JSON.stringify({
 						email: formData.email,
 						password: formData.password
-					}),
-					signal: AbortSignal.timeout(30000) // 30 second timeout
+					})
 				});
 				
 				const data = await response.json();
@@ -56,61 +54,45 @@ export default function Login() {
 					setError('Login failed');
 				}
 			} else {
-				// Direct Registration (without OTP)
-				console.log('🔄 Registering user directly');
-				console.log('📧 Email:', formData.email);
-				
+				// Direct Registration
 				// Validate required fields for registration
 				if (!formData.name || !formData.phone || !formData.category) {
-					throw new Error('Name, phone number, and category are required for registration.');
+					setError('Name, phone number, and category are required for registration.');
+					return;
 				}
 				
-				const response = await fetch('https://task-manager-x6vw.onrender.com/api/auth/register', {
-					method: 'POST',
-					headers: { 
-						'Content-Type': 'application/json',
-						'Accept': 'application/json'
-					},
-					body: JSON.stringify({
-						name: formData.name,
-						email: formData.email,
-						password: formData.password,
-						phone: formData.phone,
-						category: formData.category,
-						role: 'client'
-					}),
-					signal: AbortSignal.timeout(30000) // 30 second timeout
-				});
-				
-				console.log('📡 Response status:', response.status);
-				
-				if (!response.ok) {
-					const errorText = await response.text();
-					console.error('❌ Error response:', errorText);
-					throw new Error(`HTTP ${response.status}: ${errorText}`);
-				}
-				
-				const data = await response.json();
-				console.log('✅ Registration Response:', data);
-				
-				if (data.id || data.message) {
-					setMessage('✅ Registration successful! You can now login.');
-					setIsLogin(true);
-					setFormData({ name: '', email: '', password: '', phone: '', category: '', role: 'client' });
-					setError('');
-				} else {
-					setError(data.message || 'Registration failed');
+				try {
+					const response = await fetch('https://task-manager-x6vw.onrender.com/api/auth/register', {
+						method: 'POST',
+						headers: { 
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({
+							name: formData.name,
+							email: formData.email,
+							password: formData.password,
+							phone: formData.phone,
+							role: formData.category
+						})
+					});
+					
+					const data = await response.json();
+					
+					if (response.ok && (data.id || data.message)) {
+						setMessage('✅ Registration successful! You can now login.');
+						setIsLogin(true);
+						setFormData({ name: '', email: '', password: '', phone: '', category: '' });
+						setError('');
+					} else {
+						setError(data.message || 'Registration failed');
+					}
+				} catch (err) {
+					setError('Registration failed. Please try again.');
 				}
 			}
 		} catch (err) {
 			console.error('❌ Full error details:', err);
-			if (err.message.includes('fetch')) {
-				setError('Unable to connect to server. Please check your internet connection and try again.');
-			} else if (err.message.includes('HTTP')) {
-				setError('Registration failed. Please check your details and try again.');
-			} else {
-				setError(err.message || 'Registration failed. Please try again.');
-			}
+			setError(`Error: ${err.message}. Check browser console for details.`);
 		} finally {
 			setLoading(false);
 		}
@@ -127,7 +109,7 @@ export default function Login() {
 		setIsLogin(!isLogin);
 		setError('');
 		setMessage('');
-		setFormData({ email: '', password: '', name: '', phone: '', category: '', role: 'client' });
+		setFormData({ email: '', password: '', name: '', phone: '', category: '' });
 	};
 
 	const styles = {
@@ -240,11 +222,9 @@ export default function Login() {
 								style={styles.input}
 							>
 								<option value="">Select Category *</option>
-								<option value="Business Owner">Business Owner</option>
-								<option value="Freelancer">Freelancer</option>
-								<option value="Student">Student</option>
-								<option value="Professional">Professional</option>
-								<option value="Other">Other</option>
+								<option value="client">Client</option>
+								<option value="vendor">Vendor</option>
+								<option value="subadmin">Sub-Admin</option>
 							</select>
 						</>
 					)}

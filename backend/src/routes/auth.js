@@ -9,17 +9,16 @@ const router = express.Router();
 // Register new user (public - only for clients)
 router.post('/register', async (req, res, next) => {
 	try {
-		const { name, email, password, phone, category, role } = req.body;
+		const { name, email, password, phone, role } = req.body;
 		
 		// Validate required fields
-		if (!name || !email || !password || !phone || !category) {
-			return res.status(400).json({ message: 'Name, email, password, phone, and category are required' });
+		if (!name || !email || !password || !phone || !role) {
+			return res.status(400).json({ message: 'Name, email, password, phone, and role are required' });
 		}
 		
-		// Only allow client registration through public route
-		// Allow clients and vendors to register publicly
-		if (role && role !== 'client' && role !== 'vendor') {
-			return res.status(403).json({ message: 'Only clients or vendors can register publicly' });
+		// Validate role
+		if (!['client', 'vendor', 'subadmin'].includes(role)) {
+			return res.status(400).json({ message: 'Invalid role. Must be client, vendor, or subadmin' });
 		}
 		
 		const existing = await User.findOne({ email });
@@ -31,9 +30,8 @@ router.post('/register', async (req, res, next) => {
 			email, 
 			password: hash,
 			phone,
-			category, 
-			role: role === 'vendor' ? 'vendor' : 'client',
-			isApproved: true 
+			role: role,
+			isApproved: role === 'subadmin' ? false : true  // Sub-admins need approval
 		});
 		
 		res.json({ id: user._id, message: 'Registration successful' });
