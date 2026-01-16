@@ -45,12 +45,12 @@ router.post('/', auth, async (req, res, next) => {
         throw new Error(`Insufficient stock for ${product.title}. Available: ${product.stock}`);
       }
 
-      // Set vendor (all items should be from same vendor for this order)
+      // Set Partner (all items should be from same Partner for this order)
       if (!vendorId) {
         vendorId = product.vendor;
         coinConversionRate = product.coinConversionRate || 1;
       } else if (vendorId.toString() !== product.vendor.toString()) {
-        throw new Error('All items in an order must be from the same vendor');
+        throw new Error('All items in an order must be from the same Partner');
       }
 
       const quantity = parseInt(item.quantity);
@@ -134,10 +134,10 @@ router.post('/', auth, async (req, res, next) => {
     user.coinsBalance -= totalCoinsUsed;
     await user.save({ session });
 
-    // Get vendor for receipt
+    // Get Partner for receipt
     const vendor = await User.findById(vendorId).session(session);
     
-    // Update vendor's coin balance (transfer coins from customer)
+    // Update Partner's coin balance (transfer coins from customer)
     if (vendor) {
       vendor.coinsBalance = (vendor.coinsBalance || 0) + totalCoinsUsed;
       await vendor.save({ session });
@@ -203,7 +203,7 @@ router.post('/', auth, async (req, res, next) => {
     res.status(201).json({
       success: true,
       order: populatedOrder,
-      message: `Order placed successfully! ${totalCoinsUsed} coins transferred to vendor.`
+      message: `Order placed successfully! ${totalCoinsUsed} coins transferred to Partner.`
     });
 
   } catch (error) {
@@ -252,11 +252,11 @@ router.get('/my-orders', auth, async (req, res, next) => {
   }
 });
 
-// Get vendor's orders
-router.get('/vendor-orders', auth, async (req, res, next) => {
+// Get Partner's orders
+router.get('/partner-orders', auth, async (req, res, next) => {
   try {
-    if (req.user.role !== 'vendor' && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Vendor access required' });
+    if (req.user.role !== 'Partner' && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Partner access required' });
     }
 
     const page = Math.max(1, parseInt(req.query.page || '1'));
@@ -344,10 +344,10 @@ router.get('/:orderId', auth, async (req, res, next) => {
 
     // Check if user has access to this order
     const isCustomer = order.customer._id.toString() === req.user._id.toString();
-    const isVendor = order.vendor._id.toString() === req.user._id.toString();
+    const isPartner = order.vendor._id.toString() === req.user._id.toString();
     const isAdmin = req.user.role === 'admin';
 
-    if (!isCustomer && !isVendor && !isAdmin) {
+    if (!isCustomer && !isPartner && !isAdmin) {
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -357,7 +357,7 @@ router.get('/:orderId', auth, async (req, res, next) => {
   }
 });
 
-// Update order status (vendor only)
+// Update order status (Partner only)
 router.put('/:orderId/status', auth, async (req, res, next) => {
   try {
     const { status } = req.body;
@@ -372,11 +372,11 @@ router.put('/:orderId/status', auth, async (req, res, next) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // Check if user is vendor of this order or admin
-    const isVendor = order.vendor.toString() === req.user._id.toString();
+    // Check if user is Partner of this order or admin
+    const isPartner = order.vendor.toString() === req.user._id.toString();
     const isAdmin = req.user.role === 'admin';
 
-    if (!isVendor && !isAdmin) {
+    if (!isPartner && !isAdmin) {
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -405,10 +405,10 @@ router.get('/:orderId/receipt', auth, async (req, res, next) => {
 
     // Check if user has access to this order
     const isCustomer = order.customer.toString() === req.user._id.toString();
-    const isVendor = order.vendor.toString() === req.user._id.toString();
+    const isPartner = order.vendor.toString() === req.user._id.toString();
     const isAdmin = req.user.role === 'admin';
 
-    if (!isCustomer && !isVendor && !isAdmin) {
+    if (!isCustomer && !isPartner && !isAdmin) {
       return res.status(403).json({ message: 'Access denied' });
     }
 
