@@ -93,46 +93,49 @@ export default function ProductCreate() {
 
     setLoading(true);
     try {
-      const productData = {
-        title: form.title,
-        description: form.description,
-        originalPrice: Number(form.originalPrice),
-        discountPercentage: Number(form.discountPercentage) || 0,
-        coinConversionRate: Number(form.coinConversionRate) || 1,
-        stock: Number(form.stock) || 0,
-        category: form.category,
-        sku: form.sku,
-        weight: form.weight,
-        dimensions: form.dimensions,
-        tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : []
-      };
+      // Use FormData for combined product creation with images
+      const formData = new FormData();
+      formData.append('title', form.title);
+      formData.append('description', form.description);
+      formData.append('originalPrice', form.originalPrice);
+      formData.append('discountPercentage', form.discountPercentage || '0');
+      formData.append('coinConversionRate', form.coinConversionRate || '1');
+      formData.append('stock', form.stock || '0');
+      formData.append('category', form.category);
+      formData.append('sku', form.sku);
+      formData.append('weight', form.weight);
+      formData.append('dimensions', form.dimensions);
+      formData.append('tags', form.tags);
+      formData.append('isPublished', form.isPublished);
 
-      const res = await api.post('/products', productData);
-      const productId = res.data.product._id;
+      // Add images to FormData
+      images.forEach((file) => {
+        formData.append('images', file);
+      });
 
-      if (images.length) {
-        const formData = new FormData();
-        images.forEach((f) => formData.append('images', f));
-        await api.post(`/products/${productId}/images`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-      }
+      // Use the combined endpoint
+      const res = await api.post('/products/create-with-images', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
-      setSuccess('Product created! Redirecting to subscription payment...');
+      setSuccess('Product created successfully! Redirecting to products...');
       
-      // Redirect to subscription payment page
+      // Redirect to products page
       setTimeout(() => {
-        navigate(`/subscription/payment/${productId}`);
+        navigate('/products');
       }, 1500);
       
-      setFormData({
+      setForm({
         title: '',
         description: '',
         originalPrice: '',
-        discountPercentage: '',
-        finalPrice: '',
-        coinPrice: '',
-        category: '',
+        discountPercentage: '0',
+        coinConversionRate: '1',
+        stock: '',
+        category: 'General',
+        sku: '',
+        weight: '',
+        dimensions: '',
         tags: '', 
         isPublished: true 
       });

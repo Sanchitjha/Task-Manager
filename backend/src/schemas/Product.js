@@ -4,19 +4,30 @@ const productSchema = new Schema(
   {
     title: { type: String, required: true, trim: true },
     description: { type: String, default: '' },
-    price: { type: Number, required: true, default: 0 },
+    originalPrice: { type: Number, required: true },
+    discountPercentage: { type: Number, default: 0, min: 0, max: 100 },
+    discountAmount: { type: Number, default: 0 },
+    finalPrice: { type: Number, default: 0 },
+    coinConversionRate: { type: Number, default: 1, min: 0.01 },
+    coinPrice: { type: Number, default: 0 },
+    price: { type: Number, default: 0 }, // Keep for backward compatibility
     stock: { type: Number, default: 0 },
     images: [{ type: String }], // Stored as upload paths like /uploads/products/...
     vendor: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     category: { type: String, default: 'general' },
-    isPublished: { type: Boolean, default: false }, // Changed to false - requires subscription payment
+    isPublished: { type: Boolean, default: true },
     sku: { type: String, default: null },
     weight: { type: String, default: null },
     dimensions: { type: String, default: null },
     tags: [{ type: String }],
     
+    // Discount Management
+    discountStartDate: { type: Date },
+    discountEndDate: { type: Date },
+    isDiscountActive: { type: Boolean, default: false },
+    
     // Subscription Management
-    requiresSubscription: { type: Boolean, default: true },
+    requiresSubscription: { type: Boolean, default: false },
     currentSubscription: { type: Schema.Types.ObjectId, ref: 'ProductSubscription' },
     subscriptionExpiry: { type: Date },
     subscriptionHistory: [{ type: Schema.Types.ObjectId, ref: 'ProductSubscription' }]

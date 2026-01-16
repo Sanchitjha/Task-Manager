@@ -5,6 +5,54 @@ const { uploadProduct } = require('../middleware/uploadProduct');
 
 const router = express.Router();
 
+// Create product with images (vendor or admin) - Combined endpoint
+router.post('/create-with-images', auth, uploadProduct.array('images', 6), async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: 'Authentication required' });
+    if (user.role !== 'vendor' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Vendor access required' });
+    }
+
+    const { 
+      title, description, originalPrice, discountPercentage, coinConversionRate, 
+      stock, category, isPublished, sku, weight, dimensions, tags 
+    } = req.body;
+    
+    if (!title || typeof originalPrice === 'undefined') {
+      return res.status(400).json({ message: 'Title and original price required' });
+    }
+
+    // Parse arrays if they come as strings from FormData
+    const parsedTags = Array.isArray(tags) ? tags : (typeof tags === 'string' && tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : []);
+    const parsedDimensions = typeof dimensions === 'string' && dimensions ? dimensions : null;
+
+    // Create product with image paths
+    const images = req.files ? req.files.map(f => `/uploads/products/${f.filename}`) : [];
+
+    const product = await Product.create({
+      title,
+      description,
+      originalPrice: Number(originalPrice),
+      discountPercentage: Number(discountPercentage) || 0,
+      coinConversionRate: Number(coinConversionRate) || 1,
+      stock: Number(stock) || 0,
+      category: category || 'general',
+      isPublished: typeof isPublished !== 'undefined' ? !!isPublished : true,
+      sku: sku || null,
+      weight: weight || null,
+      dimensions: parsedDimensions,
+      tags: parsedTags,
+      images: images,
+      vendor: user._id
+    });
+
+    res.json({ success: true, product, message: 'Product created successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Create product (vendor or admin)
 router.post('/', auth, async (req, res, next) => {
   try {
