@@ -49,8 +49,8 @@ export default function Navbar() {
 					<div className="hidden lg:flex items-center gap-4">
 						{user && (
 							<>
-								{/* Earn Link - Client Only */}
-								{user.role === 'client' && (
+								{/* Earn Link - User Only */}
+								{user.role === 'user' && (
 									<Link 
 										to="/earn" 
 										className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 ${
@@ -62,8 +62,8 @@ export default function Navbar() {
 										💰 Earn
 									</Link>
 								)}
-								{/* Wallet Link - Client Only */}
-								{user.role === 'client' && (
+								{/* Wallet Link - User Only */}
+								{user.role === 'user' && (
 									<Link 
 										to="/wallet" 
 										className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 ${
@@ -75,8 +75,8 @@ export default function Navbar() {
 										👛 Wallet
 									</Link>
 								)}
-								{/* Shop Link - Only for Clients and Admins */}
-								{(user.role === 'client' || user.role === 'admin') && (
+								{/* Shop Link - Only for Users and Admins */}
+								{(user.role === 'user' || user.role === 'admin') && (
 									<Link 
 										to="/shop" 
 										className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 ${
@@ -88,8 +88,8 @@ export default function Navbar() {
 										🛍️ Shop
 									</Link>
 								)}
-								{/* Orders Link - For clients and vendors */}
-								{(user.role === 'client' || user.role === 'vendor' || user.role === 'admin') && (
+								{/* Orders Link - For users and Partners */}
+								{(user.role === 'user' || user.role === 'Partner' || user.role === 'admin') && (
 									<Link 
 										to="/orders" 
 										className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 ${
@@ -115,7 +115,7 @@ export default function Navbar() {
 									</Link>
 								)}
 								{/* Seller Portal Link */}
-								{user.role === 'vendor' && (
+								{user.role === 'Partner' && (
 									<Link 
 										to="/seller/dashboard" 
 										className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 ${
