@@ -44,7 +44,8 @@ export default function Login() {
 					body: JSON.stringify({
 						email: formData.email,
 						password: formData.password
-					})
+					}),
+					signal: AbortSignal.timeout(30000) // 30 second timeout
 				});
 				
 				const data = await response.json();
@@ -77,7 +78,8 @@ export default function Login() {
 						phone: formData.phone,
 						category: formData.category,
 						role: 'client'
-					})
+					}),
+					signal: AbortSignal.timeout(30000) // 30 second timeout
 				});
 				
 				console.log('📡 Response status:', response.status);
@@ -102,7 +104,13 @@ export default function Login() {
 			}
 		} catch (err) {
 			console.error('❌ Full error details:', err);
-			setError(`Error: ${err.message}. Check browser console for details.`);
+			if (err.message.includes('fetch')) {
+				setError('Unable to connect to server. Please check your internet connection and try again.');
+			} else if (err.message.includes('HTTP')) {
+				setError('Registration failed. Please check your details and try again.');
+			} else {
+				setError(err.message || 'Registration failed. Please try again.');
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -202,21 +210,24 @@ export default function Login() {
 					/>
 
 					{!isLogin && (
+						<input
+							type="tel"
+							name="phone"
+							placeholder="Phone Number *"
+							value={formData.phone}
+							onChange={handleChange}
+							required
+							style={styles.input}
+						/>
+					)}
+
+					{!isLogin && (
 						<>
 							<input
 								type="text"
 								name="name"
 								placeholder="Full Name *"
 								value={formData.name}
-								onChange={handleChange}
-								required
-								style={styles.input}
-							/>
-							<input
-								type="tel"
-								name="phone"
-								placeholder="Phone Number *"
-								value={formData.phone}
 								onChange={handleChange}
 								required
 								style={styles.input}
