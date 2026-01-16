@@ -3,7 +3,7 @@ const { Schema, model } = require('mongoose');
 const productSubscriptionSchema = new Schema(
   {
     product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
-    vendor: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    partner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     
     // Subscription Details
     numberOfDays: { type: Number, required: true, min: 1 },
@@ -51,7 +51,7 @@ const productSubscriptionSchema = new Schema(
 );
 
 // Index for efficient queries
-productSubscriptionSchema.index({ vendor: 1, status: 1 });
+productSubscriptionSchema.index({ partner: 1, status: 1 });
 productSubscriptionSchema.index({ endDate: 1, status: 1 });
 productSubscriptionSchema.index({ product: 1 });
 
