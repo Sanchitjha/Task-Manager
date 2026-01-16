@@ -10,7 +10,7 @@ export default function Login() {
 		phone: '',
 		category: ''
 	});
-	const [isLogin, setIsLogin] = useState(true);
+	const [mode, setMode] = useState('welcome'); // 'welcome', 'login', 'register'
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 	const [message, setMessage] = useState('');
@@ -44,7 +44,7 @@ export default function Login() {
 		setError('');
 
 		try {
-			if (isLogin) {
+			if (mode === 'login') {
 				// Use AuthContext login method
 				const result = await login(formData.email, formData.password);
 				if (result.success) {
@@ -57,7 +57,7 @@ export default function Login() {
 				} else {
 					setError(result.error || 'Login failed');
 				}
-			} else {
+			} else if (mode === 'register') {
 				// Direct Registration
 				// Validate required fields for registration
 				if (!formData.name || !formData.phone || !formData.category) {
@@ -84,7 +84,7 @@ export default function Login() {
 					
 					if (response.ok && (data.id || data.message)) {
 						setMessage('✅ Registration successful! You can now login.');
-						setIsLogin(true);
+						setMode('login');
 						setFormData({ name: '', email: '', password: '', phone: '', category: '' });
 						setError('');
 					} else {
@@ -109,8 +109,22 @@ export default function Login() {
 		});
 	};
 
-	const toggleMode = () => {
-		setIsLogin(!isLogin);
+	const goToLogin = () => {
+		setMode('login');
+		setError('');
+		setMessage('');
+		setFormData({ email: '', password: '', name: '', phone: '', category: '' });
+	};
+
+	const goToRegister = () => {
+		setMode('register');
+		setError('');
+		setMessage('');
+		setFormData({ email: '', password: '', name: '', phone: '', category: '' });
+	};
+
+	const goToWelcome = () => {
+		setMode('welcome');
 		setError('');
 		setMessage('');
 		setFormData({ email: '', password: '', name: '', phone: '', category: '' });
@@ -140,6 +154,12 @@ export default function Login() {
 			marginBottom: '30px',
 			color: '#333'
 		},
+		subtitle: {
+			fontSize: '16px',
+			textAlign: 'center',
+			marginBottom: '30px',
+			color: '#666'
+		},
 		input: {
 			width: '100%',
 			padding: '12px',
@@ -167,6 +187,14 @@ export default function Login() {
 			marginBottom: '15px',
 			fontSize: '14px'
 		},
+		success: {
+			backgroundColor: '#e8f5e8',
+			color: '#2e7d32',
+			padding: '10px',
+			borderRadius: '4px',
+			marginBottom: '15px',
+			fontSize: '14px'
+		},
 		link: {
 			color: '#007bff',
 			cursor: 'pointer',
@@ -180,114 +208,142 @@ export default function Login() {
 	return (
 		<div style={styles.container}>
 			<div style={styles.form}>
-				<h1 style={styles.title}>
-					{isLogin ? 'Welcome Back' : 'Create Account'}
-				</h1>
-				
-				<form onSubmit={handleSubmit}>
-					<input
-						type="email"
-						name="email"
-						placeholder="Email Address *"
-						value={formData.email}
-						onChange={handleChange}
-						required
-						style={styles.input}
-					/>
+				{mode === 'welcome' ? (
+					// Welcome Screen with Login and New User Options
+					<>
+						<h1 style={styles.title}>Welcome to Showcase Retail</h1>
+						<p style={styles.subtitle}>Choose an option to continue</p>
+						
+						<button
+							onClick={goToLogin}
+							style={{...styles.button, marginBottom: '15px'}}
+						>
+							Login
+						</button>
+						
+						<button
+							onClick={goToRegister}
+							style={{...styles.button, backgroundColor: '#28a745'}}
+						>
+							New User
+						</button>
 
-					{!isLogin && (
-						<input
-							type="tel"
-							name="phone"
-							placeholder="Phone Number *"
-							value={formData.phone}
-							onChange={handleChange}
-							required
-							style={styles.input}
-						/>
-					)}
-
-					{!isLogin && (
-						<>
+						<div style={styles.link}>
+							<a href="/" style={{ color: '#666', textDecoration: 'none' }}>
+								← Back to Home
+							</a>
+						</div>
+					</>
+				) : (
+					// Login or Registration Form
+					<>
+						<h1 style={styles.title}>
+							{mode === 'login' ? 'Login' : 'Create New Account'}
+						</h1>
+						
+						<form onSubmit={handleSubmit}>
 							<input
-								type="text"
-								name="name"
-								placeholder="Full Name *"
-								value={formData.name}
+								type="email"
+								name="email"
+								placeholder="Email Address *"
+								value={formData.email}
 								onChange={handleChange}
 								required
 								style={styles.input}
 							/>
-							<select
-								name="category"
-								value={formData.category}
+
+							{mode === 'register' && (
+								<>
+									<input
+										type="tel"
+										name="phone"
+										placeholder="Phone Number *"
+										value={formData.phone}
+										onChange={handleChange}
+										required
+										style={styles.input}
+									/>
+									<input
+										type="text"
+										name="name"
+										placeholder="Full Name *"
+										value={formData.name}
+										onChange={handleChange}
+										required
+										style={styles.input}
+									/>
+									<select
+										name="category"
+										value={formData.category}
+										onChange={handleChange}
+										required
+										style={styles.input}
+									>
+										<option value="">Select Category *</option>
+										<option value="client">Client</option>
+										<option value="vendor">Vendor</option>
+										<option value="subadmin">Sub-Admin</option>
+									</select>
+								</>
+							)}
+
+							<input
+								type="password"
+								name="password"
+								placeholder="Password *"
+								value={formData.password}
 								onChange={handleChange}
 								required
 								style={styles.input}
+							/>
+
+							{error && (
+								<div style={styles.error}>
+									{error}
+								</div>
+							)}
+
+							{message && (
+								<div style={styles.success}>
+									{message}
+								</div>
+							)}
+
+							{mode === 'login' && (
+								<div style={{
+									padding: '10px',
+									backgroundColor: '#e3f2fd',
+									color: '#0d47a1',
+									borderRadius: '4px',
+									fontSize: '12px',
+									marginBottom: '15px',
+									border: '1px solid #90caf9'
+								}}>
+									💡 <strong>Admin Access:</strong> Use your admin credentials to access the admin panel
+								</div>
+							)}
+
+							<button
+								type="submit"
+								disabled={loading}
+								style={{
+									...styles.button,
+									opacity: loading ? 0.7 : 1,
+									cursor: loading ? 'not-allowed' : 'pointer'
+								}}
 							>
-								<option value="">Select Category *</option>
-								<option value="client">Client</option>
-								<option value="vendor">Vendor</option>
-								<option value="subadmin">Sub-Admin</option>
-							</select>
-						</>
-					)}
+								{loading ? 'Please wait...' : (mode === 'login' ? 'Sign In' : 'Create Account')}
+							</button>
+						</form>
 
-					<input
-						type="password"
-						name="password"
-						placeholder="Password *"
-						value={formData.password}
-						onChange={handleChange}
-						required
-						style={styles.input}
-						/>
-
-					{error && (
-						<div style={styles.error}>
-							{error}
+						<div
+							onClick={goToWelcome}
+							style={styles.link}
+						>
+							← Back to Options
 						</div>
-					)}
-
-					{isLogin && (
-						<div style={{
-							padding: '10px',
-							backgroundColor: '#e3f2fd',
-							color: '#0d47a1',
-							borderRadius: '4px',
-							fontSize: '12px',
-							marginBottom: '15px',
-							border: '1px solid #90caf9'
-						}}>
-							💡 <strong>Admin Access:</strong> Use your admin credentials to access the admin panel
-						</div>
-					)}
-
-					<button
-						type="submit"
-						disabled={loading}
-						style={{
-							...styles.button,
-							opacity: loading ? 0.7 : 1,
-							cursor: loading ? 'not-allowed' : 'pointer'
-						}}
-					>
-						{loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
-					</button>
-				</form>
-
-				<div
-					onClick={toggleMode}
-					style={styles.link}
-				>
-					{isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-				</div>
-
-				<div style={styles.link}>
-					<a href="/" style={{ color: '#666', textDecoration: 'none' }}>
-						← Back to Home
-					</a>
-				</div>
+					</>
+				)}
 			</div>
 		</div>
 	);
