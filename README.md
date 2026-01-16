@@ -4,7 +4,7 @@ A modern web-based rewards platform built with React, Node.js, Express, and Mong
 
 ## Features
 
-- **User Management**: Multiple roles (Admin, Sub-admin, Client, Vendor) with transfer permissions
+- **User Management**: Multiple roles (Admin, Sub-admin, User, Partner) with transfer permissions
 - **Video Rewards**: Watch YouTube videos and earn coins based on watch time
 - **Wallet System**: Track balance, transactions, and coin transfers
 - **Shop & Redeem**: Use coins for discounts on external purchases
