@@ -20,17 +20,15 @@ const userSchema = new Schema(
 			contactNumber: { type: String }
 		},
 		
-		role: { type: String, enum: ['admin', 'subadmin', 'client', 'vendor'], default: 'client' },
-		coinsBalance: { type: Number, default: 0 }, // Earned coins (not yet redeemed)
-		walletBalance: { type: Number, default: 0 }, // Redeemed money
+	role: { type: String, enum: ['admin', 'subadmin', 'user', 'Partner'], default: 'user' },
 		
 		// Sub-admin specific fields
 		isApproved: { type: Boolean, default: true }, // false for sub-admins until approved
 		approvedBy: { type: Schema.Types.ObjectId, ref: 'User' }, // Admin who approved
 		approvedAt: { type: Date },
 		
-		// Client relationship
-		addedBy: { type: Schema.Types.ObjectId, ref: 'User' }, // Sub-admin who added this client
+// User relationship
+	addedBy: { type: Schema.Types.ObjectId, ref: 'User' }, // Sub-admin who added this user
 		
 		transferOverride: {
 			sendBlocked: { type: Boolean, default: false },

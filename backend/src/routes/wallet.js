@@ -39,8 +39,8 @@ router.get('/transactions', auth, async (req, res, next) => {
 // Redeem coins to wallet (convert coins to money)
 router.post('/redeem', auth, async (req, res, next) => {
 	try {
-		if (req.user.role !== 'client') {
-			return res.status(403).json({ message: 'Only clients can redeem coins' });
+	if (req.user.role !== 'user') {
+		return res.status(403).json({ message: 'Only users can redeem coins' });
 		}
 		
 		const { coinsAmount } = req.body;
