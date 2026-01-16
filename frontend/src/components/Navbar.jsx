@@ -7,7 +7,7 @@ export default function Navbar() {
 	const location = useLocation();
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-	if (location.pathname === '/login') {
+	if (location.pathname === '/login' || location.pathname === '/register') {
 		return null;
 	}
 	
