@@ -15,7 +15,7 @@ router.post('/create-with-images', auth, uploadProduct.array('images', 6), async
     }
 
     const { 
-      title, description, originalPrice, discountPercentage, coinConversionRate, 
+      title, description, originalPrice, discountPercentage, coinDiscount, coinConversionRate, 
       stock, category, isPublished, sku, weight, dimensions, tags 
     } = req.body;
     
@@ -35,6 +35,7 @@ router.post('/create-with-images', auth, uploadProduct.array('images', 6), async
       description,
       originalPrice: Number(originalPrice),
       discountPercentage: Number(discountPercentage) || 0,
+      coinDiscount: Number(coinDiscount) || 0,
       coinConversionRate: Number(coinConversionRate) || 1,
       stock: Number(stock) || 0,
       category: category || 'general',
@@ -63,7 +64,7 @@ router.post('/', auth, async (req, res, next) => {
     }
 
     const { 
-      title, description, originalPrice, discountPercentage, coinConversionRate, 
+      title, description, originalPrice, discountPercentage, coinDiscount, coinConversionRate, 
       stock, category, isPublished, sku, weight, dimensions, tags 
     } = req.body;
     
@@ -76,6 +77,7 @@ router.post('/', auth, async (req, res, next) => {
       description,
       originalPrice: Number(originalPrice),
       discountPercentage: Number(discountPercentage) || 0,
+      coinDiscount: Number(coinDiscount) || 0,
       coinConversionRate: Number(coinConversionRate) || 1,
       stock: Number(stock) || 0,
       category: category || 'general',
