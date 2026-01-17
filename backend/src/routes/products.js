@@ -166,7 +166,7 @@ router.delete('/:id', auth, async (req, res, next) => {
       return res.status(403).json({ message: 'Not allowed to delete this product' });
     }
 
-    await product.remove();
+    await Product.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: 'Product deleted' });
   } catch (error) {
     next(error);
