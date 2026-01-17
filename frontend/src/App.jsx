@@ -25,6 +25,9 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
 import VendorDashboard from './pages/VendorDashboard';
+import VendorShop from './pages/VendorShop';
+import VendorShopsList from './pages/VendorShopsList';
+import VendorShopSetup from './components/VendorShopSetup';
 import SellerDashboard from './pages/SellerDashboard';
 import SellerInventory from './pages/SellerInventory';
 import SellerOrders from './pages/SellerOrders';
@@ -78,7 +81,14 @@ function App() {
 							<VendorDashboard />
 						</ProtectedRoute>
 					} />
+					<Route path="/vendor/setup-shop" element={
+						<ProtectedRoute>
+							<VendorShopSetup />
+						</ProtectedRoute>
+					} />
 					<Route path="/vendor/products/new" element={<ProductCreate />} />
+					<Route path="/shops" element={<VendorShopsList />} />
+					<Route path="/shop/:vendorId" element={<VendorShop />} />
 
 					{/* Seller Portal Routes */}
 					<Route path="/seller" element={
