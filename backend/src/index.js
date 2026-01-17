@@ -56,6 +56,7 @@ app.use('/api/settings', settingsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/partner', partnerRouter);
+app.use('/api/vendor', partnerRouter); // New vendor system routes
 app.use('/api/orders', ordersRouter);
 app.use('/api/subscriptions', subscriptionsRouter);
 
