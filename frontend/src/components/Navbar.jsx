@@ -88,6 +88,17 @@ export default function Navbar() {
 										🛍️ Shop
 									</Link>
 								)}
+								{/* Local Shops Link - For all users */}
+								<Link 
+									to="/shops" 
+									className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 ${
+										isActive('/shops') 
+											? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg' 
+											: 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+									}`}
+								>
+									🏪 Local Shops
+								</Link>
 								{/* Orders Link - For users and Partners */}
 								{(user.role === 'user' || user.role === 'Partner' || user.role === 'admin') && (
 									<Link 
@@ -125,6 +136,19 @@ export default function Navbar() {
 										}`}
 									>
 										🏪 Seller Portal
+									</Link>
+								)}
+								{/* Vendor Dashboard Link */}
+								{user.role === 'vendor' && (
+									<Link 
+										to="/vendor/dashboard" 
+										className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 ${
+											isActive('/vendor/dashboard') 
+												? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg' 
+												: 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+										}`}
+									>
+										🏬 Vendor Dashboard
 									</Link>
 								)}
 								{/* Admin Dashboard Link */}
