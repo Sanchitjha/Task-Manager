@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { productsAPI, api } from '../lib/api';
+import { productsAPI } from '../lib/api';
+import api from '../lib/api';
 import { Link } from 'react-router-dom';
 
 export default function VendorDashboard() {
@@ -330,6 +331,7 @@ export default function VendorDashboard() {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );
