@@ -5,14 +5,20 @@ const productSchema = new Schema(
     title: { type: String, required: true, trim: true },
     description: { type: String, default: '' },
     originalPrice: { type: Number, required: true },
+    
+    // Coin-based Discount System for In-Store Model
+    coinDiscount: { type: Number, default: 0, min: 0 }, // Coins user can redeem
+    coinConversionRate: { type: Number, default: 1, min: 0.01 }, // 1 coin = ₹1 by default
+    finalPriceAfterCoins: { type: Number, default: 0 }, // Price after max coin discount
+    
+    // Traditional discount (kept for compatibility)
     discountPercentage: { type: Number, default: 0, min: 0, max: 100 },
     discountAmount: { type: Number, default: 0 },
     finalPrice: { type: Number, default: 0 },
-    coinConversionRate: { type: Number, default: 1, min: 0.01 },
-    coinPrice: { type: Number, default: 0 },
+    
     price: { type: Number, default: 0 }, // Keep for backward compatibility
     stock: { type: Number, default: 0 },
-    images: [{ type: String }], // Stored as upload paths like /uploads/products/...
+    images: [{ type: String }],
     vendor: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     category: { type: String, default: 'general' },
     isPublished: { type: Boolean, default: true },
@@ -20,6 +26,17 @@ const productSchema = new Schema(
     weight: { type: String, default: null },
     dimensions: { type: String, default: null },
     tags: [{ type: String }],
+    
+    // In-Store Specific
+    inStoreOnly: { type: Boolean, default: true },
+    allowOnlineOrder: { type: Boolean, default: false },
+    
+    // Analytics
+    analytics: {
+      totalViews: { type: Number, default: 0 },
+      totalCoinsUsed: { type: Number, default: 0 },
+      totalInStorePurchases: { type: Number, default: 0 }
+    },
     
     // Discount Management
     discountStartDate: { type: Date },
@@ -37,7 +54,7 @@ const productSchema = new Schema(
 
 // Pre-save middleware to calculate prices
 productSchema.pre('save', function(next) {
-  // Calculate final price after discount
+  // Calculate traditional final price after discount
   if (this.discountAmount > 0) {
     this.finalPrice = Math.max(0, this.originalPrice - this.discountAmount);
   } else if (this.discountPercentage > 0) {
@@ -48,8 +65,16 @@ productSchema.pre('save', function(next) {
     this.discountAmount = 0;
   }
   
-  // Calculate coin price
-  this.coinPrice = Math.ceil(this.finalPrice / this.coinConversionRate);
+  // Calculate final price after coin discount
+  if (this.coinDiscount > 0) {
+    const maxCoinDiscount = this.coinDiscount * this.coinConversionRate;
+    this.finalPriceAfterCoins = Math.max(0, this.originalPrice - maxCoinDiscount);
+  } else {
+    this.finalPriceAfterCoins = this.originalPrice;
+  }
+  
+  // Set price for backward compatibility
+  this.price = this.finalPrice;
   
   // Check if discount is active based on dates
   const now = new Date();
