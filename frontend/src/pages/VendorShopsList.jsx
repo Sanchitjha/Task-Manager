@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../lib/api';
+import api from '../lib/api';
 
 const VendorShopsList = () => {
   const [vendors, setVendors] = useState([]);
