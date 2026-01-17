@@ -14,8 +14,7 @@ export default function ProductCreate() {
     title: '', 
     description: '', 
     originalPrice: '', 
-    discountPercentage: '0',
-    coinConversionRate: '1',
+    discountPercentage: '0',    coinDiscount: '0',    coinConversionRate: '1',
     stock: '', 
     category: 'General', 
     sku: '', 
@@ -99,6 +98,7 @@ export default function ProductCreate() {
       formData.append('description', form.description);
       formData.append('originalPrice', form.originalPrice);
       formData.append('discountPercentage', form.discountPercentage || '0');
+      formData.append('coinDiscount', form.coinDiscount || '0');
       formData.append('coinConversionRate', form.coinConversionRate || '1');
       formData.append('stock', form.stock || '0');
       formData.append('category', form.category);
@@ -130,6 +130,7 @@ export default function ProductCreate() {
         description: '',
         originalPrice: '',
         discountPercentage: '0',
+        coinDiscount: '0',
         coinConversionRate: '1',
         stock: '',
         category: 'General',
@@ -190,6 +191,21 @@ export default function ProductCreate() {
                   className="w-full mt-1 p-2 border rounded" 
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Max Coins for Discount</label>
+                <input 
+                  type="number" 
+                  value={form.coinDiscount} 
+                  onChange={(e) => setForm({ ...form, coinDiscount: e.target.value })} 
+                  placeholder="0" 
+                  min="0"
+                  className="w-full mt-1 p-2 border rounded" 
+                />
+                <p className="text-xs text-gray-500 mt-1">Maximum coins a customer can use for discount</p>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Coin Rate (₹/coin)</label>
                 <input 
@@ -200,6 +216,7 @@ export default function ProductCreate() {
                   placeholder="1.0" 
                   className="w-full mt-1 p-2 border rounded" 
                 />
+                <p className="text-xs text-gray-500 mt-1">How much ₹ each coin is worth</p>
               </div>
             </div>
 
@@ -220,7 +237,7 @@ export default function ProductCreate() {
             {form.originalPrice && (
               <div className="p-4 bg-blue-50 rounded-lg">
                 <h3 className="font-semibold text-blue-900 mb-2">💰 Pricing Preview</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
                     <p className="text-gray-600">Original Price: <span className="font-semibold">₹{form.originalPrice}</span></p>
                     {form.discountPercentage > 0 && (
@@ -230,11 +247,26 @@ export default function ProductCreate() {
                     )}
                   </div>
                   <div>
-                    <p className="text-orange-600">
-                      Coin Price: <span className="font-semibold">
-                        {Math.ceil((form.originalPrice - (form.originalPrice * (form.discountPercentage || 0) / 100)) / (form.coinConversionRate || 1))} coins
-                      </span>
+                    <p className="text-blue-600">
+                      Max Coin Discount: <span className="font-semibold">{form.coinDiscount} coins</span>
                     </p>
+                    {form.coinDiscount > 0 && (
+                      <p className="text-blue-600">
+                        = ₹{(form.coinDiscount * (form.coinConversionRate || 1)).toFixed(2)} off
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-orange-600">
+                      Conversion Rate: <span className="font-semibold">₹{form.coinConversionRate}/coin</span>
+                    </p>
+                    {form.coinDiscount > 0 && (
+                      <p className="text-purple-600">
+                        Min Final Price: <span className="font-semibold">
+                          ₹{Math.max(0, form.originalPrice - (form.originalPrice * (form.discountPercentage || 0) / 100) - (form.coinDiscount * (form.coinConversionRate || 1))).toFixed(2)}
+                        </span>
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
