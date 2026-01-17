@@ -6,9 +6,6 @@ const { auth, adminOnly } = require('../middleware/auth');
 
 const router = express.Router();
 
-<<<<<<< HEAD
-// Register new user (public - only for clients)
-=======
 // Send Email OTP for registration
 router.post('/send-email-otp', async (req, res, next) => {
 	try {
@@ -166,45 +163,27 @@ router.post('/verify-email-otp-register', async (req, res, next) => {
 });
 
 // Register new user (public - only for users)
->>>>>>> d309a46 (feat: Update registration terminology from 'client' and 'vendor' to 'user' and 'Partner' in auth routes)
 router.post('/register', async (req, res, next) => {
 	try {
 		const { name, email, password, phone, role } = req.body;
 		
-<<<<<<< HEAD
 		// Validate required fields
 		if (!name || !email || !password || !phone || !role) {
 			return res.status(400).json({ message: 'Name, email, password, phone, and role are required' });
 		}
 		
 		// Validate role
-		if (!['client', 'vendor', 'subadmin'].includes(role)) {
-			return res.status(400).json({ message: 'Invalid role. Must be client, vendor, or subadmin' });
-=======
-		// Only allow user registration through public route
-		// Allow users and Partners to register publicly
-		if (role && role !== 'user' && role !== 'Partner') {
-			return res.status(403).json({ message: 'Only users or Partners can register publicly' });
->>>>>>> d309a46 (feat: Update registration terminology from 'client' and 'vendor' to 'user' and 'Partner' in auth routes)
+		if (!['user', 'Partner', 'subadmin'].includes(role)) {
+			return res.status(400).json({ message: 'Invalid role. Must be user, Partner, or subadmin' });
 		}
 		
-		const existing = await User.findOne({ email });
-		if (existing) return res.status(400).json({ message: 'Email already used' });
-		
-		const hash = await bcrypt.hash(password, 10);
-		const user = await User.create({ 
-			name, 
-			email, 
-<<<<<<< HEAD
+		// Only allow user and Partner registration through public route
+		if (role && role !== 'user' && role !== 'Partner') {
+			return res.status(403).json({ message: 'Only users or Partners can register publicly' });
 			password: hash,
 			phone,
 			role: role,
 			isApproved: role === 'subadmin' ? false : true  // Sub-admins need approval
-=======
-			password: hash, 
-			role: role === 'Partner' ? 'Partner' : 'user',
-			isApproved: true 
->>>>>>> d309a46 (feat: Update registration terminology from 'client' and 'vendor' to 'user' and 'Partner' in auth routes)
 		});
 		
 		res.json({ id: user._id, message: 'Registration successful' });
