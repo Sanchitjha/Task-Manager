@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import api from '../lib/api';
+import { api } from '../lib/api';
 
 export default function Wallet() {
 	const { user, setUser } = useAuth();
@@ -11,9 +11,14 @@ export default function Wallet() {
 	const [redeemAmount, setRedeemAmount] = useState('');
 	const [message, setMessage] = useState({ type: '', text: '' });
 	const [showRedeemModal, setShowRedeemModal] = useState(false);
+	
+	// New wallet system data
+	const [newWalletData, setNewWalletData] = useState(null);
+	const [newTransactions, setNewTransactions] = useState([]);
 
 	useEffect(() => {
 		fetchWalletData();
+		fetchNewWalletData();
 	}, []);
 
 	useEffect(() => {
@@ -29,8 +34,8 @@ export default function Wallet() {
 	const fetchWalletData = async () => {
 		try {
 			const [balanceRes, transactionsRes] = await Promise.all([
-				api.get('/wallet/balance'),
-				api.get('/wallet/transactions')
+				api.get('/api/wallet/balance'),
+				api.get('/api/wallet/transactions')
 			]);
 			
 			setCoinsBalance(balanceRes.data.coinsBalance || 0);
@@ -41,6 +46,20 @@ export default function Wallet() {
 			setMessage({ type: 'error', text: 'Failed to load wallet data' });
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	const fetchNewWalletData = async () => {
+		try {
+			const [walletRes, transactionsRes] = await Promise.all([
+				api.get('/api/wallet/'),
+				api.get('/api/wallet/transactions-history')
+			]);
+			
+			setNewWalletData(walletRes.data.wallet);
+			setNewTransactions(transactionsRes.data.transactions || []);
+		} catch (error) {
+			console.error('Failed to fetch new wallet data:', error);
 		}
 	};
 
@@ -83,8 +102,9 @@ export default function Wallet() {
 				walletBalance: response.data.newWalletBalance
 			});
 			
-			// Refresh transactions
+			// Refresh wallet data
 			fetchWalletData();
+			fetchNewWalletData();
 			
 			// Reset form
 			setRedeemAmount('');
@@ -107,8 +127,13 @@ export default function Wallet() {
 
 	const getTransactionIcon = (type) => {
 		switch (type) {
+			case 'earned':
 			case 'earn':
 				return '🎬';
+			case 'spent':
+				return '🛒';
+			case 'redeem':
+				return '💰';
 			case 'redeem':
 				return '💰';
 			case 'transfer_send':
@@ -143,6 +168,27 @@ export default function Wallet() {
 					'bg-blue-100 text-blue-700'
 				}`}>
 					{message.text}
+				</div>
+			)}
+
+			{/* New Wallet System */}
+			{newWalletData && (
+				<div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 mb-6 text-white">
+					<h2 className="text-2xl font-bold mb-4">Your Wallet (New System)</h2>
+					<div className="grid md:grid-cols-3 gap-4">
+						<div className="text-center">
+							<div className="text-4xl font-bold mb-2">{newWalletData.coins}</div>
+							<div className="text-blue-100">Available Coins</div>
+						</div>
+						<div className="text-center">
+							<div className="text-4xl font-bold mb-2">{newWalletData.totalEarned}</div>
+							<div className="text-blue-100">Total Earned</div>
+						</div>
+						<div className="text-center">
+							<div className="text-4xl font-bold mb-2">{newWalletData.totalSpent}</div>
+							<div className="text-blue-100">Total Spent</div>
+						</div>
+					</div>
 				</div>
 			)}
 
