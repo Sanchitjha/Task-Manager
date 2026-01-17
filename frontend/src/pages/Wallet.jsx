@@ -274,6 +274,45 @@ export default function Wallet() {
 				)}
 			</div>
 
+			{/* New Wallet Transactions */}
+			{newTransactions.length > 0 && (
+				<div className="bg-white rounded-lg shadow-md p-6 mb-6">
+					<h2 className="text-xl font-semibold mb-4">Recent Transactions (New System)</h2>
+					<div className="space-y-4">
+						{newTransactions.slice(0, 10).map((tx) => (
+							<div key={tx._id} className="flex items-center justify-between p-4 border rounded-lg">
+								<div className="flex items-center space-x-4">
+									<div className="text-2xl">
+										{getTransactionIcon(tx.type)}
+									</div>
+									<div>
+										<div className="font-semibold">{tx.description}</div>
+										<div className="text-sm text-gray-500">
+											{formatDate(tx.createdAt)}
+										</div>
+										{tx.vendor && (
+											<div className="text-xs text-blue-600">
+												{tx.vendor.shopDetails?.shopName || tx.vendor.name}
+											</div>
+										)}
+									</div>
+								</div>
+								<div className="text-right">
+									<div className={`font-bold text-lg ${
+										tx.type === 'earned' ? 'text-green-600' : 'text-red-600'
+									}`}>
+										{tx.type === 'earned' ? '+' : '-'}{tx.amount}
+									</div>
+									<div className="text-xs text-gray-500">
+										Balance: {tx.balanceAfter}
+									</div>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			)}
+
 			{/* Redeem Modal */}
 			{showRedeemModal && (
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
