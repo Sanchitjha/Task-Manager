@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { api } from '../lib/api';
+import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 
 const VendorShop = () => {
