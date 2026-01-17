@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { api } from '../lib/api';
+import api from '../lib/api';
 
 export default function Wallet() {
 	const { user, setUser } = useAuth();
@@ -132,8 +132,6 @@ export default function Wallet() {
 				return '🎬';
 			case 'spent':
 				return '🛒';
-			case 'redeem':
-				return '💰';
 			case 'redeem':
 				return '💰';
 			case 'transfer_send':
