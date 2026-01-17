@@ -5,6 +5,8 @@ const { PartnerReview } = require('../schemas/VendorReview');
 const { Product } = require('../schemas/Product');
 const { Transaction } = require('../schemas/Transaction');
 const { User } = require('../schemas/User');
+const { WalletTransaction } = require('../schemas/WalletTransaction');
+const { InStorePurchase } = require('../schemas/InStorePurchase');
 const { auth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -374,6 +376,290 @@ router.get('/reviews', auth, async (req, res, next) => {
     ]);
 
     res.json({ success: true, reviews, total, page, pages: Math.ceil(total / limit) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ===== NEW VENDOR SYSTEM FOR IN-STORE ONLY MODEL =====
+
+// Vendor shop setup
+router.post('/setup-shop', auth, async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (user.role !== 'vendor') {
+      return res.status(403).json({ message: 'Vendor access required' });
+    }
+
+    const {
+      shopName, ownerName, description, category,
+      street, area, city, pincode, state,
+      latitude, longitude, mapUrl,
+      contactNumber, whatsappNumber,
+      openTime, closeTime, workingDays, isOpen24x7
+    } = req.body;
+
+    if (!shopName || !street || !city || !pincode || !contactNumber) {
+      return res.status(400).json({ 
+        message: 'Shop name, address, city, pincode, and contact number are required' 
+      });
+    }
+
+    // Update user with shop details
+    await User.findByIdAndUpdate(user._id, {
+      'shopDetails.shopName': shopName,
+      'shopDetails.ownerName': ownerName || user.name,
+      'shopDetails.description': description,
+      'shopDetails.category': category,
+      'shopDetails.address.street': street,
+      'shopDetails.address.area': area,
+      'shopDetails.address.city': city,
+      'shopDetails.address.pincode': pincode,
+      'shopDetails.address.state': state,
+      'shopDetails.location.latitude': latitude,
+      'shopDetails.location.longitude': longitude,
+      'shopDetails.location.mapUrl': mapUrl,
+      'shopDetails.contactNumber': contactNumber,
+      'shopDetails.whatsappNumber': whatsappNumber,
+      'shopDetails.timing.openTime': openTime,
+      'shopDetails.timing.closeTime': closeTime,
+      'shopDetails.timing.workingDays': workingDays,
+      'shopDetails.timing.isOpen24x7': isOpen24x7
+    });
+
+    res.json({ success: true, message: 'Shop details updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get vendor dashboard for new system
+router.get('/shop-dashboard', auth, async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (user.role !== 'vendor') {
+      return res.status(403).json({ message: 'Vendor access required' });
+    }
+
+    // Get product counts
+    const totalProducts = await Product.countDocuments({ vendor: user._id });
+    const activeProducts = await Product.countDocuments({ 
+      vendor: user._id, 
+      isPublished: true 
+    });
+
+    // Get purchase analytics
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const todayPurchases = await InStorePurchase.countDocuments({
+      vendor: user._id,
+      purchaseDate: { $gte: today }
+    });
+
+    // Get total coins redeemed and discount given
+    const analytics = await InStorePurchase.aggregate([
+      { $match: { vendor: user._id } },
+      {
+        $group: {
+          _id: null,
+          totalCoinsRedeemed: { $sum: '$coinsUsed' },
+          totalDiscountGiven: { $sum: '$discountAmount' },
+          totalPurchases: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const stats = analytics[0] || {
+      totalCoinsRedeemed: 0,
+      totalDiscountGiven: 0,
+      totalPurchases: 0
+    };
+
+    res.json({
+      success: true,
+      dashboard: {
+        totalProducts,
+        activeProducts,
+        todayPurchases,
+        totalCoinsRedeemed: stats.totalCoinsRedeemed,
+        totalDiscountGiven: stats.totalDiscountGiven,
+        totalPurchases: stats.totalPurchases
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Confirm in-store purchase
+router.post('/confirm-purchase', auth, async (req, res, next) => {
+  try {
+    const vendor = req.user;
+    if (vendor.role !== 'vendor') {
+      return res.status(403).json({ message: 'Vendor access required' });
+    }
+
+    const {
+      userId, productId, coinsUsed, verificationCode, notes
+    } = req.body;
+
+    if (!userId || !productId) {
+      return res.status(400).json({ message: 'User ID and Product ID required' });
+    }
+
+    // Get user and product
+    const user = await User.findById(userId);
+    const product = await Product.findById(productId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (!product || product.vendor.toString() !== vendor._id.toString()) {
+      return res.status(404).json({ message: 'Product not found or not yours' });
+    }
+
+    // Check if user has enough coins
+    if (coinsUsed > user.wallet.coins) {
+      return res.status(400).json({ message: 'Insufficient coins in user wallet' });
+    }
+
+    // Check if coins requested exceed product's allowed discount
+    if (coinsUsed > product.coinDiscount) {
+      return res.status(400).json({ 
+        message: `Maximum ${product.coinDiscount} coins can be used for this product` 
+      });
+    }
+
+    // Calculate amounts
+    const discountAmount = coinsUsed * product.coinConversionRate;
+    const finalAmountPaid = Math.max(0, product.originalPrice - discountAmount);
+
+    // Start transaction
+    // Deduct coins from user wallet
+    const balanceBefore = user.wallet.coins;
+    const balanceAfter = balanceBefore - coinsUsed;
+    
+    await User.findByIdAndUpdate(userId, {
+      'wallet.coins': balanceAfter,
+      'wallet.totalSpent': user.wallet.totalSpent + coinsUsed
+    });
+
+    // Create wallet transaction
+    await WalletTransaction.create({
+      user: userId,
+      vendor: vendor._id,
+      product: productId,
+      type: 'spent',
+      amount: coinsUsed,
+      description: `Discount used at ${vendor.shopDetails?.shopName || vendor.name}`,
+      source: 'in_store_purchase',
+      inStorePurchase: {
+        productName: product.title,
+        originalPrice: product.originalPrice,
+        coinsUsed,
+        discountAmount,
+        finalAmountPaid,
+        purchaseDate: new Date(),
+        confirmedBy: vendor._id
+      },
+      balanceBefore,
+      balanceAfter
+    });
+
+    // Create in-store purchase record
+    await InStorePurchase.create({
+      user: userId,
+      vendor: vendor._id,
+      product: productId,
+      productName: product.title,
+      originalPrice: product.originalPrice,
+      coinsUsed,
+      coinConversionRate: product.coinConversionRate,
+      discountAmount,
+      finalAmountPaid,
+      confirmedBy: vendor._id,
+      customerDetails: {
+        name: user.name,
+        phone: user.phone,
+        email: user.email
+      },
+      verificationCode,
+      vendorNotes: notes,
+      status: 'completed'
+    });
+
+    // Update product and vendor analytics
+    await Product.findByIdAndUpdate(productId, {
+      $inc: {
+        'analytics.totalCoinsUsed': coinsUsed,
+        'analytics.totalInStorePurchases': 1
+      }
+    });
+
+    await User.findByIdAndUpdate(vendor._id, {
+      $inc: {
+        'shopDetails.analytics.totalCoinsRedeemed': coinsUsed,
+        'shopDetails.analytics.totalDiscountGiven': discountAmount
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Purchase confirmed successfully',
+      purchase: {
+        productName: product.title,
+        originalPrice: product.originalPrice,
+        coinsUsed,
+        discountAmount,
+        finalAmountPaid,
+        customerName: user.name
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get vendor's purchase history
+router.get('/shop-purchases', auth, async (req, res, next) => {
+  try {
+    const vendor = req.user;
+    if (vendor.role !== 'vendor') {
+      return res.status(403).json({ message: 'Vendor access required' });
+    }
+
+    const page = Math.max(1, parseInt(req.query.page || '1'));
+    const limit = Math.min(50, parseInt(req.query.limit || '20'));
+    const skip = (page - 1) * limit;
+
+    const filter = { vendor: vendor._id };
+    
+    // Date filter
+    if (req.query.from || req.query.to) {
+      filter.purchaseDate = {};
+      if (req.query.from) filter.purchaseDate.$gte = new Date(req.query.from);
+      if (req.query.to) filter.purchaseDate.$lte = new Date(req.query.to);
+    }
+
+    const [purchases, total] = await Promise.all([
+      InStorePurchase.find(filter)
+        .populate('user', 'name phone email')
+        .populate('product', 'title images')
+        .sort({ purchaseDate: -1 })
+        .skip(skip)
+        .limit(limit),
+      InStorePurchase.countDocuments(filter)
+    ]);
+
+    res.json({
+      success: true,
+      purchases,
+      total,
+      page,
+      pages: Math.ceil(total / limit)
+    });
   } catch (error) {
     next(error);
   }
