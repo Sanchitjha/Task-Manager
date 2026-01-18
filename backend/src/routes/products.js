@@ -5,13 +5,13 @@ const { uploadProduct } = require('../middleware/uploadProduct');
 
 const router = express.Router();
 
-// Create product with images (vendor or admin) - Combined endpoint
+// Create product with images (partner or admin) - Combined endpoint
 router.post('/create-with-images', auth, uploadProduct.array('images', 6), async (req, res, next) => {
   try {
     const user = req.user;
     if (!user) return res.status(401).json({ message: 'Authentication required' });
-    if (user.role !== 'vendor' && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Vendor access required' });
+    if (user.role !== 'Partner' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Partner access required' });
     }
 
     const { 
@@ -54,13 +54,13 @@ router.post('/create-with-images', auth, uploadProduct.array('images', 6), async
   }
 });
 
-// Create product (vendor or admin)
+// Create product (partner or admin)
 router.post('/', auth, async (req, res, next) => {
   try {
     const user = req.user;
     if (!user) return res.status(401).json({ message: 'Authentication required' });
-    if (user.role !== 'vendor' && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Vendor access required' });
+    if (user.role !== 'Partner' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Partner access required' });
     }
 
     const { 
