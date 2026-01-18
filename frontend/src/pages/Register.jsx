@@ -195,8 +195,8 @@ export default function Register() {
 						style={styles.input}
 					>
 						<option value="">Select Category *</option>
-						<option value="client">Client</option>
-						<option value="vendor">Vendor</option>
+						<option value="user">User</option>
+						<option value="Partner">Partner</option>
 						<option value="subadmin">Sub-Admin</option>
 					</select>
 
