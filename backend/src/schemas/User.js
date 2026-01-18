@@ -79,7 +79,7 @@ const userSchema = new Schema(
 			totalSpent: { type: Number, default: 0 }
 		},
 		
-		role: { type: String, enum: ['admin', 'subadmin', 'user', 'vendor'], default: 'user' },
+		role: { type: String, enum: ['admin', 'subadmin', 'user', 'Partner'], default: 'user' },
 		
 		// Sub-admin specific fields
 		isApproved: { type: Boolean, default: true },
