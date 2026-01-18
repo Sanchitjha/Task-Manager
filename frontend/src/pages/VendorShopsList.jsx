@@ -279,7 +279,7 @@ const PartnerShopsList = () => {
           <div className="text-center">
             <div className="text-4xl mb-3">🔍</div>
             <h3 className="font-semibold text-blue-800 mb-2">Browse Shops</h3>
-            <p className="text-blue-700 text-sm">Find local vendors and browse their products online</p>
+            <p className="text-blue-700 text-sm">Find local partners and browse their products online</p>
           </div>
           
           <div className="text-center">
