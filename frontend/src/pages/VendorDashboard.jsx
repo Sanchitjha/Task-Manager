@@ -4,7 +4,7 @@ import { productsAPI } from '../lib/api';
 import api from '../lib/api';
 import { Link } from 'react-router-dom';
 
-export default function VendorDashboard() {
+export default function PartnerDashboard() {
   const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -21,13 +21,13 @@ export default function VendorDashboard() {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
   if (!user) return <div className="p-6">Please login.</div>;
-  if (user.role !== 'vendor' && user.role !== 'admin') {
-    return <div className="p-6 text-red-600">Vendor access required.</div>;
+  if (user.role !== 'Partner' && user.role !== 'admin') {
+    return <div className="p-6 text-red-600">Partner access required.</div>;
   }
 
   const loadDashboard = async () => {
     try {
-      const response = await api.get('/api/vendor/shop-dashboard');
+      const response = await api.get('/api/partners/shop-dashboard');
       setDashboardData(response.data.dashboard);
     } catch (error) {
       console.error('Failed to load dashboard:', error);
@@ -37,7 +37,7 @@ export default function VendorDashboard() {
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const res = await productsAPI.list({ vendor: user._id, limit: 100 });
+      const res = await productsAPI.list({ partner: user._id, limit: 100 });
       setProducts(res.data.items || []);
     } catch (e) {
       console.error('Failed to load products', e);
@@ -56,7 +56,7 @@ export default function VendorDashboard() {
     e.preventDefault();
     
     try {
-      const response = await api.post('/api/vendor/confirm-purchase', purchaseForm);
+      const response = await api.post('/api/partners/confirm-purchase', purchaseForm);
       alert(`Purchase confirmed! Final amount paid: ₹${response.data.purchase.finalAmountPaid}`);
       
       // Reset form
@@ -168,7 +168,7 @@ export default function VendorDashboard() {
       {/* Header and Actions */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-3xl font-bold">Vendor Dashboard</h1>
+          <h1 className="text-3xl font-bold">Partner Dashboard</h1>
           <div className="space-x-2">
             <button 
               onClick={() => setShowPurchaseModal(true)}
@@ -176,7 +176,7 @@ export default function VendorDashboard() {
             >
               Confirm Purchase
             </button>
-            <Link to="/vendor/products/new" className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+            <Link to="/partner/products/new" className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
               + New Product
             </Link>
           </div>
