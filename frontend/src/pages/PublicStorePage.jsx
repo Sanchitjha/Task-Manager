@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { api } from '../lib/api';
+import api from '../lib/api';
 import { toast } from 'react-hot-toast';
 import { 
   FaStore, FaMapMarkerAlt, FaClock, FaPhone, FaStar, FaCoins,
