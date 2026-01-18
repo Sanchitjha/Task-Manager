@@ -6,14 +6,14 @@ export default function SubAdminDashboard() {
 	const { user } = useAuth();
 	const [loading, setLoading] = useState(true);
 	const [stats, setStats] = useState(null);
-	const [clients, setClients] = useState([]);
-	const [selectedClient, setSelectedClient] = useState(null);
-	const [clientDetails, setClientDetails] = useState(null);
+	const [users, setUsers] = useState([]);
+	const [selectedUser, setSelectedUser] = useState(null);
+	const [userDetails, setUserDetails] = useState(null);
 	const [showAddModal, setShowAddModal] = useState(false);
 	const [showCoinModal, setShowCoinModal] = useState(false);
 	const [message, setMessage] = useState({ text: '', type: '' });
 	const [formData, setFormData] = useState({ name: '', email: '', password: '' });
-	const [coinFormData, setCoinFormData] = useState({ clientEmail: '', amount: '', description: '' });
+	const [coinFormData, setCoinFormData] = useState({ userEmail: '', amount: '', description: '' });
 	const [activeTab, setActiveTab] = useState('list'); // list, details, wallet
 
 	useEffect(() => {
@@ -25,12 +25,12 @@ export default function SubAdminDashboard() {
 	const fetchDashboardData = async () => {
 		try {
 			setLoading(true);
-			const [statsRes, clientsRes] = await Promise.all([
+			const [statsRes, usersRes] = await Promise.all([
 				api.get('/admin/dashboard/subadmin-stats'),
-				api.get('/admin/clients')
+				api.get('/admin/users')
 			]);
 			setStats(statsRes.data);
-			setClients(clientsRes.data);
+			setUsers(usersRes.data);
 		} catch (error) {
 			showMessage('Failed to load dashboard data', 'error');
 		} finally {
@@ -38,27 +38,27 @@ export default function SubAdminDashboard() {
 		}
 	};
 
-	const fetchClientDetails = async (clientId) => {
+	const fetchUserDetails = async (userId) => {
 		try {
-			const res = await api.get(`/admin/clients/${clientId}`);
-			setClientDetails(res.data);
-			setSelectedClient(clientId);
+			const res = await api.get(`/admin/users/${userId}`);
+			setUserDetails(res.data);
+			setSelectedUser(userId);
 			setActiveTab('details');
 		} catch (error) {
-			showMessage('Failed to load client details', 'error');
+			showMessage('Failed to load user details', 'error');
 		}
 	};
 
-	const handleAddClient = async (e) => {
+	const handleAddUser = async (e) => {
 		e.preventDefault();
 		try {
-			await api.post('/admin/clients', formData);
-			showMessage('Client added successfully', 'success');
+			await api.post('/admin/users', formData);
+			showMessage('User added successfully', 'success');
 			setShowAddModal(false);
 			setFormData({ name: '', email: '', password: '' });
 			fetchDashboardData();
 		} catch (error) {
-			showMessage(error.response?.data?.message || 'Failed to add client', 'error');
+			showMessage(error.response?.data?.message || 'Failed to add user', 'error');
 		}
 	};
 
@@ -68,7 +68,7 @@ export default function SubAdminDashboard() {
 			const response = await api.post('/admin/subadmin/distribute-coins', coinFormData);
 			showMessage(response.data.message, 'success');
 			setShowCoinModal(false);
-			setCoinFormData({ clientEmail: '', amount: '', description: '' });
+		setCoinFormData({ userEmail: '', amount: '', description: '' });
 			fetchDashboardData(); // Refresh data
 		} catch (error) {
 			showMessage(error.response?.data?.error || 'Failed to distribute coins', 'error');
@@ -79,20 +79,20 @@ export default function SubAdminDashboard() {
 		setShowCoinModal(true);
 	};
 
-	const deleteClient = async (clientId) => {
-		if (!confirm('Are you sure you want to delete this client?')) return;
+	const deleteUser = async (userId) => {
+		if (!confirm('Are you sure you want to delete this user?')) return;
 		
 		try {
-			await api.delete(`/admin/clients/${clientId}`);
-			showMessage('Client deleted successfully', 'success');
+			await api.delete(`/admin/users/${userId}`);
+			showMessage('User deleted successfully', 'success');
 			fetchDashboardData();
-			if (selectedClient === clientId) {
-				setSelectedClient(null);
-				setClientDetails(null);
+			if (selectedUser === userId) {
+				setSelectedUser(null);
+				setUserDetails(null);
 				setActiveTab('list');
 			}
 		} catch (error) {
-			showMessage(error.response?.data?.message || 'Failed to delete client', 'error');
+			showMessage(error.response?.data?.message || 'Failed to delete user', 'error');
 		}
 	};
 
@@ -149,7 +149,7 @@ export default function SubAdminDashboard() {
 				<div className="mb-8 flex justify-between items-center">
 					<div>
 						<h1 className="text-3xl font-bold text-gray-900">Sub-Admin Dashboard</h1>
-						<p className="text-gray-600 mt-2">Manage your clients and distribute coins</p>
+					<p className="text-gray-600 mt-2">Manage your users and distribute coins</p>
 						<div className="mt-3 bg-blue-50 inline-flex items-center px-3 py-1 rounded-full text-sm">
 							<svg className="w-4 h-4 text-blue-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
@@ -186,13 +186,13 @@ export default function SubAdminDashboard() {
 				{stats && (
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
 						<div className="bg-white rounded-lg shadow p-6">
-							<div className="text-sm font-medium text-gray-500">Total Clients</div>
-							<div className="mt-2 text-3xl font-bold text-gray-900">{stats.clients.total}</div>
-						</div>
-						<div className="bg-white rounded-lg shadow p-6">
-							<div className="text-sm font-medium text-gray-500">Active Clients</div>
-							<div className="mt-2 text-3xl font-bold text-green-600">{stats.clients.active}</div>
-							<div className="text-xs text-gray-500 mt-1">Clients with coins balance</div>
+						<div className="text-sm font-medium text-gray-500">Total Users</div>
+						<div className="mt-2 text-3xl font-bold text-gray-900">{stats.users.total}</div>
+					</div>
+					<div className="bg-white rounded-lg shadow p-6">
+						<div className="text-sm font-medium text-gray-500">Active Users</div>
+						<div className="mt-2 text-3xl font-bold text-green-600">{stats.users.active}</div>
+						<div className="text-xs text-gray-500 mt-1">Users with coin balance</div>
 						</div>
 					</div>
 				)}
@@ -209,7 +209,7 @@ export default function SubAdminDashboard() {
 										: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 								}`}
 							>
-								📋 My Clients ({clients.length})
+								📋 My Users ({users.length})
 							</button>
 							<button
 								onClick={() => setActiveTab('wallet')}
@@ -221,7 +221,7 @@ export default function SubAdminDashboard() {
 							>
 								💰 Wallet & Rewards
 							</button>
-							{selectedClient && (
+							{selectedUser && (
 								<button
 									onClick={() => setActiveTab('details')}
 									className={`py-4 px-6 text-sm font-medium border-b-2 ${
@@ -230,24 +230,24 @@ export default function SubAdminDashboard() {
 											: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 									}`}
 								>
-									👤 Client Details
+									👤 User Details
 								</button>
 							)}
 						</nav>
 					</div>
 
 					<div className="p-6">
-						{/* Clients List Tab */}
+						{/* Users List Tab */}
 						{activeTab === 'list' && (
 							<div>
-								{clients.length === 0 ? (
+								{users.length === 0 ? (
 									<div className="text-center py-12 text-gray-500">
-										<p className="mb-4">No clients added yet</p>
+										<p className="mb-4">No users added yet</p>
 										<button
 											onClick={() => setShowAddModal(true)}
 											className="text-blue-600 hover:text-blue-800 font-medium"
 										>
-											Add your first client
+											Add your first user
 										</button>
 									</div>
 								) : (
