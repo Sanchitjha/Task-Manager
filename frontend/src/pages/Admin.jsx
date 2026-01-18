@@ -13,7 +13,7 @@ export default function Admin() {
 		// Mock data for now
 		setUsers([
 			{ id: 1, name: 'John Doe', email: 'john@example.com', role: 'client', walletBalance: 100 },
-			{ id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'vendor', walletBalance: 50 },
+			{ id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Partner', walletBalance: 50 },
 		]);
 		setVideos([
 			{ id: 1, title: 'Sample Video', url: 'https://youtube.com/watch?v=123', isActive: true },
