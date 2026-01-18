@@ -164,12 +164,12 @@ function App() {
 					
 					{/* Protected Routes */}
 					<Route path="/earn" element={
-						<ProtectedRoute clientOnly>
+						<ProtectedRoute userOnly>
 							<Earn />
 						</ProtectedRoute>
 					} />
 					<Route path="/wallet" element={
-						<ProtectedRoute clientOnly>
+						<ProtectedRoute userOnly>
 							<Wallet />
 						</ProtectedRoute>
 					} />
