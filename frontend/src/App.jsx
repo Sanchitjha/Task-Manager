@@ -25,9 +25,16 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
 import VendorDashboard from './pages/VendorDashboard'; // PartnerDashboard
+import PartnerDashboard from './pages/PartnerDashboard';
 import VendorShop from './pages/VendorShop'; // PartnerShop
 import VendorShopsList from './pages/VendorShopsList'; // PartnerShopsList
 import VendorShopSetup from './components/VendorShopSetup'; // PartnerShopSetup
+import PartnerRegister from './pages/PartnerRegister';
+import ProductForm from './pages/ProductForm';
+import ProductManagement from './pages/ProductManagement';
+import PurchaseConfirmation from './pages/PurchaseConfirmation';
+import PublicStorePage from './pages/PublicStorePage';
+import PartnerReports from './pages/PartnerReports';
 import SellerDashboard from './pages/SellerDashboard';
 import SellerInventory from './pages/SellerInventory';
 import SellerOrders from './pages/SellerOrders';
@@ -59,6 +66,11 @@ function App() {
 							<Register />
 						</ErrorBoundary>
 					} />
+					<Route path="/partner/register" element={
+						<ErrorBoundary>
+							<PartnerRegister />
+						</ErrorBoundary>
+					} />
 					<Route path="/products" element={<Products />} />
 					<Route path="/product/:id" element={<ProductDetail />} />
 					<Route path="/cart" element={
@@ -78,9 +90,36 @@ function App() {
 					} />
 					<Route path="/partner/dashboard" element={
 						<ProtectedRoute>
-							<VendorDashboard />
+							<PartnerDashboard />
 						</ProtectedRoute>
 					} />
+					<Route path="/products" element={
+						<ProtectedRoute>
+							<ProductManagement />
+						</ProtectedRoute>
+					} />
+					<Route path="/products/create" element={
+						<ProtectedRoute>
+							<ProductForm />
+						</ProtectedRoute>
+					} />
+					<Route path="/products/edit/:id" element={
+						<ProtectedRoute>
+							<ProductForm />
+						</ProtectedRoute>
+					} />
+					<Route path="/partner/purchase-confirm" element={
+						<ProtectedRoute>
+							<PurchaseConfirmation />
+						</ProtectedRoute>
+					} />
+					<Route path="/partner/reports" element={
+						<ProtectedRoute>
+							<PartnerReports />
+						</ProtectedRoute>
+					} />
+					<Route path="/store/:partnerId" element={<PublicStorePage />} />
+					<Route path="/shops" element={<VendorShopsList />} />
 					<Route path="/partner/setup-shop" element={
 						<ProtectedRoute>
 							<VendorShopSetup />
