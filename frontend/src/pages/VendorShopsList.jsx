@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../lib/api';
 
 const VendorShopsList = () => {
-  const [vendors, setVendors] = useState([]);
+  const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,49 +16,49 @@ const VendorShopsList = () => {
   ];
 
   useEffect(() => {
-    loadVendors();
+    loadPartners();
   }, []);
 
-  const loadVendors = async () => {
+  const loadPartners = async () => {
     try {
-      // Get all users with vendor role who have shop details
-      const response = await api.get('/api/users?role=vendor&hasShop=true');
-      const vendorUsers = response.data.users || [];
+      // Get all users with Partner role who have shop details
+      const response = await api.get('/api/users?role=Partner&hasShop=true');
+      const partnerUsers = response.data.users || [];
       
-      // Filter vendors who have shop details set up
-      const vendorsWithShops = vendorUsers.filter(vendor => 
-        vendor.shopDetails && 
-        vendor.shopDetails.shopName && 
-        vendor.shopDetails.address && 
-        vendor.shopDetails.address.city
+      // Filter Partners who have shop details set up
+      const partnersWithShops = partnerUsers.filter(partner => 
+        partner.shopDetails && 
+        partner.shopDetails.shopName && 
+        partner.shopDetails.address && 
+        partner.shopDetails.address.city
       );
       
-      setVendors(vendorsWithShops);
+      setPartners(partnersWithShops);
     } catch (error) {
-      console.error('Failed to load vendors:', error);
+      console.error('Failed to load partners:', error);
       setError('Failed to load shops');
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredVendors = vendors.filter(vendor => {
+  const filteredPartners = partners.filter(partner => {
     const matchesSearch = !searchTerm || 
-      vendor.shopDetails?.shopName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vendor.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vendor.shopDetails?.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      partner.shopDetails?.shopName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      partner.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      partner.shopDetails?.description?.toLowerCase().includes(searchTerm.toLowerCase());
       
     const matchesCategory = !selectedCategory || 
-      vendor.shopDetails?.category === selectedCategory;
+      partner.shopDetails?.category === selectedCategory;
       
     const matchesCity = !selectedCity || 
-      vendor.shopDetails?.address?.city?.toLowerCase() === selectedCity.toLowerCase();
+      partner.shopDetails?.address?.city?.toLowerCase() === selectedCity.toLowerCase();
 
     return matchesSearch && matchesCategory && matchesCity;
   });
 
-  const uniqueCities = [...new Set(vendors.map(vendor => 
-    vendor.shopDetails?.address?.city
+  const uniqueCities = [...new Set(partners.map(partner => 
+    partner.shopDetails?.address?.city
   ).filter(Boolean))];
 
   const openMap = (address) => {
@@ -79,7 +79,7 @@ const VendorShopsList = () => {
   return (
     <div className="max-w-7xl mx-auto p-4">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Local Shops & Vendors</h1>
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">Local Shops & Partners</h1>
         <p className="text-gray-600">Discover local businesses and earn coin discounts!</p>
       </div>
 
@@ -149,7 +149,7 @@ const VendorShopsList = () => {
       {/* Results Summary */}
       <div className="mb-6">
         <p className="text-gray-600">
-          Found {filteredVendors.length} shop{filteredVendors.length !== 1 ? 's' : ''} 
+          Found {filteredPartners.length} shop{filteredPartners.length !== 1 ? 's' : ''} 
           {searchTerm && ` matching "${searchTerm}"`}
           {selectedCategory && ` in ${selectedCategory}`}
           {selectedCity && ` in ${selectedCity}`}
@@ -157,7 +157,7 @@ const VendorShopsList = () => {
       </div>
 
       {/* Shop Cards */}
-      {filteredVendors.length === 0 ? (
+      {filteredPartners.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🏪</div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">No shops found</h3>
@@ -165,25 +165,25 @@ const VendorShopsList = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredVendors.map(vendor => (
-            <div key={vendor._id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+          {filteredPartners.map(partner => (
+            <div key={partner._id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
               {/* Shop Header */}
               <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4">
                 <h3 className="text-xl font-bold mb-1">
-                  {vendor.shopDetails?.shopName || vendor.name}
+                  {partner.shopDetails?.shopName || partner.name}
                 </h3>
-                {vendor.shopDetails?.category && (
+                {partner.shopDetails?.category && (
                   <span className="inline-block bg-white bg-opacity-20 text-white px-2 py-1 rounded-full text-xs">
-                    {vendor.shopDetails.category}
+                    {partner.shopDetails.category}
                   </span>
                 )}
               </div>
 
               <div className="p-6">
                 {/* Description */}
-                {vendor.shopDetails?.description && (
+                {partner.shopDetails?.description && (
                   <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                    {vendor.shopDetails.description}
+                    {partner.shopDetails.description}
                   </p>
                 )}
 
@@ -193,11 +193,11 @@ const VendorShopsList = () => {
                     <span className="text-gray-400 mt-0.5">📍</span>
                     <div>
                       <p className="text-gray-700">
-                        {vendor.shopDetails?.address?.street}
-                        {vendor.shopDetails?.address?.area && `, ${vendor.shopDetails.address.area}`}
+                        {partner.shopDetails?.address?.street}
+                        {partner.shopDetails?.address?.area && `, ${partner.shopDetails.address.area}`}
                       </p>
                       <p className="text-gray-700">
-                        {vendor.shopDetails?.address?.city} - {vendor.shopDetails?.address?.pincode}
+                        {partner.shopDetails?.address?.city} - {partner.shopDetails?.address?.pincode}
                       </p>
                     </div>
                   </div>
@@ -205,20 +205,20 @@ const VendorShopsList = () => {
 
                 {/* Contact Info */}
                 <div className="mb-4 space-y-2">
-                  {vendor.shopDetails?.contactNumber && (
+                  {partner.shopDetails?.contactNumber && (
                     <div className="flex items-center space-x-2 text-sm">
                       <span className="text-green-600">📞</span>
-                      <span className="text-gray-700">{vendor.shopDetails.contactNumber}</span>
+                      <span className="text-gray-700">{partner.shopDetails.contactNumber}</span>
                     </div>
                   )}
                   
-                  {vendor.shopDetails?.timing && (
+                  {partner.shopDetails?.timing && (
                     <div className="flex items-center space-x-2 text-sm">
                       <span className="text-blue-600">🕒</span>
                       <span className="text-gray-700">
-                        {vendor.shopDetails.timing.isOpen24x7 
+                        {partner.shopDetails.timing.isOpen24x7 
                           ? 'Open 24/7' 
-                          : `${vendor.shopDetails.timing.openTime || 'N/A'} - ${vendor.shopDetails.timing.closeTime || 'N/A'}`
+                          : `${partner.shopDetails.timing.openTime || 'N/A'} - ${partner.shopDetails.timing.closeTime || 'N/A'}`
                         }
                       </span>
                     </div>
@@ -228,24 +228,24 @@ const VendorShopsList = () => {
                 {/* Actions */}
                 <div className="flex space-x-2">
                   <Link
-                    to={`/shop/${vendor._id}`}
+                    to={`/shop/${partner._id}`}
                     className="flex-1 bg-blue-600 text-white text-center py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     Visit Shop
                   </Link>
                   
-                  {vendor.shopDetails?.address && (
+                  {partner.shopDetails?.address && (
                     <button
-                      onClick={() => openMap(vendor.shopDetails.address)}
+                      onClick={() => openMap(partner.shopDetails.address)}
                       className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
                     >
                       📍
                     </button>
                   )}
                   
-                  {vendor.shopDetails?.contactNumber && (
+                  {partner.shopDetails?.contactNumber && (
                     <a
-                      href={`tel:${vendor.shopDetails.contactNumber}`}
+                      href={`tel:${partner.shopDetails.contactNumber}`}
                       className="bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors"
                     >
                       📞
@@ -279,7 +279,7 @@ const VendorShopsList = () => {
           <div className="text-center">
             <div className="text-4xl mb-3">🔍</div>
             <h3 className="font-semibold text-blue-800 mb-2">Browse Shops</h3>
-            <p className="text-blue-700 text-sm">Find local vendors and browse their products online</p>
+            <p className="text-blue-700 text-sm">Find local Partners and browse their products online</p>
           </div>
           
           <div className="text-center">
