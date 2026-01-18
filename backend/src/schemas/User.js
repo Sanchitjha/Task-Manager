@@ -79,7 +79,13 @@ const userSchema = new Schema(
 			totalSpent: { type: Number, default: 0 }
 		},
 		
-		role: { type: String, enum: ['admin', 'subadmin', 'user', 'Partner'], default: 'user' },
+		role: { type: String, enum: ['admin', 'subadmin', 'user', 'Partner', 'temp-partner'], default: 'user' },
+		
+		// Email verification fields
+		isEmailVerified: { type: Boolean, default: true },
+		emailOtpCode: { type: String },
+		emailOtpExpiry: { type: Date },
+		emailOtpAttempts: { type: Number, default: 0 },
 		
 		// Sub-admin specific fields
 		isApproved: { type: Boolean, default: true },
