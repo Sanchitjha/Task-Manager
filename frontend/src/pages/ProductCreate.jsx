@@ -45,7 +45,7 @@ export default function ProductCreate() {
   }, [form.title]);
 
   if (!user) return <div className="p-6 text-red-600">Please login to create products.</div>;
-  if (user.role !== 'vendor' && user.role !== 'admin') return <div className="p-6 text-red-600">Vendor access required to create products.</div>;
+  if (user.role !== 'Partner' && user.role !== 'admin') return <div className="p-6 text-red-600">Partner access required to create products.</div>;
 
   const handleFile = (e) => {
     const files = Array.from(e.target.files).slice(0, 6); // limit 6 images
