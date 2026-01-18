@@ -283,7 +283,7 @@ export default function SubAdminDashboard() {
 														</td>
 														<td className="px-6 py-4 whitespace-nowrap text-sm">
 															<button
-																onClick={() => fetchClientDetails(client._id)}
+																	onClick={() => fetchUserDetails(user._id)}
 																className="text-blue-600 hover:text-blue-800 mr-3"
 															>
 																View Details
@@ -304,8 +304,8 @@ export default function SubAdminDashboard() {
 							</div>
 						)}
 
-						{/* Client Details Tab */}
-						{activeTab === 'details' && clientDetails && (
+						{/* User Details Tab */}
+						{activeTab === 'details' && userDetails && (
 							<div>
 								<button
 									onClick={() => setActiveTab('list')}
@@ -315,27 +315,27 @@ export default function SubAdminDashboard() {
 								</button>
 								
 								<div className="bg-white border rounded-lg p-6 mb-6">
-									<h3 className="text-xl font-bold mb-4">Client Information</h3>
+									<h3 className="text-xl font-bold mb-4">User Information</h3>
 									<div className="grid grid-cols-2 gap-4">
 										<div>
 											<p className="text-sm text-gray-500">Name</p>
-											<p className="font-semibold">{clientDetails.client.name}</p>
+											<p className="font-semibold">{userDetails.user.name}</p>
 										</div>
 										<div>
 											<p className="text-sm text-gray-500">Email</p>
-											<p className="font-semibold">{clientDetails.client.email}</p>
+											<p className="font-semibold">{userDetails.user.email}</p>
 										</div>
 										<div>
 											<p className="text-sm text-gray-500">Videos Watched</p>
-											<p className="font-semibold">{clientDetails.stats.videosWatched}</p>
+											<p className="font-semibold">{userDetails.stats.videosWatched}</p>
 										</div>
 										<div>
-											<p className="text-sm text-gray-500">Coins Balance</p>
-											<p className="font-semibold text-green-600">{clientDetails.stats.coinsBalance} coins</p>
+											<p className="text-sm text-gray-500">Coin Balance</p>
+											<p className="font-semibold text-green-600">{userDetails.stats.coinsBalance} coins</p>
 										</div>
 										<div>
 											<p className="text-sm text-gray-500">Wallet Balance</p>
-											<p className="font-semibold text-blue-600">₹{clientDetails.stats.walletBalance.toFixed(2)}</p>
+											<p className="font-semibold text-blue-600">₹{userDetails.stats.walletBalance.toFixed(2)}</p>
 										</div>
 									</div>
 								</div>
@@ -431,7 +431,7 @@ export default function SubAdminDashboard() {
 							<div>
 								<div className="mb-6">
 									<h3 className="text-xl font-bold text-gray-900 mb-2">Wallet & Rewards System</h3>
-									<p className="text-gray-600">Manage your coin balance and distribute rewards to your clients</p>
+									<p className="text-gray-600">Manage your coin balance and distribute rewards to your users</p>
 								</div>
 
 								<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -464,8 +464,8 @@ export default function SubAdminDashboard() {
 											Monitor your transactions and distributions
 										</p>
 										<div className="bg-white rounded px-3 py-2 text-center">
-											<span className="text-2xl font-bold text-green-600">{clients.length}</span>
-											<div className="text-xs text-gray-500">Clients Managed</div>
+									<span className="text-2xl font-bold text-green-600">{users.length}</span>
+									<div className="text-xs text-gray-500">Users Managed</div>
 										</div>
 									</div>
 
@@ -520,22 +520,22 @@ export default function SubAdminDashboard() {
 			{showCoinModal && (
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
 					<div className="bg-white rounded-lg p-6 w-full max-w-md">
-						<h3 className="text-lg font-bold mb-4">Distribute Coins to Client</h3>
+						<h3 className="text-lg font-bold mb-4">Distribute Coins to User</h3>
 						<form onSubmit={handleCoinDistribution}>
 							<div className="mb-4">
 								<label className="block text-sm font-medium text-gray-700 mb-2">
-									Select Client
-								</label>
-								<select
-									value={coinFormData.clientEmail}
-									onChange={(e) => setCoinFormData({...coinFormData, clientEmail: e.target.value})}
-									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-									required
-								>
-									<option value="">Select a client...</option>
-									{clients.map((client) => (
-										<option key={client._id} value={client.email}>
-											{client.name} ({client.email}) - Balance: {client.coinsBalance} coins
+								Select User
+							</label>
+							<select
+								value={coinFormData.userEmail}
+								onChange={(e) => setCoinFormData({...coinFormData, userEmail: e.target.value})}
+								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+								required
+							>
+								<option value="">Select a user...</option>
+								{users.map((user) => (
+									<option key={user._id} value={user.email}>
+										{user.name} ({user.email}) - Balance: {user.coinsBalance} coins
 										</option>
 									))}
 								</select>
@@ -592,12 +592,12 @@ export default function SubAdminDashboard() {
 				</div>
 			)}
 
-			{/* Add Client Modal */}
+			{/* Add User Modal */}
 			{showAddModal && (
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
 					<div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-						<h2 className="text-2xl font-bold mb-4">Add New Client</h2>
-						<form onSubmit={handleAddClient}>
+						<h2 className="text-2xl font-bold mb-4">Add New User</h2>
+						<form onSubmit={handleAddUser}>
 							<div className="mb-4">
 								<label className="block text-sm font-medium text-gray-700 mb-2">
 									Name
@@ -640,7 +640,7 @@ export default function SubAdminDashboard() {
 									type="submit"
 									className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-medium"
 								>
-									Add Client
+									Add User
 								</button>
 								<button
 									type="button"
