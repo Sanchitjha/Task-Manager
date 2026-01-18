@@ -305,10 +305,15 @@ router.get('/partner/search-users', auth, async (req, res, next) => {
         { phone: { $regex: q, $options: 'i' } }
       ]
     })
-    .select('name email phone coinsBalance')
+    .select('name email phone wallet.coins')
     .limit(10);
 
-    res.json({ users });
+    const formattedUsers = users.map(user => ({
+      ...user.toObject(),
+      coinsBalance: user.wallet?.coins || 0
+    }));
+
+    res.json({ users: formattedUsers });
 
   } catch (error) {
     next(error);
