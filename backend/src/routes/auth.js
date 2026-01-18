@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { User } = require('../schemas/User');
 const { auth, adminOnly } = require('../middleware/auth');
+const { EmailOTPService } = require('../lib/emailOtpService');
 
 const router = express.Router();
 
@@ -356,6 +357,152 @@ router.post('/logout', auth, async (req, res, next) => {
 		res.json({ message: 'Logged out successfully' });
 	} catch (e) { 
 		next(e); 
+	}
+});
+
+// Send Email OTP for partner registration
+router.post('/send-partner-email-otp', async (req, res, next) => {
+	try {
+		const { email } = req.body;
+		
+		// Validate email
+		if (!email) {
+			return res.status(400).json({ message: 'Email is required' });
+		}
+		
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailRegex.test(email)) {
+			return res.status(400).json({ message: 'Invalid email format' });
+		}
+		
+		// Check if user already exists
+		const existingUser = await User.findOne({ email });
+		if (existingUser) {
+			return res.status(400).json({ message: 'User already exists with this email' });
+		}
+		
+		// Generate OTP
+		const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+		const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+		
+		// Store OTP temporarily - Create temporary user record
+		let tempUser = await User.findOne({ email, role: 'temp-partner' });
+		
+		if (tempUser) {
+			// Update existing temp user
+			tempUser.emailOtpCode = otpCode;
+			tempUser.emailOtpExpiry = otpExpiry;
+			tempUser.emailOtpAttempts = 0;
+			await tempUser.save();
+		} else {
+			// Create new temp user
+			tempUser = await User.create({
+				name: 'Temporary Partner',
+				email,
+				phone: 'temp',
+				password: 'temp',
+				role: 'temp-partner',
+				emailOtpCode: otpCode,
+				emailOtpExpiry: otpExpiry,
+				emailOtpAttempts: 0,
+				isEmailVerified: false
+			});
+		}
+		
+		// Send Email OTP
+		const otpResult = await EmailOTPService.sendEmailOTP(email, otpCode, 'Partner Registration');
+		
+		if (otpResult.success) {
+			// Response object
+			const response = {
+				success: true,
+				message: 'OTP sent successfully to your email address for partner registration',
+				email: email,
+				expiresIn: '10 minutes'
+			};
+			
+			// Include OTP in development mode
+			if (otpResult.developmentMode) {
+				response.developmentOTP = otpResult.otp;
+				response.developmentMessage = `Development Mode: Your OTP is ${otpResult.otp}`;
+			}
+			
+			res.json(response);
+		} else {
+			res.status(500).json({ 
+				success: false, 
+				message: 'Failed to send OTP. Please try again.' 
+			});
+		}
+		
+	} catch (error) {
+		console.error('Send Partner Email OTP error:', error);
+		next(error);
+	}
+});
+
+// Verify Email OTP for partner registration
+router.post('/verify-partner-otp', async (req, res, next) => {
+	try {
+		const { email, otp } = req.body;
+		
+		// Validate required fields
+		if (!email || !otp) {
+			return res.status(400).json({ 
+				message: 'Email and OTP are required' 
+			});
+		}
+		
+		// Find temp user
+		const tempUser = await User.findOne({ 
+			email,
+			role: 'temp-partner'
+		});
+		
+		if (!tempUser) {
+			return res.status(400).json({ 
+				message: 'Invalid email or OTP session expired' 
+			});
+		}
+		
+		// Check OTP expiry
+		if (new Date() > tempUser.emailOtpExpiry) {
+			await User.deleteOne({ email, role: 'temp-partner' });
+			return res.status(400).json({ 
+				message: 'OTP has expired. Please request a new one.' 
+			});
+		}
+		
+		// Check OTP attempts
+		if (tempUser.emailOtpAttempts >= 3) {
+			await User.deleteOne({ email, role: 'temp-partner' });
+			return res.status(400).json({ 
+				message: 'Too many failed attempts. Please request a new OTP.' 
+			});
+		}
+		
+		// Verify OTP
+		if (tempUser.emailOtpCode !== otp) {
+			tempUser.emailOtpAttempts += 1;
+			await tempUser.save();
+			return res.status(400).json({ 
+				message: 'Invalid OTP. Please try again.' 
+			});
+		}
+		
+		// Mark as verified
+		tempUser.isEmailVerified = true;
+		await tempUser.save();
+		
+		res.json({ 
+			success: true, 
+			message: 'Email verified successfully. You can now complete partner registration.',
+			verificationToken: tempUser._id.toString() // Use temp user ID as token
+		});
+		
+	} catch (error) {
+		console.error('Verify Partner Email OTP error:', error);
+		next(error);
 	}
 });
 
