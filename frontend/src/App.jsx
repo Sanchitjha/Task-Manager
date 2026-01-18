@@ -24,10 +24,10 @@ import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
-import VendorDashboard from './pages/VendorDashboard';
-import VendorShop from './pages/VendorShop';
-import VendorShopsList from './pages/VendorShopsList';
-import VendorShopSetup from './components/VendorShopSetup';
+import VendorDashboard from './pages/VendorDashboard'; // PartnerDashboard
+import VendorShop from './pages/VendorShop'; // PartnerShop
+import VendorShopsList from './pages/VendorShopsList'; // PartnerShopsList
+import VendorShopSetup from './components/VendorShopSetup'; // PartnerShopSetup
 import SellerDashboard from './pages/SellerDashboard';
 import SellerInventory from './pages/SellerInventory';
 import SellerOrders from './pages/SellerOrders';
@@ -76,19 +76,19 @@ function App() {
 							<Orders />
 						</ProtectedRoute>
 					} />
-					<Route path="/vendor/dashboard" element={
+					<Route path="/partner/dashboard" element={
 						<ProtectedRoute>
 							<VendorDashboard />
 						</ProtectedRoute>
 					} />
-					<Route path="/vendor/setup-shop" element={
+					<Route path="/partner/setup-shop" element={
 						<ProtectedRoute>
 							<VendorShopSetup />
 						</ProtectedRoute>
 					} />
-					<Route path="/vendor/products/new" element={<ProductCreate />} />
+					<Route path="/partner/products/new" element={<ProductCreate />} />
 					<Route path="/shops" element={<VendorShopsList />} />
-					<Route path="/shop/:vendorId" element={<VendorShop />} />
+					<Route path="/shop/:partnerId" element={<VendorShop />} />
 
 					{/* Seller Portal Routes */}
 					<Route path="/seller" element={
