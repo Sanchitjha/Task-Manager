@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../lib/api';
 
-const VendorShopsList = () => {
+const PartnerShopsList = () => {
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -25,7 +25,7 @@ const VendorShopsList = () => {
       const response = await api.get('/api/users?role=Partner&hasShop=true');
       const partnerUsers = response.data.users || [];
       
-      // Filter Partners who have shop details set up
+      // Filter partners who have shop details set up
       const partnersWithShops = partnerUsers.filter(partner => 
         partner.shopDetails && 
         partner.shopDetails.shopName && 
@@ -279,7 +279,7 @@ const VendorShopsList = () => {
           <div className="text-center">
             <div className="text-4xl mb-3">🔍</div>
             <h3 className="font-semibold text-blue-800 mb-2">Browse Shops</h3>
-            <p className="text-blue-700 text-sm">Find local Partners and browse their products online</p>
+            <p className="text-blue-700 text-sm">Find local vendors and browse their products online</p>
           </div>
           
           <div className="text-center">
@@ -299,4 +299,4 @@ const VendorShopsList = () => {
   );
 };
 
-export default VendorShopsList;
+export default PartnerShopsList;
