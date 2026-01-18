@@ -13,6 +13,7 @@ const settingsRouter = require('./routes/settings');
 const adminRouter = require('./routes/admin');
 const productsRouter = require('./routes/products');
 const partnerRouter = require('./routes/vendor');
+const partnersRouter = require('./routes/partners');
 const ordersRouter = require('./routes/orders');
 const subscriptionsRouter = require('./routes/subscriptions');
 const { initSubscriptionCron } = require('./lib/subscriptionCron');
@@ -55,7 +56,7 @@ app.use('/api/transactions', transactionsRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/products', productsRouter);
-app.use('/api/partners', partnerRouter); // Partners route
+app.use('/api/partners', partnersRouter); // New Partners API
 app.use('/api/partner', partnerRouter);
 app.use('/api/vendor', partnerRouter); // Legacy vendor system routes
 app.use('/api/orders', ordersRouter);
