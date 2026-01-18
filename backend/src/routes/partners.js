@@ -90,7 +90,7 @@ router.post('/register', uploadProduct.fields([
       role: 'Partner',
       shopDetails,
       isApproved: null, // Pending approval
-      coinsBalance: 0
+      wallet: { coins: 0, totalEarned: 0, totalSpent: 0 }
     });
 
     res.status(201).json({
@@ -245,7 +245,7 @@ router.post('/confirm-purchase', auth, async (req, res) => {
     }
 
     // Check user has enough coins
-    if (user.coinsBalance < coinsUsed) {
+    if (user.wallet.coins < coinsUsed) {
       return res.status(400).json({ message: 'User does not have enough coins' });
     }
 
@@ -266,11 +266,14 @@ router.post('/confirm-purchase', auth, async (req, res) => {
 
     try {
       // Deduct coins from user
-      user.coinsBalance -= coinsUsed;
+      user.wallet.coins -= coinsUsed;
+      user.wallet.totalSpent += coinsUsed;
       await user.save({ session });
 
       // Add coins to partner (optional - for tracking)
-      req.user.coinsBalance = (req.user.coinsBalance || 0) + coinsUsed;
+      req.user.wallet = req.user.wallet || { coins: 0, totalEarned: 0, totalSpent: 0 };
+      req.user.wallet.coins = (req.user.wallet.coins || 0) + coinsUsed;
+      req.user.wallet.totalEarned = (req.user.wallet.totalEarned || 0) + coinsUsed;
       await req.user.save({ session });
 
       // Create transaction record
