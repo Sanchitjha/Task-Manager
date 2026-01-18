@@ -209,4 +209,183 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
+// Get partner products with search and filters
+router.get('/partner/my-products', auth, async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: 'Authentication required' });
+    if (user.role !== 'Partner' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Partner access required' });
+    }
+
+    const { page = 1, limit = 12, search, category, status, sortBy = 'createdAt' } = req.query;
+    const skip = (page - 1) * limit;
+    
+    const filter = { vendor: user._id };
+    
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { sku: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    if (category && category !== 'all') {
+      filter.category = category;
+    }
+    
+    if (status) {
+      filter.isPublished = status === 'active';
+    }
+
+    let sortQuery = {};
+    switch (sortBy) {
+      case 'name':
+        sortQuery = { title: 1 };
+        break;
+      case 'price':
+        sortQuery = { originalPrice: 1 };
+        break;
+      case 'stock':
+        sortQuery = { stock: -1 };
+        break;
+      case 'createdAt':
+      default:
+        sortQuery = { createdAt: -1 };
+        break;
+    }
+
+    const [products, total] = await Promise.all([
+      Product.find(filter).sort(sortQuery).skip(parseInt(skip)).limit(parseInt(limit)),
+      Product.countDocuments(filter)
+    ]);
+
+    // Calculate stats
+    const stats = {
+      totalProducts: total,
+      activeProducts: await Product.countDocuments({ vendor: user._id, isPublished: true }),
+      outOfStock: await Product.countDocuments({ vendor: user._id, stock: 0 }),
+      lowStock: await Product.countDocuments({ vendor: user._id, stock: { $lte: 5, $gt: 0 } })
+    };
+
+    res.json({
+      success: true,
+      products,
+      stats,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit)
+    });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Search users (for partner purchase confirmation)
+router.get('/partner/search-users', auth, async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: 'Authentication required' });
+    if (user.role !== 'Partner') {
+      return res.status(403).json({ message: 'Partner access required' });
+    }
+
+    const { q } = req.query;
+    if (!q) {
+      return res.json({ users: [] });
+    }
+
+    const { User } = require('../schemas/User');
+    const users = await User.find({
+      $or: [
+        { name: { $regex: q, $options: 'i' } },
+        { email: { $regex: q, $options: 'i' } },
+        { phone: { $regex: q, $options: 'i' } }
+      ]
+    })
+    .select('name email phone coinsBalance')
+    .limit(10);
+
+    res.json({ users });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Search products (for partner purchase confirmation)
+router.get('/partner/search-products', auth, async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: 'Authentication required' });
+    if (user.role !== 'Partner') {
+      return res.status(403).json({ message: 'Partner access required' });
+    }
+
+    const { q } = req.query;
+    if (!q) {
+      return res.json({ products: [] });
+    }
+
+    const products = await Product.find({
+      vendor: user._id,
+      $or: [
+        { title: { $regex: q, $options: 'i' } },
+        { sku: { $regex: q, $options: 'i' } }
+      ]
+    })
+    .select('title sku originalPrice coinDiscount stock images')
+    .limit(10);
+
+    res.json({ products });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get products for a specific partner (public)
+router.get('/partner/:partnerId/products', async (req, res, next) => {
+  try {
+    const { partnerId } = req.params;
+    const { page = 1, limit = 12, search, category } = req.query;
+    const skip = (page - 1) * limit;
+    
+    const filter = { 
+      vendor: partnerId, 
+      isPublished: true 
+    };
+    
+    if (search) {
+      filter.title = { $regex: search, $options: 'i' };
+    }
+    
+    if (category && category !== 'all') {
+      filter.category = category;
+    }
+
+    const [products, total] = await Promise.all([
+      Product.find(filter)
+        .select('title description originalPrice coinDiscount images category stock')
+        .sort({ createdAt: -1 })
+        .skip(parseInt(skip))
+        .limit(parseInt(limit)),
+      Product.countDocuments(filter)
+    ]);
+
+    res.json({
+      success: true,
+      products,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / limit)
+    });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;
