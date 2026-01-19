@@ -255,7 +255,7 @@ router.get('/my-orders', auth, async (req, res, next) => {
 // Get Partner's orders
 router.get('/partner-orders', auth, async (req, res, next) => {
   try {
-    if (req.user.role !== 'Partner' && req.user.role !== 'admin') {
+    if (req.user.role !== 'vendor' && user.role !== 'partner' && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Partner access required' });
     }
 
