@@ -206,7 +206,7 @@ export default function AdminVendors() {
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Recent Vendors</h3>
                     <div className="space-y-3">
-                      {partners.slice(0, 5).map((vendor) => (
+                      {partners.slice(0, 5).map((partner) => (
                         <div key={vendor._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div>
                             <p className="font-medium">{vendor.name}</p>
@@ -275,10 +275,10 @@ export default function AdminVendors() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {partners.map((vendor) => {
-                        const vendorProducts = products.filter(p => p.vendor === vendor._id).length;
+                      {partners.map((partner) => {
+                        const vendorProducts = products.filter(p => p.partner === vendor._id).length;
                         const vendorRevenue = orders
-                          .filter(o => o.vendor === vendor._id)
+                          .filter(o => o.partner === vendor._id)
                           .reduce((sum, o) => sum + o.totalAmount, 0);
                         
                         return (
@@ -350,7 +350,7 @@ export default function AdminVendors() {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {products.map((product) => {
-                        const vendor = partners.find(v => v._id === product.vendor);
+                        const vendor = partners.find(v => v._id === product.partner);
                         
                         return (
                           <tr key={product._id}>
