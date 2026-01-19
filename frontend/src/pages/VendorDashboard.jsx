@@ -43,7 +43,7 @@ export default function VendorDashboard() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Vendor Dashboard</h1>
-        <Link to="/vendor/products/new" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        <Link to="/partner/products/new" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
           + New Product
         </Link>
       </div>
@@ -52,7 +52,7 @@ export default function VendorDashboard() {
       {loading && <div className="text-gray-600">Loading products...</div>}
 
       {!loading && products.length === 0 && (
-        <div className="text-gray-500">No products yet. <Link to="/vendor/products/new" className="text-blue-600 hover:underline">Create one!</Link></div>
+        <div className="text-gray-500">No products yet. <Link to="/partner/products/new" className="text-blue-600 hover:underline">Create one!</Link></div>
       )}
 
       <div className="grid gap-4">
@@ -70,7 +70,7 @@ export default function VendorDashboard() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Link to={`/vendor/products/${p._id}/edit`} className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">
+              <Link to={`/partner/products/${p._id}/edit`} className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">
                 Edit
               </Link>
               <button onClick={() => deleteProduct(p._id)} className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700">
