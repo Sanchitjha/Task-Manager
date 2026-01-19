@@ -60,7 +60,7 @@ const orderSchema = new Schema(
     paymentMethod: { type: String, enum: ['card', 'upi', 'wallet', 'bank_transfer'], default: 'card' },
     paymentStatus: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' },
     
-    // Vendor settlement
+    // Partner settlement
     vendorPayout: { type: Number, default: 0 },
     payoutStatus: { type: String, enum: ['pending', 'processed', 'cancelled'], default: 'pending' },
     
