@@ -88,7 +88,7 @@ async function testWalletTransaction() {
       console.log('');
 
       // Check balance
-      if (client.coinsBalance < totalCoinsUsed) {
+      if (user.coinsBalance < totalCoinsUsed) {
         throw new Error('Insufficient coins!');
       }
 
@@ -96,7 +96,7 @@ async function testWalletTransaction() {
       const orderId = `TEST-ORD-${Date.now()}`;
       const order = await Order.create([{
         orderId,
-        customer: client._id,
+        customer: user._id,
         vendor: vendor._id,
         items: [{
           product: product._id,
@@ -115,11 +115,11 @@ async function testWalletTransaction() {
       }], { session });
 
       // Transfer coins
-      client.coinsBalance -= totalCoinsUsed;
-      await client.save({ session });
+      user.coinsBalance -= totalCoinsUsed;
+      await user.save({ session });
 
-      vendor.coinsBalance = (vendor.coinsBalance || 0) + totalCoinsUsed;
-      await vendor.save({ session });
+      partner.coinsBalance = (partner.coinsBalance || 0) + totalCoinsUsed;
+      await partner.save({ session });
 
       // Create transactions
       await Transaction.create([
@@ -131,18 +131,18 @@ async function testWalletTransaction() {
           status: 'completed',
           metadata: {
             orderId: order[0]._id,
-            vendorId: vendor._id
+            partnerId: partner._id
           }
         },
         {
-          userId: vendor._id,
+          userId: partner._id,
           type: 'sale',
           amount: totalCoinsUsed,
           description: `Order received: ${orderId}`,
           status: 'completed',
           metadata: {
             orderId: order[0]._id,
-            customerId: client._id
+            customerId: user._id
           }
         }
       ], { session });
@@ -151,38 +151,38 @@ async function testWalletTransaction() {
       console.log('✅ Transaction committed successfully!\n');
 
       // Refresh balances
-      await client.updateOne({ $inc: {} }); // Force refresh
-      await vendor.updateOne({ $inc: {} });
-      const updatedClient = await User.findById(client._id);
-      const updatedVendor = await User.findById(vendor._id);
+      await user.updateOne({ $inc: {} }); // Force refresh
+      await partner.updateOne({ $inc: {} });
+      const updatedUser = await User.findById(user._id);
+      const updatedPartner = await User.findById(partner._id);
 
       console.log('📊 AFTER TRANSACTION:');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log(`Client (${updatedClient.email}): ${updatedClient.coinsBalance} coins (-${totalCoinsUsed})`);
-      console.log(`Vendor (${updatedVendor.email}): ${updatedVendor.coinsBalance} coins (+${totalCoinsUsed})`);
+      console.log(`User (${updatedUser.email}): ${updatedUser.coinsBalance} coins (-${totalCoinsUsed})`);
+      console.log(`Partner (${updatedPartner.email}): ${updatedPartner.coinsBalance} coins (+${totalCoinsUsed})`);
       console.log('');
 
       // Check transactions
-      const clientTx = await Transaction.findOne({ userId: client._id, type: 'purchase' }).sort({ createdAt: -1 });
-      const vendorTx = await Transaction.findOne({ userId: vendor._id, type: 'sale' }).sort({ createdAt: -1 });
+      const userTx = await Transaction.findOne({ userId: user._id, type: 'purchase' }).sort({ createdAt: -1 });
+      const vendorTx = await Transaction.findOne({ userId: partner._id, type: 'sale' }).sort({ createdAt: -1 });
 
       console.log('📝 TRANSACTION RECORDS:');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('Client Transaction:');
-      console.log(`  Type: ${clientTx.type}`);
-      console.log(`  Amount: ${clientTx.amount} coins`);
-      console.log(`  Status: ${clientTx.status}`);
-      console.log(`  Description: ${clientTx.description}`);
+      console.log('User Transaction:');
+      console.log(`  Type: ${userTx.type}`);
+      console.log(`  Amount: ${userTx.amount} coins`);
+      console.log(`  Status: ${userTx.status}`);
+      console.log(`  Description: ${userTx.description}`);
       console.log('');
-      console.log('Vendor Transaction:');
-      console.log(`  Type: ${vendorTx.type}`);
-      console.log(`  Amount: ${vendorTx.amount} coins`);
-      console.log(`  Status: ${vendorTx.status}`);
-      console.log(`  Description: ${vendorTx.description}`);
+      console.log('Partner Transaction:');
+      console.log(`  Type: ${partnerTx.type}`);
+      console.log(`  Amount: ${partnerTx.amount} coins`);
+      console.log(`  Status: ${partnerTx.status}`);
+      console.log(`  Description: ${partnerTx.description}`);
       console.log('');
 
       console.log('✅ WALLET TRANSACTION SYSTEM IS WORKING CORRECTLY! ✅');
-      console.log('Coins successfully transferred from client to vendor.');
+      console.log('Coins successfully transferred from user to partner.');
 
     } catch (error) {
       await session.abortTransaction();
