@@ -21,7 +21,7 @@ export default function SellerProfile() {
 
   const loadProfile = async () => {
     try {
-      const res = await api.get('/vendor/profile');
+      const res = await api.get('/partner/profile');
       setProfile(res.data.profile);
       setForm(res.data.profile || {});
     } catch (e) {
@@ -39,7 +39,7 @@ export default function SellerProfile() {
     setError('');
 
     try {
-      await api.put('/vendor/profile', form);
+      await api.put('/partner/profile', form);
       setSuccess('Profile updated successfully!');
       loadProfile();
     } catch (e) {
