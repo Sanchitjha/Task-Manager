@@ -12,13 +12,8 @@ export default function Admin() {
 	useEffect(() => {
 		// Mock data for now
 		setUsers([
-<<<<<<< HEAD
-			{ id: 1, name: 'John Doe', email: 'john@example.com', role: 'client', walletBalance: 100 },
-			{ id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'Partner', walletBalance: 50 },
-=======
 			{ id: 1, name: 'John Doe', email: 'john@example.com', role: 'user', walletBalance: 100 },
 			{ id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'partner', walletBalance: 50 },
->>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
 		]);
 		setVideos([
 			{ id: 1, title: 'Sample Video', url: 'https://youtube.com/watch?v=123', isActive: true },
