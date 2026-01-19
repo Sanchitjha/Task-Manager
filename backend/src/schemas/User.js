@@ -20,7 +20,7 @@ const userSchema = new Schema(
 			contactNumber: { type: String }
 		},
 		
-	role: { type: String, enum: ['admin', 'subadmin', 'user', 'Partner'], default: 'user' },
+	role: { type: String, enum: ['admin', 'subadmin', 'user', 'client', 'vendor', 'partner'], default: 'user' },
 		
 		// Sub-admin specific fields
 		isApproved: { type: Boolean, default: true }, // false for sub-admins until approved
