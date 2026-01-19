@@ -10,7 +10,7 @@ router.post('/create-with-images', auth, uploadProduct.array('images', 6), async
   try {
     const user = req.user;
     if (!user) return res.status(401).json({ message: 'Authentication required' });
-    if (user.role !== 'vendor' && user.role !== 'admin') {
+    if (user.role !== 'vendor' && user.role !== 'partner' && user.role !== 'admin') {
       return res.status(403).json({ message: 'Vendor access required' });
     }
 
@@ -58,7 +58,7 @@ router.post('/', auth, async (req, res, next) => {
   try {
     const user = req.user;
     if (!user) return res.status(401).json({ message: 'Authentication required' });
-    if (user.role !== 'vendor' && user.role !== 'admin') {
+    if (user.role !== 'vendor' && user.role !== 'partner' && user.role !== 'admin') {
       return res.status(403).json({ message: 'Vendor access required' });
     }
 
