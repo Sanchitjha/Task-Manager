@@ -439,7 +439,7 @@ router.get('/dashboard/subadmin-stats', auth, adminOrSubadmin, async (req, res, 
 // Get all Partners (admin only)
 router.get('/partners', auth, adminOnly, async (req, res, next) => {
 	try {
-		const partners = await User.find({ role: { : ['vendor', 'partner'] } })
+		const partners = await User.find({ role: { $in: ['vendor', 'partner'] } })
 			.select('-password')
 			.sort({ createdAt: -1 });
 		
@@ -453,7 +453,7 @@ router.patch('/partners/:partnerId', auth, adminOnly, async (req, res, next) => 
 		const { isActive } = req.body;
 		
 		const partner = await User.findById(req.params.partnerId);
-		if (!partner || partner.role !== 'vendor' && user.role !== 'partner') {
+		if (!partner || (partner.role !== 'vendor' && partner.role !== 'partner')) {
 			return res.status(404).json({ error: 'Partner not found' });
 		}
 		
@@ -539,8 +539,8 @@ router.patch('/orders/:orderId', auth, adminOnly, async (req, res, next) => {
 // Get partner management stats (admin only)
 router.get('/partner-stats', auth, adminOnly, async (req, res, next) => {
 	try {
-		const totalPartners = await User.countDocuments({ role: { : ['vendor', 'partner'] } });
-		const activePartners = await User.countDocuments({ role: 'Partner', isActive: true });
+		const totalPartners = await User.countDocuments({ role: { $in: ['vendor', 'partner'] } });
+		const activePartners = await User.countDocuments({ role: { $in: ['vendor', 'partner'] }, isActive: true });
 		
 		const { Product } = require('../schemas/Product');
 		const totalProducts = await Product.countDocuments();
