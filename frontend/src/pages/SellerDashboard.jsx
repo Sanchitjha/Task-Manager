@@ -10,7 +10,7 @@ export default function SellerDashboard() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!user || (user.role !== 'vendor' && user.role !== 'admin')) return;
+    if (!user || (user.role !== 'vendor' && user.role !== 'partner' && user.role !== 'admin')) return;
 
     const loadStats = async () => {
       try {
@@ -27,7 +27,7 @@ export default function SellerDashboard() {
     loadStats();
   }, [user]);
 
-  if (!user || (user.role !== 'vendor' && user.role !== 'admin')) {
+  if (!user || (user.role !== 'vendor' && user.role !== 'partner' && user.role !== 'admin')) {
     return <div className="p-6 text-red-600">Vendor access required.</div>;
   }
 
