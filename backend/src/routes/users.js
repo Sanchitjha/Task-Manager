@@ -35,9 +35,33 @@ router.patch('/:id', auth, async (req, res, next) => {
             return res.status(403).json({ msg: 'Not authorized to update this profile' });
         }
 
+        const { name, email, phone, shopDetails, ...otherFields } = req.body;
+        
+        // Build update object
+        const updateData = {};
+        if (name !== undefined) updateData.name = name;
+        if (email !== undefined) updateData.email = email;
+        if (phone !== undefined) updateData.phone = phone;
+        
+        // Handle shop details for partners
+        if (shopDetails && req.user.role === 'Partner') {
+            updateData.shopDetails = {
+                ...shopDetails,
+                // Preserve existing verification status
+                verification: req.user.shopDetails?.verification || {
+                    status: 'pending',
+                    shopPhoto: null,
+                    idProof: null,
+                    verifiedAt: null,
+                    verifiedBy: null,
+                    rejectionReason: null
+                }
+            };
+        }
+
         const user = await User.findByIdAndUpdate(
             req.params.id, 
-            { name: req.body.name }, // Only allow name updates through this endpoint
+            updateData,
             { new: true, runValidators: true } 
         ).select('-password');
 
