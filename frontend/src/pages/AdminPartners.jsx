@@ -51,7 +51,7 @@ export default function AdminPartners() {
       });
       
     } catch (e) {
-      console.error('Failed to load admin partner? data:', e);
+      console.error('Failed to load admin partner data:', e);
     } finally {
       setLoading(false);
     }
@@ -350,7 +350,7 @@ export default function AdminPartners() {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {products.map((product) => {
-                        const partner? = partners.find(v => v._id === product.partner);
+                        const partnerData = partners.find(v => v._id === product.partner);
                         
                         return (
                           <tr key={product._id}>
@@ -376,7 +376,7 @@ export default function AdminPartners() {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {partner? ? partner.name : 'Unknown'}
+                              {partnerData ? partnerData.name : 'Unknown'}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {product.price} coins
