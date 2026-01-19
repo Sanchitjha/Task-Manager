@@ -14,7 +14,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [userBalance, setUserBalance] = useState(0);
   const [cart, setCart] = useState([]);
-  const [vendorInfo, setVendorInfo] = useState(null);
+  const [partnerInfo, setPartnerInfo] = useState(null);
 
   useEffect(() => {
     loadProduct();
@@ -28,10 +28,10 @@ export default function ProductDetail() {
       const res = await api.get(`/products/${id}`);
       setProduct(res.data.product);
       
-      // Load vendor info
+      // Load partner info
       if (res.data.product.vendor) {
         const vendorRes = await api.get(`/vendor/profile/${res.data.product.vendor}`);
-        setVendorInfo(vendorRes.data.vendor);
+        setPartnerInfo(vendorRes.data.vendor);
       }
     } catch (e) {
       console.error('Failed to load product:', e);
@@ -100,9 +100,9 @@ export default function ProductDetail() {
   };
 
   const contactVendor = () => {
-    if (vendorInfo && vendorInfo.whatsapp) {
+    if (partnerInfo && partnerInfo.whatsapp) {
       const message = `Hi, I'm interested in your product: ${product.title}`;
-      const whatsappUrl = `https://wa.me/${vendorInfo.whatsapp}?text=${encodeURIComponent(message)}`;
+      const whatsappUrl = `https://wa.me/${partnerInfo.whatsapp}?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, '_blank');
     }
   };
@@ -226,11 +226,11 @@ export default function ProductDetail() {
               )}
 
               {/* Vendor Info */}
-              {vendorInfo && (
+              {partnerInfo && (
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <h3 className="font-semibold text-gray-900 mb-2">Sold by</h3>
-                  <p className="text-gray-600">{vendorInfo.name}</p>
-                  {vendorInfo.whatsapp && (
+                  <p className="text-gray-600">{partnerInfo.name}</p>
+                  {partnerInfo.whatsapp && (
                     <button
                       onClick={contactVendor}
                       className="mt-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm"
