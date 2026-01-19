@@ -6,7 +6,7 @@ import api from '../lib/api';
 export default function AdminVendors() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [vendors, setVendors] = useState([]);
+  const [partners, setPartners] = useState([]);
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,9 +25,9 @@ export default function AdminVendors() {
     try {
       setLoading(true);
       
-      // Load vendors
-      const vendorsRes = await api.get('/admin/vendors');
-      setVendors(vendorsRes.data.vendors || []);
+      // Load partners
+      const partnersRes = await api.get('/admin/partners');
+      setPartners(partnersRes.data.partners || []);
       
       // Load products
       const productsRes = await api.get('/admin/products');
@@ -40,13 +40,13 @@ export default function AdminVendors() {
       // Calculate stats
       const totalRevenue = ordersRes.data.orders.reduce((sum, order) => sum + order.totalAmount, 0);
       const totalProducts = productsRes.data.products.length;
-      const totalVendors = vendorsRes.data.vendors.length;
+      const totalPartners = partnersRes.data.partners.length;
       const pendingOrders = ordersRes.data.orders.filter(o => o.status === 'pending').length;
       
       setStats({
         totalRevenue,
         totalProducts,
-        totalVendors,
+        totalPartners,
         pendingOrders
       });
       
@@ -57,15 +57,15 @@ export default function AdminVendors() {
     }
   };
 
-  const toggleVendorStatus = async (vendorId, currentStatus) => {
+  const togglePartnerStatus = async (partnerId, currentStatus) => {
     try {
-      await api.patch(`/admin/vendors/${vendorId}`, {
+      await api.patch(`/admin/partners/${partnerId}`, {
         isActive: !currentStatus
       });
       loadData(); // Reload data
     } catch (e) {
-      console.error('Failed to update vendor status:', e);
-      alert('Failed to update vendor status');
+      console.error('Failed to update partner status:', e);
+      alert('Failed to update partner status');
     }
   };
 
@@ -118,8 +118,8 @@ export default function AdminVendors() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Vendor Management</h1>
-              <p className="text-gray-600 mt-2">Manage vendors, products, and e-commerce operations</p>
+              <h1 className="text-3xl font-bold text-gray-900">Partner Management</h1>
+              <p className="text-gray-600 mt-2">Manage partners, products, and e-commerce operations</p>
             </div>
             <Link
               to="/admin"
@@ -133,7 +133,7 @@ export default function AdminVendors() {
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-            <div className="text-3xl font-bold text-orange-600">{stats.totalVendors}</div>
+            <div className="text-3xl font-bold text-orange-600">{stats.totalPartners}</div>
             <div className="text-gray-600 mt-1">Total Vendors</div>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-6 text-center">
@@ -165,14 +165,14 @@ export default function AdminVendors() {
                 Overview
               </button>
               <button
-                onClick={() => setActiveTab('vendors')}
+                onClick={() => setActiveTab('partners')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'vendors'
+                  activeTab === 'partners'
                     ? 'border-orange-500 text-orange-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Vendors ({vendors.length})
+                Vendors ({partners.length})
               </button>
               <button
                 onClick={() => setActiveTab('products')}
@@ -206,7 +206,7 @@ export default function AdminVendors() {
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Recent Vendors</h3>
                     <div className="space-y-3">
-                      {vendors.slice(0, 5).map((vendor) => (
+                      {partners.slice(0, 5).map((vendor) => (
                         <div key={vendor._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div>
                             <p className="font-medium">{vendor.name}</p>
@@ -251,7 +251,7 @@ export default function AdminVendors() {
             )}
 
             {/* Vendors Tab */}
-            {activeTab === 'vendors' && (
+            {activeTab === 'partners' && (
               <div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
@@ -275,7 +275,7 @@ export default function AdminVendors() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {vendors.map((vendor) => {
+                      {partners.map((vendor) => {
                         const vendorProducts = products.filter(p => p.vendor === vendor._id).length;
                         const vendorRevenue = orders
                           .filter(o => o.vendor === vendor._id)
@@ -304,7 +304,7 @@ export default function AdminVendors() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               <button
-                                onClick={() => toggleVendorStatus(vendor._id, vendor.isActive)}
+                                onClick={() => togglePartnerStatus(vendor._id, vendor.isActive)}
                                 className={`mr-2 ${
                                   vendor.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'
                                 }`}
@@ -350,7 +350,7 @@ export default function AdminVendors() {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {products.map((product) => {
-                        const vendor = vendors.find(v => v._id === product.vendor);
+                        const vendor = partners.find(v => v._id === product.vendor);
                         
                         return (
                           <tr key={product._id}>
