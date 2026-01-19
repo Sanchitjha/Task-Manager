@@ -10,13 +10,8 @@ router.post('/create-with-images', auth, uploadProduct.array('images', 6), async
   try {
     const user = req.user;
     if (!user) return res.status(401).json({ message: 'Authentication required' });
-<<<<<<< HEAD
-    if (user.role !== 'Partner' && user.role !== 'admin') {
+    if (user.role !== 'partner' && user.role !== 'admin') {
       return res.status(403).json({ message: 'Partner access required' });
-=======
-    if (user.role !== 'partner' && user.role !== 'partner' && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Vendor access required' });
->>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
     }
 
     const { 
@@ -64,13 +59,8 @@ router.post('/', auth, async (req, res, next) => {
   try {
     const user = req.user;
     if (!user) return res.status(401).json({ message: 'Authentication required' });
-<<<<<<< HEAD
-    if (user.role !== 'Partner' && user.role !== 'admin') {
+    if (user.role !== 'partner' && user.role !== 'admin') {
       return res.status(403).json({ message: 'Partner access required' });
-=======
-    if (user.role !== 'partner' && user.role !== 'partner' && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Vendor access required' });
->>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
     }
 
     const { 
