@@ -22,12 +22,12 @@ async function fixUsers() {
 		// Fix users with undefined roles
 		await User.updateMany(
 			{ role: { $exists: false } },
-			{ $set: { role: 'client', isApproved: true } }
+			{ $set: { role: 'user', isApproved: true } }
 		);
 
 		// Fix clients and admins without isApproved
 		await User.updateMany(
-			{ role: { $in: ['client', 'admin'] }, isApproved: { $ne: true } },
+			{ role: { $in: ['user', 'admin'] }, isApproved: { $ne: true } },
 			{ $set: { isApproved: true } }
 		);
 
@@ -68,7 +68,7 @@ async function fixUsers() {
 			console.log('\n✅ Created test admin: admin@test.com / admin123');
 		}
 
-		// Create a test client if needed
+		// Create a test user if needed
 		const clientExists = await User.findOne({ email: 'test@test.com' });
 		if (!clientExists) {
 			const hashedPassword = await bcrypt.hash('test123', 10);
@@ -76,12 +76,12 @@ async function fixUsers() {
 				name: 'Test User',
 				email: 'test@test.com',
 				password: hashedPassword,
-				role: 'client',
+				role: 'user',
 				isApproved: true,
 				coinsBalance: 100,
 				walletBalance: 50
 			});
-			console.log('✅ Created test client: test@test.com / test123');
+			console.log('✅ Created test user: test@test.com / test123');
 		}
 
 		await mongoose.disconnect();
