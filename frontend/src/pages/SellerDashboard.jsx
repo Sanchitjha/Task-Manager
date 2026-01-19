@@ -14,7 +14,7 @@ export default function SellerDashboard() {
 
     const loadStats = async () => {
       try {
-        const res = await api.get('/vendor/stats');
+        const res = await api.get('/partner/stats');
         setStats(res.data.stats);
       } catch (e) {
         console.error(e);
