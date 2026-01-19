@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
+import { 
+	FaUsers, FaCoins, FaEye, FaPlus, FaTimes, 
+	FaSave, FaTrash, FaSearch, FaDownload, FaUpload,
+	FaUserPlus, FaMoneyBill, FaCog, FaChartLine,
+	FaUserCheck, FaUserTimes, FaHistory, FaWallet
+} from 'react-icons/fa';
 
 export default function SubAdminDashboard() {
 	const { user } = useAuth();
@@ -52,11 +58,7 @@ export default function SubAdminDashboard() {
 	const handleAddUser = async (e) => {
 		e.preventDefault();
 		try {
-<<<<<<< HEAD
 			await api.post('/admin/users', formData);
-=======
-			await api.post('/admin/clients', formData);
->>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
 			showMessage('User added successfully', 'success');
 			setShowAddModal(false);
 			setFormData({ name: '', email: '', password: '' });
@@ -83,19 +85,11 @@ export default function SubAdminDashboard() {
 		setShowCoinModal(true);
 	};
 
-<<<<<<< HEAD
 	const deleteUser = async (userId) => {
 		if (!confirm('Are you sure you want to delete this user?')) return;
 		
 		try {
 			await api.delete(`/admin/users/${userId}`);
-=======
-	const deleteClient = async (clientId) => {
-		if (!confirm('Are you sure you want to delete this user?')) return;
-		
-		try {
-			await api.delete(`/admin/clients/${clientId}`);
->>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
 			showMessage('User deleted successfully', 'success');
 			fetchDashboardData();
 			if (selectedUser === userId) {
@@ -198,27 +192,16 @@ export default function SubAdminDashboard() {
 				{stats && (
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
 						<div className="bg-white rounded-lg shadow p-6">
-<<<<<<< HEAD
-						<div className="text-sm font-medium text-gray-500">Total Users</div>
-						<div className="mt-2 text-3xl font-bold text-gray-900">{stats.users.total}</div>
-					</div>
-					<div className="bg-white rounded-lg shadow p-6">
-						<div className="text-sm font-medium text-gray-500">Active Users</div>
-						<div className="mt-2 text-3xl font-bold text-green-600">{stats.users.active}</div>
-						<div className="text-xs text-gray-500 mt-1">Users with coin balance</div>
-=======
-							<div className="text-sm font-medium text-gray-500">Total Clients</div>
+							<div className="text-sm font-medium text-gray-500">Total Users</div>
 							<div className="mt-2 text-3xl font-bold text-gray-900">{stats.users.total}</div>
 						</div>
 						<div className="bg-white rounded-lg shadow p-6">
-							<div className="text-sm font-medium text-gray-500">Active Clients</div>
+							<div className="text-sm font-medium text-gray-500">Active Users</div>
 							<div className="mt-2 text-3xl font-bold text-green-600">{stats.users.active}</div>
-							<div className="text-xs text-gray-500 mt-1">Clients with coins balance</div>
->>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
+							<div className="text-xs text-gray-500 mt-1">Users with coin balance</div>
 						</div>
 					</div>
 				)}
-
 				{/* Tabs */}
 				<div className="bg-white rounded-lg shadow">
 					<div className="border-b border-gray-200">
@@ -231,11 +214,7 @@ export default function SubAdminDashboard() {
 										: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 								}`}
 							>
-<<<<<<< HEAD
 								📋 My Users ({users.length})
-=======
-								📋 My Clients ({users.length})
->>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
 							</button>
 							<button
 								onClick={() => setActiveTab('wallet')}
@@ -309,11 +288,7 @@ export default function SubAdminDashboard() {
 														</td>
 														<td className="px-6 py-4 whitespace-nowrap text-sm">
 															<button
-<<<<<<< HEAD
-																	onClick={() => fetchUserDetails(user._id)}
-=======
-																onClick={() => fetchClientDetails(user._id)}
->>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
+															onClick={() => fetchUserDetails(user._id)}
 																className="text-blue-600 hover:text-blue-800 mr-3"
 															>
 																View Details
@@ -335,11 +310,7 @@ export default function SubAdminDashboard() {
 						)}
 
 						{/* User Details Tab */}
-<<<<<<< HEAD
 						{activeTab === 'details' && userDetails && (
-=======
-						{activeTab === 'details' && clientDetails && (
->>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
 							<div>
 								<button
 									onClick={() => setActiveTab('list')}
@@ -353,19 +324,11 @@ export default function SubAdminDashboard() {
 									<div className="grid grid-cols-2 gap-4">
 										<div>
 											<p className="text-sm text-gray-500">Name</p>
-<<<<<<< HEAD
 											<p className="font-semibold">{userDetails.user.name}</p>
 										</div>
 										<div>
 											<p className="text-sm text-gray-500">Email</p>
-											<p className="font-semibold">{userDetails.user.email}</p>
-=======
-											<p className="font-semibold">{clientDetails.user.name}</p>
-										</div>
-										<div>
-											<p className="text-sm text-gray-500">Email</p>
 											<p className="font-semibold">{clientDetails.user.email}</p>
->>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
 										</div>
 										<div>
 											<p className="text-sm text-gray-500">Videos Watched</p>
@@ -384,7 +347,7 @@ export default function SubAdminDashboard() {
 
 								{/* Recent Transactions */}
 								<h3 className="text-xl font-bold mb-4">Recent Transactions</h3>
-								{clientDetails.recentTransactions.length === 0 ? (
+								{userDetails.recentTransactions.length === 0 ? (
 									<div className="text-center py-8 text-gray-500">
 										<p>No transactions yet</p>
 									</div>
@@ -400,7 +363,7 @@ export default function SubAdminDashboard() {
 												</tr>
 											</thead>
 											<tbody className="bg-white divide-y divide-gray-200">
-												{clientDetails.recentTransactions.map((txn) => (
+												{userDetails.recentTransactions.map((txn) => (
 													<tr key={txn._id}>
 														<td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
 															{new Date(txn.createdAt).toLocaleDateString()}
@@ -431,13 +394,13 @@ export default function SubAdminDashboard() {
 
 								{/* Recent Videos */}
 								<h3 className="text-xl font-bold mb-4">Recently Watched Videos</h3>
-								{clientDetails.recentVideos.length === 0 ? (
+								{userDetails.recentVideos.length === 0 ? (
 									<div className="text-center py-8 text-gray-500">
 										<p>No videos watched yet</p>
 									</div>
 								) : (
 									<div className="grid grid-cols-1 gap-4">
-										{clientDetails.recentVideos.map((watch) => (
+										{userDetails.recentVideos.map((watch) => (
 											<div key={watch._id} className="border rounded-lg p-4">
 												<div className="flex justify-between items-start">
 													<div>
@@ -506,13 +469,8 @@ export default function SubAdminDashboard() {
 											Monitor your transactions and distributions
 										</p>
 										<div className="bg-white rounded px-3 py-2 text-center">
-<<<<<<< HEAD
-									<span className="text-2xl font-bold text-green-600">{users.length}</span>
-									<div className="text-xs text-gray-500">Users Managed</div>
-=======
-											<span className="text-2xl font-bold text-green-600">{users.length}</span>
-											<div className="text-xs text-gray-500">Clients Managed</div>
->>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
+												<span className="text-2xl font-bold text-green-600">{users.length}</span>
+												<div className="text-xs text-gray-500">Clients Managed</div>
 										</div>
 									</div>
 
@@ -571,25 +529,11 @@ export default function SubAdminDashboard() {
 						<form onSubmit={handleCoinDistribution}>
 							<div className="mb-4">
 								<label className="block text-sm font-medium text-gray-700 mb-2">
-<<<<<<< HEAD
-								Select User
-							</label>
-							<select
-								value={coinFormData.userEmail}
-								onChange={(e) => setCoinFormData({...coinFormData, userEmail: e.target.value})}
-								className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-								required
-							>
-								<option value="">Select a user...</option>
-								{users.map((user) => (
-									<option key={user._id} value={user.email}>
-										{user.name} ({user.email}) - Balance: {user.coinsBalance} coins
-=======
 									Select User
 								</label>
 								<select
-									value={coinFormData.clientEmail}
-									onChange={(e) => setCoinFormData({...coinFormData, clientEmail: e.target.value})}
+									value={coinFormData.userEmail}
+									onChange={(e) => setCoinFormData({...coinFormData, userEmail: e.target.value})}
 									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
 									required
 								>
@@ -597,7 +541,6 @@ export default function SubAdminDashboard() {
 									{users.map((user) => (
 										<option key={user._id} value={user.email}>
 											{user.name} ({user.email}) - Balance: {user.coinsBalance} coins
->>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
 										</option>
 									))}
 								</select>
@@ -642,7 +585,7 @@ export default function SubAdminDashboard() {
 									type="button"
 									onClick={() => {
 										setShowCoinModal(false);
-										setCoinFormData({ clientEmail: '', amount: '', description: '' });
+										setCoinFormData({ userEmail: '', amount: '', description: '' });
 									}}
 									className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400"
 								>
@@ -659,11 +602,7 @@ export default function SubAdminDashboard() {
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
 					<div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
 						<h2 className="text-2xl font-bold mb-4">Add New User</h2>
-<<<<<<< HEAD
 						<form onSubmit={handleAddUser}>
-=======
-						<form onSubmit={handleAddClient}>
->>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
 							<div className="mb-4">
 								<label className="block text-sm font-medium text-gray-700 mb-2">
 									Name
