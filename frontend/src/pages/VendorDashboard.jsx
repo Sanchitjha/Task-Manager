@@ -10,8 +10,8 @@ export default function VendorDashboard() {
   const [error, setError] = useState('');
 
   if (!user) return <div className="p-6">Please login.</div>;
-  if (user.role !== 'vendor' && user.role !== 'admin') {
-    return <div className="p-6 text-red-600">Vendor access required.</div>;
+  if (user.role !== 'vendor' && user.role !== 'partner' && user.role !== 'admin') {
+    return <div className="p-6 text-red-600">Vendor/Partner access required.</div>;
   }
 
   const loadProducts = async () => {
