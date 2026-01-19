@@ -15,7 +15,7 @@ import Shop from './pages/Shop';
 import Admin from './pages/Admin';
 import AdminVideos from './pages/AdminVideos';
 import AdminDashboard from './pages/AdminDashboard';
-import AdminVendors from './pages/AdminVendors';
+import AdminPartners from './pages/AdminPartners';
 import SubAdminDashboard from './pages/SubAdminDashboard';
 import Profile from './pages/Profile';
 import Products from './pages/Products';
@@ -178,9 +178,9 @@ function App() {
 							<AdminVideos />
 						</ProtectedRoute>
 					} />
-					<Route path="/admin/vendors" element={
+					<Route path="/admin/partners" element={
 						<ProtectedRoute adminOnly>
-							<AdminVendors />
+							<AdminPartners />
 						</ProtectedRoute>
 					} />
 					<Route path="/admin/dashboard" element={
