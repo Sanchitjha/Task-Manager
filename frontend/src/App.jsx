@@ -88,50 +88,45 @@ function App() {
 							<Orders />
 						</ProtectedRoute>
 					} />
-					<Route path="/partner/dashboard" element={
-						<ProtectedRoute>
-							<PartnerDashboard />
-						</ProtectedRoute>
-					} />
-<<<<<<< HEAD
-					<Route path="/products" element={
-						<ProtectedRoute>
-							<ProductManagement />
-						</ProtectedRoute>
-					} />
-					<Route path="/products/create" element={
-						<ProtectedRoute>
-							<ProductForm />
-						</ProtectedRoute>
-					} />
-					<Route path="/products/edit/:id" element={
-						<ProtectedRoute>
-							<ProductForm />
-						</ProtectedRoute>
-					} />
-					<Route path="/partner/purchase-confirm" element={
-						<ProtectedRoute>
-							<PurchaseConfirmation />
-						</ProtectedRoute>
-					} />
-					<Route path="/partner/reports" element={
-						<ProtectedRoute>
-							<PartnerReports />
-						</ProtectedRoute>
-					} />
-					<Route path="/store/:partnerId" element={<PublicStorePage />} />
-					<Route path="/shops" element={<VendorShopsList />} />
-					<Route path="/partner/setup-shop" element={
-						<ProtectedRoute>
-							<VendorShopSetup />
-						</ProtectedRoute>
-					} />
-					<Route path="/partner/products/new" element={<ProductCreate />} />
-					<Route path="/shops" element={<VendorShopsList />} />
-					<Route path="/shop/:partnerId" element={<VendorShop />} />
-=======
-					<Route path="/partner/products/new" element={<ProductCreate />} />
->>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
+<Route path="/partner/dashboard" element={
+	<ProtectedRoute>
+		<PartnerDashboard />
+	</ProtectedRoute>
+} />
+<Route path="/products" element={
+	<ProtectedRoute>
+		<ProductManagement />
+	</ProtectedRoute>
+} />
+<Route path="/products/create" element={
+	<ProtectedRoute>
+		<ProductForm />
+	</ProtectedRoute>
+} />
+<Route path="/products/edit/:id" element={
+	<ProtectedRoute>
+		<ProductForm />
+	</ProtectedRoute>
+} />
+<Route path="/partner/purchase-confirm" element={
+	<ProtectedRoute>
+		<PurchaseConfirmation />
+	</ProtectedRoute>
+} />
+<Route path="/partner/reports" element={
+	<ProtectedRoute>
+		<PartnerReports />
+	</ProtectedRoute>
+} />
+<Route path="/store/:partnerId" element={<PublicStorePage />} />
+<Route path="/shops" element={<VendorShopsList />} />
+<Route path="/partner/setup-shop" element={
+	<ProtectedRoute>
+		<VendorShopSetup />
+	</ProtectedRoute>
+} />
+<Route path="/partner/products/new" element={<ProductCreate />} />
+<Route path="/shop/:partnerId" element={<VendorShop />} />
 
 					{/* Seller Portal Routes */}
 					<Route path="/seller" element={
