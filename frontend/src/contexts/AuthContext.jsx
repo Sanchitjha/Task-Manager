@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }) => {
 		}
 	};
 
-	const register = async (name, email, password, role = 'client') => {
+	const register = async (name, email, password, role = 'user') => {
 		try {
 			let endpoint = '/auth/register'; // Default for clients
 			
