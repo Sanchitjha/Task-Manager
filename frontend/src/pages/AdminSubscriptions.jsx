@@ -79,7 +79,7 @@ export default function AdminSubscriptions() {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">📋 Product Subscriptions</h1>
-          <p className="text-gray-600 mt-1">Manage vendor product subscriptions</p>
+          <p className="text-gray-600 mt-1">Manage partner product subscriptions</p>
         </div>
         <Link
           to="/admin/dashboard"
