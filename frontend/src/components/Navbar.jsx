@@ -88,8 +88,8 @@ export default function Navbar() {
 										🛍️ Shop
 									</Link>
 								)}
-								{/* Orders Link - For users and Partners */}
-								{(user.role === 'user' || user.role === 'Partner' || user.role === 'admin') && (
+							{/* Orders Link - For users, vendors and partners */}
+							{(user.role === 'user' || user.role === 'client' || user.role === 'vendor' || user.role === 'partner' || user.role === 'admin') && (
 									<Link 
 										to="/orders" 
 										className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 ${
@@ -114,8 +114,8 @@ export default function Navbar() {
 										📦 Products
 									</Link>
 								)}
-								{/* Seller Portal Link */}
-								{user.role === 'Partner' && (
+							{/* Seller Portal Link - For vendors and partners */}
+							{(user.role === 'vendor' || user.role === 'partner') && (
 									<Link 
 										to="/seller/dashboard" 
 										className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 ${
@@ -216,13 +216,13 @@ export default function Navbar() {
 									{(user.role === 'client' || user.role === 'admin') && (
 										<Link to="/shop" onClick={() => setIsMenuOpen(false)} className="px-4 py-2 rounded-xl bg-orange-50 text-orange-700 font-semibold hover:bg-orange-100 transition">🛍️ Shop</Link>
 									)}
-									{(user.role === 'client' || user.role === 'vendor' || user.role === 'admin') && (
-										<Link to="/orders" onClick={() => setIsMenuOpen(false)} className="px-4 py-2 rounded-xl bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 transition">📋 Orders</Link>
-									)}
-									{user.role !== 'subadmin' && (
-										<Link to="/products" onClick={() => setIsMenuOpen(false)} className="px-4 py-2 rounded-xl bg-brand-50 text-brand-700 font-semibold hover:bg-brand-100 transition">📦 Products</Link>
-									)}
-									{user.role === 'vendor' && (
+								{(user.role === 'client' || user.role === 'user' || user.role === 'vendor' || user.role === 'partner' || user.role === 'admin') && (
+									<Link to="/orders" onClick={() => setIsMenuOpen(false)} className="px-4 py-2 rounded-xl bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 transition">📋 Orders</Link>
+								)}
+								{user.role !== 'subadmin' && (
+									<Link to="/products" onClick={() => setIsMenuOpen(false)} className="px-4 py-2 rounded-xl bg-brand-50 text-brand-700 font-semibold hover:bg-brand-100 transition">📦 Products</Link>
+								)}
+								{(user.role === 'vendor' || user.role === 'partner') && (
 										<Link to="/seller/dashboard" onClick={() => setIsMenuOpen(false)} className="px-4 py-2 rounded-xl bg-yellow-50 text-yellow-700 font-semibold hover:bg-yellow-100 transition">🏪 Seller Portal</Link>
 									)}
 									{user.role === 'admin' && (
