@@ -73,12 +73,12 @@ function App() {
 							<Orders />
 						</ProtectedRoute>
 					} />
-					<Route path="/vendor/dashboard" element={
+					<Route path="/partner/dashboard" element={
 						<ProtectedRoute>
 							<VendorDashboard />
 						</ProtectedRoute>
 					} />
-					<Route path="/vendor/products/new" element={<ProductCreate />} />
+					<Route path="/partner/products/new" element={<ProductCreate />} />
 
 					{/* Seller Portal Routes */}
 					<Route path="/seller" element={
@@ -136,7 +136,7 @@ function App() {
 							<ProductEdit />
 						</ProtectedRoute>
 					} />
-					<Route path="/vendor/products/:id/edit" element={
+					<Route path="/partner/products/:id/edit" element={
 						<ProtectedRoute>
 							<ProductEdit />
 						</ProtectedRoute>
