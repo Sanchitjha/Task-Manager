@@ -74,13 +74,8 @@ export default function ProductEdit() {
   };
 
   if (!user) return <div className="p-6 text-red-600">Please login to edit products.</div>;
-<<<<<<< HEAD
-  if (user.role !== 'Partner' && user.role !== 'admin') {
-    return <div className="p-6 text-red-600">Vendor access required to edit products.</div>;
-=======
-  if (user.role !== 'partner' && user.role !== 'partner' && user.role !== 'admin') {
+  if (user.role !== 'partner' && user.role !== 'admin') {
     return <div className="p-6 text-red-600">Partner access required to edit products.</div>;
->>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
   }
 
   const handleFile = (e) => {
