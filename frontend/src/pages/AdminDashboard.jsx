@@ -175,7 +175,7 @@ export default function AdminDashboard() {
 						</div>
 						<div className="bg-white rounded-lg shadow p-6">
 							<div className="text-sm font-medium text-gray-500">Total Clients</div>
-							<div className="mt-2 text-3xl font-bold text-gray-900">{stats.clients.total}</div>
+							<div className="mt-2 text-3xl font-bold text-gray-900">{stats.users.total}</div>
 						</div>
 						<div className="bg-white rounded-lg shadow p-6">
 							<div className="text-sm font-medium text-gray-500">Total Coins Earned</div>
@@ -396,7 +396,7 @@ export default function AdminDashboard() {
 								</div>
 
 								<h3 className="text-xl font-bold mb-4">Clients Managed</h3>
-								{subadminDetails.clients.length === 0 ? (
+								{subadminDetails.users.length === 0 ? (
 									<div className="text-center py-8 text-gray-500">
 										<p>No clients added yet</p>
 									</div>
@@ -414,14 +414,14 @@ export default function AdminDashboard() {
 												</tr>
 											</thead>
 											<tbody className="bg-white divide-y divide-gray-200">
-												{subadminDetails.clients.map((client) => (
-													<tr key={client._id} className="hover:bg-gray-50">
-														<td className="px-6 py-4 whitespace-nowrap font-medium">{client.name}</td>
-														<td className="px-6 py-4 whitespace-nowrap text-gray-600">{client.email}</td>
-														<td className="px-6 py-4 whitespace-nowrap">{client.stats.videosWatched}</td>
-														<td className="px-6 py-4 whitespace-nowrap text-green-600">{client.stats.totalCoinsEarned}</td>
-														<td className="px-6 py-4 whitespace-nowrap text-blue-600">₹{(client.stats.totalRedeemed / 100).toFixed(2)}</td>
-														<td className="px-6 py-4 whitespace-nowrap font-semibold">{client.coinsBalance} coins</td>
+												{subadminDetails.users.map((user) => (
+													<tr key={user._id} className="hover:bg-gray-50">
+														<td className="px-6 py-4 whitespace-nowrap font-medium">{user.name}</td>
+														<td className="px-6 py-4 whitespace-nowrap text-gray-600">{user.email}</td>
+														<td className="px-6 py-4 whitespace-nowrap">{user.stats.videosWatched}</td>
+														<td className="px-6 py-4 whitespace-nowrap text-green-600">{user.stats.totalCoinsEarned}</td>
+														<td className="px-6 py-4 whitespace-nowrap text-blue-600">₹{(user.stats.totalRedeemed / 100).toFixed(2)}</td>
+														<td className="px-6 py-4 whitespace-nowrap font-semibold">{user.coinsBalance} coins</td>
 													</tr>
 												))}
 											</tbody>

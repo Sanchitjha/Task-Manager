@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 class ReceiptGenerator {
-  static async generateReceipt(order, customer, vendor) {
+  static async generateReceipt(order, customer, partner) {
     const receiptNumber = `REC-${Date.now()}-${order.orderId.split('-')[2]}`;
     const receiptPath = path.join('uploads', 'receipts', `${receiptNumber}.pdf`);
     
@@ -34,12 +34,12 @@ class ReceiptGenerator {
         // Vendor Information
         doc.fontSize(14).text('VENDOR INFORMATION:', { underline: true });
         doc.fontSize(10);
-        doc.text(`Business: ${vendor.vendorAddress?.businessName || vendor.name}`);
-        if (vendor.vendorAddress) {
-          doc.text(`Address: ${vendor.vendorAddress.street}, ${vendor.vendorAddress.city}, ${vendor.vendorAddress.state} - ${vendor.vendorAddress.zipCode}`);
-          doc.text(`Contact: ${vendor.vendorAddress.contactNumber || vendor.phone || 'N/A'}`);
-          if (vendor.vendorAddress.gstNumber) {
-            doc.text(`GST No: ${vendor.vendorAddress.gstNumber}`);
+        doc.text(`Business: ${partner.vendorAddress?.businessName || partner.name}`);
+        if (partner.vendorAddress) {
+          doc.text(`Address: ${partner.vendorAddress.street}, ${vendor.vendorAddress.city}, ${vendor.vendorAddress.state} - ${vendor.vendorAddress.zipCode}`);
+          doc.text(`Contact: ${partner.vendorAddress.contactNumber || partner.phone || 'N/A'}`);
+          if (partner.vendorAddress.gstNumber) {
+            doc.text(`GST No: ${partner.vendorAddress.gstNumber}`);
           }
         }
         doc.moveDown();

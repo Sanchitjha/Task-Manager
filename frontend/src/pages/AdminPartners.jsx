@@ -3,10 +3,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 
-export default function AdminVendors() {
+export default function AdminPartners() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [vendors, setVendors] = useState([]);
+  const [partners, setPartners] = useState([]);
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,9 +25,9 @@ export default function AdminVendors() {
     try {
       setLoading(true);
       
-      // Load vendors
-      const vendorsRes = await api.get('/admin/vendors');
-      setVendors(vendorsRes.data.vendors || []);
+      // Load partners
+      const partnersRes = await api.get('/admin/partners');
+      setPartners(partnersRes.data.partners || []);
       
       // Load products
       const productsRes = await api.get('/admin/products');
@@ -40,32 +40,32 @@ export default function AdminVendors() {
       // Calculate stats
       const totalRevenue = ordersRes.data.orders.reduce((sum, order) => sum + order.totalAmount, 0);
       const totalProducts = productsRes.data.products.length;
-      const totalVendors = vendorsRes.data.vendors.length;
+      const totalPartners = partnersRes.data.partners.length;
       const pendingOrders = ordersRes.data.orders.filter(o => o.status === 'pending').length;
       
       setStats({
         totalRevenue,
         totalProducts,
-        totalVendors,
+        totalPartners,
         pendingOrders
       });
       
     } catch (e) {
-      console.error('Failed to load admin vendor data:', e);
+      console.error('Failed to load admin partner data:', e);
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleVendorStatus = async (vendorId, currentStatus) => {
+  const togglePartnerStatus = async (partnerId, currentStatus) => {
     try {
-      await api.patch(`/admin/vendors/${vendorId}`, {
+      await api.patch(`/admin/partners/${partnerId}`, {
         isActive: !currentStatus
       });
       loadData(); // Reload data
     } catch (e) {
-      console.error('Failed to update vendor status:', e);
-      alert('Failed to update vendor status');
+      console.error('Failed to update partner status:', e);
+      alert('Failed to update partner status');
     }
   };
 
@@ -118,8 +118,8 @@ export default function AdminVendors() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Vendor Management</h1>
-              <p className="text-gray-600 mt-2">Manage vendors, products, and e-commerce operations</p>
+              <h1 className="text-3xl font-bold text-gray-900">Partner Management</h1>
+              <p className="text-gray-600 mt-2">Manage partners, products, and e-commerce operations</p>
             </div>
             <Link
               to="/admin"
@@ -133,8 +133,8 @@ export default function AdminVendors() {
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-            <div className="text-3xl font-bold text-orange-600">{stats.totalVendors}</div>
-            <div className="text-gray-600 mt-1">Total Vendors</div>
+            <div className="text-3xl font-bold text-orange-600">{stats.totalPartners}</div>
+            <div className="text-gray-600 mt-1">Total Partners</div>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-6 text-center">
             <div className="text-3xl font-bold text-blue-600">{stats.totalProducts}</div>
@@ -165,14 +165,14 @@ export default function AdminVendors() {
                 Overview
               </button>
               <button
-                onClick={() => setActiveTab('vendors')}
+                onClick={() => setActiveTab('partners')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'vendors'
+                  activeTab === 'partners'
                     ? 'border-orange-500 text-orange-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Vendors ({vendors.length})
+                Partners ({partners.length})
               </button>
               <button
                 onClick={() => setActiveTab('products')}
@@ -202,20 +202,20 @@ export default function AdminVendors() {
             {activeTab === 'overview' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Recent Vendors */}
+                  {/* Recent Partners */}
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">Recent Vendors</h3>
+                    <h3 className="text-lg font-semibold mb-4">Recent Partners</h3>
                     <div className="space-y-3">
-                      {vendors.slice(0, 5).map((vendor) => (
-                        <div key={vendor._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      {partners.slice(0, 5).map((partner) => (
+                        <div key={partner._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div>
-                            <p className="font-medium">{vendor.name}</p>
-                            <p className="text-sm text-gray-600">{vendor.email}</p>
+                            <p className="font-medium">{partner.name}</p>
+                            <p className="text-sm text-gray-600">{partner.email}</p>
                           </div>
                           <span className={`px-2 py-1 rounded-full text-xs ${
-                            vendor.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            partner.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                           }`}>
-                            {vendor.isActive ? 'Active' : 'Inactive'}
+                            {partner.isActive ? 'Active' : 'Inactive'}
                           </span>
                         </div>
                       ))}
@@ -250,15 +250,15 @@ export default function AdminVendors() {
               </div>
             )}
 
-            {/* Vendors Tab */}
-            {activeTab === 'vendors' && (
+            {/* Partners Tab */}
+            {activeTab === 'partners' && (
               <div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Vendor
+                          Partner
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Products
@@ -275,41 +275,41 @@ export default function AdminVendors() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {vendors.map((vendor) => {
-                        const vendorProducts = products.filter(p => p.vendor === vendor._id).length;
-                        const vendorRevenue = orders
-                          .filter(o => o.vendor === vendor._id)
+                      {partners.map((partner) => {
+                        const partnerProducts = products.filter(p => p.partner === partner._id).length;
+                        const partnerRevenue = orders
+                          .filter(o => o.partner === partner._id)
                           .reduce((sum, o) => sum + o.totalAmount, 0);
                         
                         return (
-                          <tr key={vendor._id}>
+                          <tr key={partner._id}>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div>
-                                <div className="text-sm font-medium text-gray-900">{vendor.name}</div>
-                                <div className="text-sm text-gray-500">{vendor.email}</div>
+                                <div className="text-sm font-medium text-gray-900">{partner.name}</div>
+                                <div className="text-sm text-gray-500">{partner.email}</div>
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {vendorProducts}
+                              {partnerProducts}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {vendorRevenue} coins
+                              {partnerRevenue} coins
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                vendor.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                partner.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                               }`}>
-                                {vendor.isActive ? 'Active' : 'Inactive'}
+                                {partner.isActive ? 'Active' : 'Inactive'}
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               <button
-                                onClick={() => toggleVendorStatus(vendor._id, vendor.isActive)}
+                                onClick={() => togglePartnerStatus(partner._id, partner.isActive)}
                                 className={`mr-2 ${
-                                  vendor.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'
+                                  partner.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'
                                 }`}
                               >
-                                {vendor.isActive ? 'Deactivate' : 'Activate'}
+                                {partner.isActive ? 'Deactivate' : 'Activate'}
                               </button>
                             </td>
                           </tr>
@@ -332,7 +332,7 @@ export default function AdminVendors() {
                           Product
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Vendor
+                          Partner
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Price
@@ -350,7 +350,7 @@ export default function AdminVendors() {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {products.map((product) => {
-                        const vendor = vendors.find(v => v._id === product.vendor);
+                        const partnerData = partners.find(v => v._id === product.partner);
                         
                         return (
                           <tr key={product._id}>
@@ -376,7 +376,7 @@ export default function AdminVendors() {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {vendor ? vendor.name : 'Unknown'}
+                              {partnerData ? partnerData.name : 'Unknown'}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {product.price} coins

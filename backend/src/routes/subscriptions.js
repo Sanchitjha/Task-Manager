@@ -40,8 +40,8 @@ router.post('/calculate', auth, async (req, res, next) => {
 router.post('/create', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'Partner' && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Partner access required' });
+    if (user.role !== 'partner' && user.role !== 'partner' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Vendor/Partner access required' });
     }
 
     const { productId, numberOfDays, paymentMethod = 'online', transactionId } = req.body;
@@ -164,8 +164,8 @@ router.post('/:subscriptionId/pay', auth, async (req, res, next) => {
 router.get('/vendor-subscriptions', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'Partner' && user.role !== 'admin') {
-      return res.status(403).json({ message: 'Partner access required' });
+    if (user.role !== 'partner' && user.role !== 'partner' && user.role !== 'admin') {
+      return res.status(403).json({ message: 'Vendor/Partner access required' });
     }
 
     const status = req.query.status; // active, expired, pending, cancelled
@@ -296,7 +296,7 @@ router.get('/admin/all', auth, async (req, res, next) => {
     const [subscriptions, total] = await Promise.all([
       ProductSubscription.find(filter)
         .populate('product', 'title images category')
-        .populate('vendor', 'name email')
+        .populate('partner', 'name email')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)

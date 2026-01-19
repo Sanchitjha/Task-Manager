@@ -40,7 +40,7 @@ async function createTestVideo() {
         }
         
         console.log('\n📹 Test the auto-coin system:');
-        console.log('1. Login as a client');
+        console.log('1. Login as a user');
         console.log('2. Go to the Earn page');
         console.log('3. Select the test video');
         console.log('4. Play for 1+ minute to see auto-rewards');

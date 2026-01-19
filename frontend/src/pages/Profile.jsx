@@ -6,12 +6,18 @@ const Profile = () => {
     const { user, setUser } = useAuth();
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
-    const [editName, setEditName] = useState(false);
-    const [newName, setNewName] = useState('');
+    const [editMode, setEditMode] = useState({ name: false, phone: false });
+    const [formData, setFormData] = useState({
+        name: '',
+        phone: ''
+    });
 
     useEffect(() => {
-        if (user?.name) {
-            setNewName(user.name);
+        if (user) {
+            setFormData({
+                name: user.name || '',
+                phone: user.phone || ''
+            });
         }
     }, [user]);
 
@@ -25,10 +31,9 @@ const Profile = () => {
         }
     }, [message]);
 
-    const handleNameUpdate = async (e) => {
-        e.preventDefault();
-        if (!newName.trim() || newName === user?.name) {
-            setEditName(false);
+    const handleFieldUpdate = async (field) => {
+        if (!formData[field].trim() || formData[field] === user?.[field]) {
+            setEditMode({ ...editMode, [field]: false });
             return;
         }
 
@@ -37,17 +42,22 @@ const Profile = () => {
             if (!user?._id) {
                 throw new Error('User ID is missing');
             }
-            const response = await api.patch(`/users/${user._id}`, { name: newName });
-            // Update the entire user object with the response data
+            
+            const updateData = { [field]: formData[field] };
+            const response = await api.patch(`/users/${user._id}`, updateData);
+            
+            // Update the user context
             setUser({ ...user, ...response.data });
-            setMessage({ type: 'success', text: 'Name updated successfully!' });
-            setEditName(false);
+            setMessage({ type: 'success', text: `${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully!` });
+            setEditMode({ ...editMode, [field]: false });
         } catch (error) {
-            console.error('Error updating name:', error);
+            console.error(`Error updating ${field}:`, error);
             setMessage({
                 type: 'error',
-                text: error.response?.data?.msg || 'Error updating name'
+                text: error.response?.data?.msg || `Error updating ${field}`
             });
+            // Reset form data on error
+            setFormData({ ...formData, [field]: user?.[field] || '' });
         } finally {
             setLoading(false);
         }
@@ -56,6 +66,13 @@ const Profile = () => {
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setMessage({ type: 'error', text: 'Image size should be less than 5MB' });
+            e.target.value = '';
+            return;
+        }
 
         const formData = new FormData();
         formData.append('profileImage', file);
@@ -70,12 +87,12 @@ const Profile = () => {
                 },
             });
 
-            // Update user context with new image and force re-render
+            // Update user context with new image
             const updatedUser = { ...user, profileImage: response.data.profileImage };
             setUser(updatedUser);
             setMessage({ type: 'success', text: 'Profile image updated successfully!' });
             
-            // Clear the file input to allow re-uploading the same file
+            // Clear the file input
             e.target.value = '';
         } catch (error) {
             console.error('Error uploading image:', error);
@@ -88,146 +105,223 @@ const Profile = () => {
         }
     };
 
+    const cancelEdit = (field) => {
+        setEditMode({ ...editMode, [field]: false });
+        setFormData({ ...formData, [field]: user?.[field] || '' });
+    };
+
     return (
-        <div className="container mx-auto p-4">
-            <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
-                <h1 className="text-2xl font-bold mb-6">Profile</h1>
-                
-                {/* Profile Image Section */}
-                <div className="mb-6">
-                    <div className="relative inline-block">
-                        <img
-                            key={user?.profileImage || 'default'}
-                            src={user?.profileImage ? `http://localhost:5000${user.profileImage}?t=${Date.now()}` : '/default-avatar.png'}
-                            alt="Profile"
-                            className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
-                        />
-                        <label 
-                            htmlFor="profile-image"
-                            className="absolute bottom-0 right-0 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 cursor-pointer"
-                            title="Change Profile Picture"
-                        >
-                            <svg 
-                                xmlns="http://www.w3.org/2000/svg" 
-                                className="h-5 w-5" 
-                                fill="none" 
-                                viewBox="0 0 24 24" 
-                                stroke="currentColor"
-                            >
-                                <path 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round" 
-                                    strokeWidth={2} 
-                                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" 
-                                />
-                                <path 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round" 
-                                    strokeWidth={2} 
-                                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" 
-                                />
-                            </svg>
-                        </label>
-                        <input
-                            type="file"
-                            id="profile-image"
-                            className="hidden"
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            disabled={loading}
-                        />
-                    </div>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 px-4">
+            <div className="max-w-4xl mx-auto">
+                {/* Header */}
+                <div className="mb-8 text-center">
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        Profile Settings
+                    </h1>
+                    <p className="text-gray-600 mt-2">Manage your account information</p>
                 </div>
 
-                {/* User Info */}
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Name</label>
-                        <div className="mt-1">
-                            {editName ? (
-                                <form onSubmit={handleNameUpdate} className="flex gap-2">
+                <div className="bg-white rounded-2xl shadow-xl p-8">
+                    {/* Profile Image Section */}
+                    <div className="flex justify-center mb-8">
+                        <div className="relative">
+                            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gradient-to-r from-blue-500 to-purple-500 shadow-lg">
+                                <img
+                                    key={user?.profileImage || 'default'}
+                                    src={user?.profileImage ? `http://localhost:5000${user.profileImage}?t=${Date.now()}` : '/default-avatar.png'}
+                                    alt="Profile"
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        e.target.src = '/default-avatar.png';
+                                    }}
+                                />
+                            </div>
+                            <label 
+                                htmlFor="profile-image"
+                                className="absolute bottom-0 right-0 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-full p-3 cursor-pointer shadow-lg transition-all duration-300 hover:scale-110"
+                                title="Change Profile Picture"
+                            >
+                                <svg 
+                                    xmlns="http://www.w3.org/2000/svg" 
+                                    className="h-5 w-5" 
+                                    fill="none" 
+                                    viewBox="0 0 24 24" 
+                                    stroke="currentColor"
+                                >
+                                    <path 
+                                        strokeLinecap="round" 
+                                        strokeLinejoin="round" 
+                                        strokeWidth={2} 
+                                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" 
+                                    />
+                                    <path 
+                                        strokeLinecap="round" 
+                                        strokeLinejoin="round" 
+                                        strokeWidth={2} 
+                                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" 
+                                    />
+                                </svg>
+                            </label>
+                            <input
+                                type="file"
+                                id="profile-image"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                disabled={loading}
+                            />
+                        </div>
+                    </div>
+
+                    {/* User Info Grid */}
+                    <div className="space-y-6">
+                        {/* Name Field */}
+                        <div className="bg-gray-50 rounded-xl p-6 transition-all duration-300 hover:shadow-md">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                👤 Full Name
+                            </label>
+                            {editMode.name ? (
+                                <div className="flex gap-2">
                                     <input
                                         type="text"
-                                        value={newName}
-                                        onChange={(e) => setNewName(e.target.value)}
-                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        className="flex-1 px-4 py-3 border-2 border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                                         disabled={loading}
                                         required
+                                        placeholder="Enter your full name"
                                     />
                                     <button
-                                        type="submit"
-                                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        onClick={() => handleFieldUpdate('name')}
+                                        className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 font-semibold transition-all duration-300 hover:scale-105"
                                         disabled={loading}
                                     >
-                                        Save
+                                        ✓ Save
                                     </button>
                                     <button
-                                        type="button"
-                                        onClick={() => {
-                                            setEditName(false);
-                                            setNewName(user?.name || '');
-                                        }}
-                                        className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                        onClick={() => cancelEdit('name')}
+                                        className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-semibold transition-all duration-300"
                                         disabled={loading}
                                     >
-                                        Cancel
+                                        ✕ Cancel
                                     </button>
-                                </form>
+                                </div>
                             ) : (
                                 <div className="flex justify-between items-center">
-                                    <span className="text-lg">{user?.name}</span>
+                                    <span className="text-lg font-medium text-gray-800">{user?.name}</span>
                                     <button
-                                        onClick={() => setEditName(true)}
-                                        className="text-blue-500 hover:text-blue-600 focus:outline-none"
+                                        onClick={() => setEditMode({ ...editMode, name: true })}
+                                        className="text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-2 transition"
                                     >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
                                         Edit
                                     </button>
                                 </div>
                             )}
                         </div>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Email</label>
-                        <div className="mt-1 text-lg">{user?.email}</div>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-                        <div className="mt-1 text-lg flex items-center">
-                            {user?.phone || 'Not provided'}
-                            {user?.isPhoneVerified && (
-                                <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                    Verified
+
+                        {/* Email Field (Read-only) */}
+                        <div className="bg-gray-50 rounded-xl p-6">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                📧 Email Address
+                            </label>
+                            <div className="flex justify-between items-center">
+                                <span className="text-lg font-medium text-gray-800">{user?.email}</span>
+                                <span className="text-xs bg-gray-200 text-gray-600 px-3 py-1 rounded-full">
+                                    Cannot be changed
                                 </span>
-                            )}
-                            {user?.phone && !user?.isPhoneVerified && (
-                                <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
-                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                    </svg>
-                                    Unverified
-                                </span>
+                            </div>
+                        </div>
+
+                        {/* Phone Field */}
+                        <div className="bg-gray-50 rounded-xl p-6 transition-all duration-300 hover:shadow-md">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                📱 Phone Number
+                            </label>
+                            {editMode.phone ? (
+                                <div className="flex gap-2">
+                                    <input
+                                        type="tel"
+                                        value={formData.phone}
+                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                        className="flex-1 px-4 py-3 border-2 border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                        disabled={loading}
+                                        required
+                                        placeholder="Enter your phone number"
+                                    />
+                                    <button
+                                        onClick={() => handleFieldUpdate('phone')}
+                                        className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 font-semibold transition-all duration-300 hover:scale-105"
+                                        disabled={loading}
+                                    >
+                                        ✓ Save
+                                    </button>
+                                    <button
+                                        onClick={() => cancelEdit('phone')}
+                                        className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-semibold transition-all duration-300"
+                                        disabled={loading}
+                                    >
+                                        ✕ Cancel
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex justify-between items-center">
+                                    <span className="text-lg font-medium text-gray-800">{user?.phone || 'Not provided'}</span>
+                                    <button
+                                        onClick={() => setEditMode({ ...editMode, phone: true })}
+                                        className="text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-2 transition"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        Edit
+                                    </button>
+                                </div>
                             )}
                         </div>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Role</label>
-                        <div className="mt-1 text-lg capitalize">{user?.role}</div>
-                    </div>
-                </div>
 
-                {/* Status Messages */}
-                {message.text && (
-                    <div className={`mt-4 p-3 rounded ${
-                        message.type === 'error' ? 'bg-red-100 text-red-700' :
-                        message.type === 'success' ? 'bg-green-100 text-green-700' :
-                        'bg-blue-100 text-blue-700'
-                    }`}>
-                        {message.text}
+                        {/* Role Field (Read-only) */}
+                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border-2 border-blue-200">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                🎭 Account Role
+                            </label>
+                            <div className="flex items-center gap-3">
+                                <span className="text-lg font-bold capitalize bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                    {user?.role}
+                                </span>
+                                {user?.role === 'admin' && <span className="text-2xl">👑</span>}
+                                {user?.role === 'subadmin' && <span className="text-2xl">⭐</span>}
+                                {user?.role === 'partner' && <span className="text-2xl">🤝</span>}
+                                {user?.role === 'user' && <span className="text-2xl">👤</span>}
+                            </div>
+                        </div>
                     </div>
-                )}
+
+                    {/* Status Messages */}
+                    {message.text && (
+                        <div className={`mt-6 p-4 rounded-xl font-semibold animate-slide-down ${
+                            message.type === 'error' ? 'bg-red-100 text-red-700 border-2 border-red-300' :
+                            message.type === 'success' ? 'bg-green-100 text-green-700 border-2 border-green-300' :
+                            'bg-blue-100 text-blue-700 border-2 border-blue-300'
+                        }`}>
+                            <div className="flex items-center gap-2">
+                                {message.type === 'success' && <span className="text-xl">✓</span>}
+                                {message.type === 'error' && <span className="text-xl">✗</span>}
+                                {message.type === 'info' && <span className="text-xl">ℹ</span>}
+                                {message.text}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Loading Indicator */}
+                    {loading && (
+                        <div className="mt-6 flex justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

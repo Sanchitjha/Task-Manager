@@ -195,8 +195,13 @@ export default function Register() {
 						style={styles.input}
 					>
 						<option value="">Select Category *</option>
+<<<<<<< HEAD
 						<option value="user">User</option>
 						<option value="Partner">Partner</option>
+=======
+					<option value="user">User</option>
+					<option value="partner">Partner</option>
+>>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
 						<option value="subadmin">Sub-Admin</option>
 					</select>
 

@@ -32,7 +32,7 @@ async function createTestUser() {
         name: 'Test User',
         email: email,
         password: hashedPassword,
-        role: 'client',
+        role: 'user',
         isEmailVerified: true,
         walletBalance: 1000
       });

@@ -5,11 +5,11 @@
     const password = 'TestPass123!';
     const name = 'Test Vendor';
     
-    // Register vendor directly
+    // Register partner directly
     let res = await fetch(`${base}/auth/register`,{
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, name, role: 'vendor' })
+      body: JSON.stringify({ email, password, name, role: 'partner' })
     });
     const registerJson = await res.json();
     console.log('register response:', registerJson);

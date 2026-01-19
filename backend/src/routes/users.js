@@ -35,6 +35,7 @@ router.patch('/:id', auth, async (req, res, next) => {
             return res.status(403).json({ msg: 'Not authorized to update this profile' });
         }
 
+<<<<<<< HEAD
         const { name, email, phone, shopDetails, ...otherFields } = req.body;
         
         // Build update object
@@ -57,6 +58,15 @@ router.patch('/:id', auth, async (req, res, next) => {
                     rejectionReason: null
                 }
             };
+=======
+        const updateData = {};
+        if (req.body.name) updateData.name = req.body.name;
+        if (req.body.phone) updateData.phone = req.body.phone;
+        
+        // Prevent email changes
+        if (req.body.email) {
+            return res.status(400).json({ msg: 'Email cannot be changed' });
+>>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
         }
 
         const user = await User.findByIdAndUpdate(
@@ -114,6 +124,19 @@ router.post('/:id/profile-image', auth, upload.single('profileImage'), async (re
             msg: 'Profile image uploaded successfully',
             profileImage: user.profileImage 
         });
+    } catch (e) {
+        next(e);
+    }
+});
+
+// Get current user's profile
+router.get('/me/profile', auth, async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password');
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+        res.json({ profile: user });
     } catch (e) {
         next(e);
     }

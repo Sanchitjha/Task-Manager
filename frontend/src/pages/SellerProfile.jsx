@@ -11,8 +11,8 @@ export default function SellerProfile() {
   const [success, setSuccess] = useState('');
   const [form, setForm] = useState({});
 
-  if (!user || user.role !== 'vendor') {
-    return <div className="p-6 text-red-600">Vendor access required.</div>;
+  if (!user || (user.role !== 'partner' && user.role !== 'partner')) {
+    return <div className="p-6 text-red-600">Partner access required.</div>;
   }
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export default function SellerProfile() {
 
   const loadProfile = async () => {
     try {
-      const res = await api.get('/vendor/profile');
+      const res = await api.get('/partner/profile');
       setProfile(res.data.profile);
       setForm(res.data.profile || {});
     } catch (e) {
@@ -39,7 +39,7 @@ export default function SellerProfile() {
     setError('');
 
     try {
-      await api.put('/vendor/profile', form);
+      await api.put('/partner/profile', form);
       setSuccess('Profile updated successfully!');
       loadProfile();
     } catch (e) {

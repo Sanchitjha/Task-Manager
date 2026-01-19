@@ -82,9 +82,9 @@ export const AuthProvider = ({ children }) => {
 		}
 	};
 
-	const register = async (name, email, password, role = 'client') => {
+	const register = async (name, email, password, role = 'user') => {
 		try {
-			let endpoint = '/auth/register'; // Default for clients
+			let endpoint = '/auth/register'; // Default for users
 			
 			// Route to different endpoints based on role
 			if (role === 'subadmin') {
@@ -104,7 +104,7 @@ export const AuthProvider = ({ children }) => {
 				};
 			}
 			
-			// For client and admin, automatically log in
+			// For user and admin, automatically log in
 			const loginResult = await login(email, password);
 			if (loginResult.success) {
 				return { success: true };

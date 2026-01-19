@@ -17,13 +17,13 @@ const router = express.Router();
 router.get('/profile', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'Partner' && user.role !== 'admin') {
+    if (user.role !== 'partner' && user.role !== 'partner' && user.role !== 'admin') {
       return res.status(403).json({ message: 'Partner access required' });
     }
 
     let profile = await PartnerProfile.findOne({ user: user._id }).populate('user', 'name email phone');
     
-    if (!profile && user.role === 'Partner') {
+    if (!profile && user.role === 'partner' || user.role === 'partner') {
       // Auto-create profile for new Partner
       profile = await PartnerProfile.create({
         user: user._id,
@@ -43,7 +43,7 @@ router.get('/profile', auth, async (req, res, next) => {
 router.put('/profile', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'Partner' && user.role !== 'admin') {
+    if (user.role !== 'partner' && user.role !== 'partner' && user.role !== 'admin') {
       return res.status(403).json({ message: 'Partner access required' });
     }
 
@@ -91,7 +91,7 @@ router.put('/profile', auth, async (req, res, next) => {
 router.get('/stats', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'Partner' && user.role !== 'admin') {
+    if (user.role !== 'partner' && user.role !== 'partner' && user.role !== 'admin') {
       return res.status(403).json({ message: 'Partner access required' });
     }
 
@@ -135,7 +135,7 @@ router.get('/stats', auth, async (req, res, next) => {
 router.get('/orders', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'Partner' && user.role !== 'admin') {
+    if (user.role !== 'partner' && user.role !== 'partner' && user.role !== 'admin') {
       return res.status(403).json({ message: 'Partner access required' });
     }
 
@@ -169,7 +169,7 @@ router.get('/orders/:id', auth, async (req, res, next) => {
     const user = req.user;
     const order = await Order.findById(req.params.id)
       .populate('customer', 'name email phone')
-      .populate('vendor', 'name')
+      .populate('partner', 'name')
       .populate('items.product');
 
     if (!order) return res.status(404).json({ message: 'Order not found' });
@@ -214,7 +214,7 @@ router.patch('/orders/:id/status', auth, async (req, res, next) => {
 router.get('/wallet', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'Partner' && user.role !== 'admin') {
+    if (user.role !== 'partner' && user.role !== 'partner' && user.role !== 'admin') {
       return res.status(403).json({ message: 'Partner access required' });
     }
 
@@ -265,7 +265,7 @@ router.get('/wallet', auth, async (req, res, next) => {
 router.get('/analytics', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'Partner' && user.role !== 'admin') {
+    if (user.role !== 'partner' && user.role !== 'partner' && user.role !== 'admin') {
       return res.status(403).json({ message: 'Partner access required' });
     }
 
@@ -358,7 +358,7 @@ router.get('/analytics', auth, async (req, res, next) => {
 router.get('/reviews', auth, async (req, res, next) => {
   try {
     const user = req.user;
-    if (user.role !== 'Partner' && user.role !== 'admin') {
+    if (user.role !== 'partner' && user.role !== 'partner' && user.role !== 'admin') {
       return res.status(403).json({ message: 'Partner access required' });
     }
 

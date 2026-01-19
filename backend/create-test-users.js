@@ -23,12 +23,12 @@ async function createTestUser() {
     
     // Create test vendor user
     const testVendor = await User.findOneAndUpdate(
-      { email: 'vendor@example.com' },
+      { email: 'partner@example.com' },
       {
-        email: 'vendor@example.com',
+        email: 'partner@example.com',
         password: hashedPassword,
         name: 'Test Vendor',
-        role: 'vendor',
+        role: 'partner',
         coinsBalance: 1000,
         isVerified: true
       },
@@ -37,7 +37,7 @@ async function createTestUser() {
     
     console.log('Test users created successfully:');
     console.log('User: test@example.com / testpass123 (500 coins)');
-    console.log('Vendor: vendor@example.com / testpass123 (1000 coins)');
+    console.log('Vendor: partner@example.com / testpass123 (1000 coins)');
     
     process.exit(0);
   } catch (error) {

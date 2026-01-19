@@ -10,8 +10,8 @@ export default function SellerReviews() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
 
-  if (!user || user.role !== 'vendor') {
-    return <div className="p-6 text-red-600">Vendor access required.</div>;
+  if (!user || (user.role !== 'partner' && user.role !== 'partner')) {
+    return <div className="p-6 text-red-600">Partner access required.</div>;
   }
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export default function SellerReviews() {
   const loadReviews = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/vendor/reviews', { params: { page, limit: 20 } });
+      const res = await api.get('/partner/reviews', { params: { page, limit: 20 } });
       setReviews(res.data.reviews || []);
       setTotal(res.data.total || 0);
     } catch (e) {

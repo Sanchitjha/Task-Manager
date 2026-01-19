@@ -1,11 +1,24 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export default function Navbar() {
 	const { user, logout } = useAuth();
 	const location = useLocation();
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+	const dropdownRef = useRef(null);
+
+	// Close dropdown when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event) => {
+			if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+				setIsProfileDropdownOpen(false);
+			}
+		};
+		document.addEventListener('mousedown', handleClickOutside);
+		return () => document.removeEventListener('mousedown', handleClickOutside);
+	}, []);
 
 	if (location.pathname === '/login' || location.pathname === '/register') {
 		return null;
@@ -88,6 +101,7 @@ export default function Navbar() {
 										🛍️ Shop
 									</Link>
 								)}
+<<<<<<< HEAD
 								{/* Local Shops Link - For all users */}
 								<Link 
 									to="/shops" 
@@ -101,6 +115,10 @@ export default function Navbar() {
 								</Link>
 								{/* Orders Link - For users and Partners */}
 								{(user.role === 'user' || user.role === 'Partner' || user.role === 'admin') && (
+=======
+							{/* Orders Link - For users, vendors and partners */}
+							{(user.role === 'user' || user.role === 'user' || user.role === 'partner' || user.role === 'partner' || user.role === 'admin') && (
+>>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
 									<Link 
 										to="/orders" 
 										className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 ${
@@ -125,8 +143,8 @@ export default function Navbar() {
 										📦 Products
 									</Link>
 								)}
-								{/* Seller Portal Link */}
-								{user.role === 'Partner' && (
+							{/* Seller Portal Link - For vendors and partners */}
+							{(user.role === 'partner' || user.role === 'partner') && (
 									<Link 
 										to="/seller/dashboard" 
 										className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-105 ${
@@ -194,17 +212,63 @@ export default function Navbar() {
 						)}
 						{/* User Info & Login/Logout */}
 						{user ? (
-							<div className="flex items-center gap-3 ml-4 pl-4 border-l border-gray-200">
-								<div className="text-right">
-									<div className="text-sm font-bold text-gray-800">{user.email}</div>
-									<div className="text-xs font-semibold text-brand-600 capitalize">{user.role}</div>
-								</div>
-								<button 
-									onClick={handleLogout}
-									className="px-5 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl hover:scale-105"
+							<div className="relative flex items-center gap-3 ml-4 pl-4 border-l border-gray-200" ref={dropdownRef}>
+								<div 
+									className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-all duration-300"
+									onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
 								>
-									🚪 Logout
-								</button>
+									<div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 shadow-md">
+										<img
+											src={user.profileImage ? `http://localhost:5000${user.profileImage}` : '/default-avatar.png'}
+											alt={user.name}
+											className="w-full h-full object-cover"
+											onError={(e) => {
+												e.target.src = '/default-avatar.png';
+											}}
+										/>
+									</div>
+									<div className="text-right">
+										<div className="text-sm font-bold text-gray-800">{user.name}</div>
+										<div className="text-xs font-semibold text-brand-600 capitalize">{user.role}</div>
+									</div>
+									<svg 
+										className={`w-4 h-4 transition-transform duration-300 ${isProfileDropdownOpen ? 'rotate-180' : ''}`} 
+										fill="none" 
+										stroke="currentColor" 
+										viewBox="0 0 24 24"
+									>
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+									</svg>
+								</div>
+								
+								{/* Dropdown Menu */}
+								{isProfileDropdownOpen && (
+									<div className="absolute right-0 top-16 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50 animate-slide-down">
+										<Link
+											to="/profile"
+											className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 transition-colors"
+											onClick={() => setIsProfileDropdownOpen(false)}
+										>
+											<svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+											</svg>
+											<span className="font-semibold text-gray-700">Edit Profile</span>
+										</Link>
+										<div className="border-t border-gray-200 my-2"></div>
+										<button 
+											onClick={() => {
+												setIsProfileDropdownOpen(false);
+												handleLogout();
+											}}
+											className="flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors w-full text-left"
+										>
+											<svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+											</svg>
+											<span className="font-semibold text-red-600">Logout</span>
+										</button>
+									</div>
+								)}
 							</div>
 						) : (
 							<div className="flex items-center gap-3">
@@ -231,7 +295,7 @@ export default function Navbar() {
 						<div className="flex flex-col gap-2">
 							{user && (
 								<>
-									{user.role === 'client' && (
+									{user.role === 'user' && (
 										<>
 											<Link to="/earn" onClick={() => setIsMenuOpen(false)} className="px-4 py-2 rounded-xl bg-green-50 text-green-700 font-semibold hover:bg-green-100 transition">💰 Earn</Link>
 											<Link to="/wallet" onClick={() => setIsMenuOpen(false)} className="px-4 py-2 rounded-xl bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 transition">👛 Wallet</Link>
@@ -240,6 +304,7 @@ export default function Navbar() {
 									{(user.role === 'user' || user.role === 'admin') && (
 										<Link to="/shop" onClick={() => setIsMenuOpen(false)} className="px-4 py-2 rounded-xl bg-orange-50 text-orange-700 font-semibold hover:bg-orange-100 transition">🛍️ Shop</Link>
 									)}
+<<<<<<< HEAD
 									{(user.role === 'user' || user.role === 'Partner' || user.role === 'admin') && (
 										<Link to="/orders" onClick={() => setIsMenuOpen(false)} className="px-4 py-2 rounded-xl bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 transition">📋 Orders</Link>
 									)}
@@ -247,6 +312,15 @@ export default function Navbar() {
 										<Link to="/products" onClick={() => setIsMenuOpen(false)} className="px-4 py-2 rounded-xl bg-brand-50 text-brand-700 font-semibold hover:bg-brand-100 transition">📦 Products</Link>
 									)}
 									{user.role === 'Partner' && (
+=======
+								{(user.role === 'user' || user.role === 'user' || user.role === 'partner' || user.role === 'partner' || user.role === 'admin') && (
+									<Link to="/orders" onClick={() => setIsMenuOpen(false)} className="px-4 py-2 rounded-xl bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 transition">📋 Orders</Link>
+								)}
+								{user.role !== 'subadmin' && (
+									<Link to="/products" onClick={() => setIsMenuOpen(false)} className="px-4 py-2 rounded-xl bg-brand-50 text-brand-700 font-semibold hover:bg-brand-100 transition">📦 Products</Link>
+								)}
+								{(user.role === 'partner' || user.role === 'partner') && (
+>>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
 										<Link to="/seller/dashboard" onClick={() => setIsMenuOpen(false)} className="px-4 py-2 rounded-xl bg-yellow-50 text-yellow-700 font-semibold hover:bg-yellow-100 transition">🏪 Seller Portal</Link>
 									)}
 									{user.role === 'admin' && (
@@ -262,10 +336,32 @@ export default function Navbar() {
 							)}
 							{user ? (
 								<div className="mt-4 pt-4 border-t border-gray-200">
-									<div className="px-4 py-2 bg-gray-50 rounded-xl mb-2">
-										<div className="font-bold text-gray-800">{user.email}</div>
-										<div className="text-sm text-brand-600 capitalize font-semibold">{user.role}</div>
+									<div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl mb-3">
+										<div className="w-12 h-12 rounded-full overflow-hidden border-2 border-blue-400 shadow-md flex-shrink-0">
+											<img
+												src={user.profileImage ? `http://localhost:5000${user.profileImage}` : '/default-avatar.png'}
+												alt={user.name}
+												className="w-full h-full object-cover"
+												onError={(e) => {
+													e.target.src = '/default-avatar.png';
+												}}
+											/>
+										</div>
+										<div className="flex-1 min-w-0">
+											<div className="font-bold text-gray-800 truncate">{user.name}</div>
+											<div className="text-xs text-brand-600 capitalize font-semibold">{user.role}</div>
+										</div>
 									</div>
+									<Link 
+										to="/profile" 
+										onClick={() => setIsMenuOpen(false)} 
+										className="w-full px-4 py-2 mb-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-purple-600 transition flex items-center gap-2 justify-center"
+									>
+										<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+										</svg>
+										Edit Profile
+									</Link>
 									<button onClick={handleLogout} className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition">🚪 Logout</button>
 								</div>
 							) : (

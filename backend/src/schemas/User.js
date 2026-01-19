@@ -72,6 +72,7 @@ const userSchema = new Schema(
 			}
 		},
 		
+<<<<<<< HEAD
 		// Wallet for users
 		wallet: {
 			coins: { type: Number, default: 0 },
@@ -86,6 +87,9 @@ const userSchema = new Schema(
 		emailOtpCode: { type: String },
 		emailOtpExpiry: { type: Date },
 		emailOtpAttempts: { type: Number, default: 0 },
+=======
+	role: { type: String, enum: ['admin', 'subadmin', 'user', 'partner'], default: 'user' },
+>>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
 		
 		// Sub-admin specific fields
 		isApproved: { type: Boolean, default: true },

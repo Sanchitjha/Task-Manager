@@ -175,7 +175,7 @@ router.post('/', auth, async (req, res, next) => {
         await order.populate([
           { path: 'items.product', model: 'Product' },
           { path: 'customer', model: 'User' },
-          { path: 'vendor', model: 'User' }
+          { path: 'partner', model: 'User' }
         ]),
         user,
         vendor
@@ -196,7 +196,7 @@ router.post('/', auth, async (req, res, next) => {
 
     // Return populated order
     const populatedOrder = await Order.findById(order._id)
-      .populate('vendor', 'name email vendorAddress')
+      .populate('partner', 'name email vendorAddress')
       .populate('customer', 'name email')
       .populate('items.product', 'title images');
 
@@ -232,7 +232,7 @@ router.get('/my-orders', auth, async (req, res, next) => {
 
     const [orders, total] = await Promise.all([
       Order.find(filter)
-        .populate('vendor', 'name email vendorAddress')
+        .populate('partner', 'name email vendorAddress')
         .populate('items.product', 'title images')
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -255,7 +255,7 @@ router.get('/my-orders', auth, async (req, res, next) => {
 // Get Partner's orders
 router.get('/partner-orders', auth, async (req, res, next) => {
   try {
-    if (req.user.role !== 'Partner' && req.user.role !== 'admin') {
+    if (req.user.role !== 'partner' && user.role !== 'partner' && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Partner access required' });
     }
 
@@ -309,7 +309,7 @@ router.get('/', auth, async (req, res) => {
     const [orders, total] = await Promise.all([
       Order.find(filter)
         .populate('customer', 'name email phone')
-        .populate('vendor', 'name email')
+        .populate('partner', 'name email')
         .populate('items.product', 'title originalPrice finalPrice')
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -334,7 +334,7 @@ router.get('/', auth, async (req, res) => {
 router.get('/:orderId', auth, async (req, res, next) => {
   try {
     const order = await Order.findOne({ orderId: req.params.orderId })
-      .populate('vendor', 'name email vendorAddress')
+      .populate('partner', 'name email vendorAddress')
       .populate('customer', 'name email phone')
       .populate('items.product', 'title images description');
 

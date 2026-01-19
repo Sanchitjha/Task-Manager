@@ -15,7 +15,7 @@ import Shop from './pages/Shop';
 import Admin from './pages/Admin';
 import AdminVideos from './pages/AdminVideos';
 import AdminDashboard from './pages/AdminDashboard';
-import AdminVendors from './pages/AdminVendors';
+import AdminPartners from './pages/AdminPartners';
 import SubAdminDashboard from './pages/SubAdminDashboard';
 import Profile from './pages/Profile';
 import Products from './pages/Products';
@@ -93,6 +93,7 @@ function App() {
 							<PartnerDashboard />
 						</ProtectedRoute>
 					} />
+<<<<<<< HEAD
 					<Route path="/products" element={
 						<ProtectedRoute>
 							<ProductManagement />
@@ -128,6 +129,9 @@ function App() {
 					<Route path="/partner/products/new" element={<ProductCreate />} />
 					<Route path="/shops" element={<VendorShopsList />} />
 					<Route path="/shop/:partnerId" element={<VendorShop />} />
+=======
+					<Route path="/partner/products/new" element={<ProductCreate />} />
+>>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
 
 					{/* Seller Portal Routes */}
 					<Route path="/seller" element={
@@ -185,7 +189,7 @@ function App() {
 							<ProductEdit />
 						</ProtectedRoute>
 					} />
-					<Route path="/vendor/products/:id/edit" element={
+					<Route path="/partner/products/:id/edit" element={
 						<ProtectedRoute>
 							<ProductEdit />
 						</ProtectedRoute>
@@ -227,9 +231,9 @@ function App() {
 							<AdminVideos />
 						</ProtectedRoute>
 					} />
-					<Route path="/admin/vendors" element={
+					<Route path="/admin/partners" element={
 						<ProtectedRoute adminOnly>
-							<AdminVendors />
+							<AdminPartners />
 						</ProtectedRoute>
 					} />
 					<Route path="/admin/dashboard" element={

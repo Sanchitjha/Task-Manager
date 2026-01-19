@@ -12,8 +12,12 @@ const transactionsRouter = require('./routes/transactions');
 const settingsRouter = require('./routes/settings');
 const adminRouter = require('./routes/admin');
 const productsRouter = require('./routes/products');
+<<<<<<< HEAD
 const partnerRouter = require('./routes/vendor');
 const partnersRouter = require('./routes/partners');
+=======
+const partnerRouter = require('./routes/partner');
+>>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
 const ordersRouter = require('./routes/orders');
 const subscriptionsRouter = require('./routes/subscriptions');
 const { initSubscriptionCron } = require('./lib/subscriptionCron');

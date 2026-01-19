@@ -426,7 +426,7 @@ export default function Checkout() {
                     <span className="font-medium">Pay with Coins</span>
                   </div>
                   <p className="text-sm text-gray-600 mt-1">
-                    Coins will be transferred to vendor wallet
+                    Coins will be transferred to partner wallet
                   </p>
                 </div>
               </div>

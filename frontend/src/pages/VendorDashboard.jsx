@@ -21,8 +21,13 @@ export default function PartnerDashboard() {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
   if (!user) return <div className="p-6">Please login.</div>;
+<<<<<<< HEAD
   if (user.role !== 'Partner' && user.role !== 'admin') {
     return <div className="p-6 text-red-600">Partner access required.</div>;
+=======
+  if (user.role !== 'partner' && user.role !== 'partner' && user.role !== 'admin') {
+    return <div className="p-6 text-red-600">Vendor/Partner access required.</div>;
+>>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
   }
 
   const loadDashboard = async () => {
@@ -95,6 +100,7 @@ export default function PartnerDashboard() {
   };
 
   return (
+<<<<<<< HEAD
     <div className="p-6 space-y-6">
       {/* Dashboard Stats */}
       {dashboardData && (
@@ -181,6 +187,14 @@ export default function PartnerDashboard() {
             </Link>
           </div>
         </div>
+=======
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Vendor Dashboard</h1>
+        <Link to="/partner/products/new" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          + New Product
+        </Link>
+>>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
       </div>
 
       {/* Purchase Confirmation Modal */}
@@ -304,7 +318,7 @@ export default function PartnerDashboard() {
       {loading && <div className="text-gray-600">Loading products...</div>}
 
       {!loading && products.length === 0 && (
-        <div className="text-gray-500">No products yet. <Link to="/vendor/products/new" className="text-blue-600 hover:underline">Create one!</Link></div>
+        <div className="text-gray-500">No products yet. <Link to="/partner/products/new" className="text-blue-600 hover:underline">Create one!</Link></div>
       )}
 
       <div className="grid gap-4">
@@ -322,7 +336,7 @@ export default function PartnerDashboard() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Link to={`/vendor/products/${p._id}/edit`} className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">
+              <Link to={`/partner/products/${p._id}/edit`} className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">
                 Edit
               </Link>
               <button onClick={() => deleteProduct(p._id)} className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700">
