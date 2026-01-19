@@ -139,7 +139,7 @@ export default function AdminSubscriptions() {
                 <thead className="bg-gray-50 border-b">
                   <tr>
                     <th className="text-left p-4">Product</th>
-                    <th className="text-left p-4">Vendor</th>
+                    <th className="text-left p-4">Partner</th>
                     <th className="text-left p-4">Images</th>
                     <th className="text-left p-4">Days</th>
                     <th className="text-left p-4">Amount</th>
