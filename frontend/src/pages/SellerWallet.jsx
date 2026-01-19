@@ -20,7 +20,7 @@ export default function SellerWallet() {
   const loadWalletData = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/vendor/wallet');
+      const response = await api.get('/partner/wallet');
       setWalletData(response.data);
     } catch (error) {
       console.error('Failed to load wallet:', error);
