@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 
-export default function AdminVendors() {
+export default function AdminPartners() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [partners, setPartners] = useState([]);
@@ -51,7 +51,7 @@ export default function AdminVendors() {
       });
       
     } catch (e) {
-      console.error('Failed to load admin vendor data:', e);
+      console.error('Failed to load admin partner? data:', e);
     } finally {
       setLoading(false);
     }
@@ -134,7 +134,7 @@ export default function AdminVendors() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm p-6 text-center">
             <div className="text-3xl font-bold text-orange-600">{stats.totalPartners}</div>
-            <div className="text-gray-600 mt-1">Total Vendors</div>
+            <div className="text-gray-600 mt-1">Total Partners</div>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-6 text-center">
             <div className="text-3xl font-bold text-blue-600">{stats.totalProducts}</div>
@@ -172,7 +172,7 @@ export default function AdminVendors() {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Vendors ({partners.length})
+                Partners ({partners.length})
               </button>
               <button
                 onClick={() => setActiveTab('products')}
@@ -202,20 +202,20 @@ export default function AdminVendors() {
             {activeTab === 'overview' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Recent Vendors */}
+                  {/* Recent Partners */}
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">Recent Vendors</h3>
+                    <h3 className="text-lg font-semibold mb-4">Recent Partners</h3>
                     <div className="space-y-3">
                       {partners.slice(0, 5).map((partner) => (
-                        <div key={vendor._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div key={partner._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div>
-                            <p className="font-medium">{vendor.name}</p>
-                            <p className="text-sm text-gray-600">{vendor.email}</p>
+                            <p className="font-medium">{partner.name}</p>
+                            <p className="text-sm text-gray-600">{partner.email}</p>
                           </div>
                           <span className={`px-2 py-1 rounded-full text-xs ${
-                            vendor.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            partner.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                           }`}>
-                            {vendor.isActive ? 'Active' : 'Inactive'}
+                            {partner.isActive ? 'Active' : 'Inactive'}
                           </span>
                         </div>
                       ))}
@@ -250,7 +250,7 @@ export default function AdminVendors() {
               </div>
             )}
 
-            {/* Vendors Tab */}
+            {/* Partners Tab */}
             {activeTab === 'partners' && (
               <div>
                 <div className="overflow-x-auto">
@@ -258,7 +258,7 @@ export default function AdminVendors() {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Vendor
+                          Partner
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Products
@@ -276,40 +276,40 @@ export default function AdminVendors() {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {partners.map((partner) => {
-                        const vendorProducts = products.filter(p => p.partner === vendor._id).length;
-                        const vendorRevenue = orders
-                          .filter(o => o.partner === vendor._id)
+                        const partner?Products = products.filter(p => p.partner === partner._id).length;
+                        const partner?Revenue = orders
+                          .filter(o => o.partner === partner._id)
                           .reduce((sum, o) => sum + o.totalAmount, 0);
                         
                         return (
-                          <tr key={vendor._id}>
+                          <tr key={partner._id}>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div>
-                                <div className="text-sm font-medium text-gray-900">{vendor.name}</div>
-                                <div className="text-sm text-gray-500">{vendor.email}</div>
+                                <div className="text-sm font-medium text-gray-900">{partner.name}</div>
+                                <div className="text-sm text-gray-500">{partner.email}</div>
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {vendorProducts}
+                              {partner?Products}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {vendorRevenue} coins
+                              {partner?Revenue} coins
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                vendor.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                partner.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                               }`}>
-                                {vendor.isActive ? 'Active' : 'Inactive'}
+                                {partner.isActive ? 'Active' : 'Inactive'}
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               <button
-                                onClick={() => togglePartnerStatus(vendor._id, vendor.isActive)}
+                                onClick={() => togglePartnerStatus(partner._id, partner.isActive)}
                                 className={`mr-2 ${
-                                  vendor.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'
+                                  partner.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'
                                 }`}
                               >
-                                {vendor.isActive ? 'Deactivate' : 'Activate'}
+                                {partner.isActive ? 'Deactivate' : 'Activate'}
                               </button>
                             </td>
                           </tr>
@@ -332,7 +332,7 @@ export default function AdminVendors() {
                           Product
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Vendor
+                          Partner
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Price
@@ -350,7 +350,7 @@ export default function AdminVendors() {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {products.map((product) => {
-                        const vendor = partners.find(v => v._id === product.partner);
+                        const partner? = partners.find(v => v._id === product.partner);
                         
                         return (
                           <tr key={product._id}>
@@ -376,7 +376,7 @@ export default function AdminVendors() {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {vendor ? vendor.name : 'Unknown'}
+                              {partner? ? partner.name : 'Unknown'}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {product.price} coins
