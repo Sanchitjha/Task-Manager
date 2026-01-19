@@ -25,7 +25,7 @@ export default function SellerOrders() {
       const params = { page, limit: 15 };
       if (statusFilter) params.status = statusFilter;
 
-      const res = await api.get('/vendor/orders', { params });
+      const res = await api.get('/partner/orders', { params });
       setOrders(res.data.orders || []);
       setTotal(res.data.total || 0);
     } catch (e) {
