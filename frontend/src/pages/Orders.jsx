@@ -111,7 +111,7 @@ export default function Orders() {
                       </p>
                       {order.vendor && (
                         <p className="text-sm text-gray-600">
-                          Vendor: {order.vendor.name}
+                          Partner: {order.vendor.name}
                         </p>
                       )}
                     </div>
