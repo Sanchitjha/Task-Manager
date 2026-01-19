@@ -35,17 +35,20 @@ router.patch('/:id', auth, async (req, res, next) => {
             return res.status(403).json({ msg: 'Not authorized to update this profile' });
         }
 
-<<<<<<< HEAD
         const { name, email, phone, shopDetails, ...otherFields } = req.body;
         
         // Build update object
         const updateData = {};
         if (name !== undefined) updateData.name = name;
-        if (email !== undefined) updateData.email = email;
         if (phone !== undefined) updateData.phone = phone;
         
+        // Prevent email changes for security
+        if (email) {
+            return res.status(400).json({ msg: 'Email cannot be changed' });
+        }
+        
         // Handle shop details for partners
-        if (shopDetails && req.user.role === 'Partner') {
+        if (shopDetails && (req.user.role === 'partner' || req.user.role === 'Partner')) {
             updateData.shopDetails = {
                 ...shopDetails,
                 // Preserve existing verification status
@@ -58,15 +61,6 @@ router.patch('/:id', auth, async (req, res, next) => {
                     rejectionReason: null
                 }
             };
-=======
-        const updateData = {};
-        if (req.body.name) updateData.name = req.body.name;
-        if (req.body.phone) updateData.phone = req.body.phone;
-        
-        // Prevent email changes
-        if (req.body.email) {
-            return res.status(400).json({ msg: 'Email cannot be changed' });
->>>>>>> b6bc9da1e30255cf3c160ed3ab93bd413ba4f91e
         }
 
         const user = await User.findByIdAndUpdate(
