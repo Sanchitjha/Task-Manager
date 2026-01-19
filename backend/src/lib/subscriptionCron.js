@@ -4,16 +4,16 @@ const { Product } = require('../schemas/Product');
 const { User } = require('../schemas/User');
 
 // Create notification helper (you can integrate with your notification system)
-async function sendExpiryNotification(vendor, admin, product, subscription) {
+async function sendExpiryNotification(partner, admin, product, subscription) {
   try {
     console.log(`[NOTIFICATION] Subscription expired for product: ${product.title}`);
-    console.log(`  - Vendor: ${vendor.email}`);
+    console.log(`  - Partner: ${partner.email}`);
     console.log(`  - Product ID: ${product._id}`);
     console.log(`  - Expired on: ${subscription.endDate}`);
     
     // TODO: Integrate with your notification system
     // Examples:
-    // - Send email to vendor and admin
+    // - Send email to partner and admin
     // - Create in-app notification
     // - Send SMS/push notification
     
@@ -68,11 +68,11 @@ async function checkExpiredSubscriptions() {
         
         // Send notifications if not already sent
         if (!subscription.expiryNotificationSent) {
-          const vendor = subscription.vendor;
+          const partner = subscription.vendor;
           
           // Send to all admins
           for (const admin of admins) {
-            await sendExpiryNotification(vendor, admin, product, subscription);
+            await sendExpiryNotification(partner, admin, product, subscription);
           }
           
           // Mark notification as sent
@@ -121,11 +121,11 @@ async function checkExpiringSubscriptions() {
     
     // Send reminder notifications
     for (const subscription of expiringSubscriptions) {
-      const vendor = subscription.vendor;
+      const partner = subscription.vendor;
       const product = subscription.product;
       
       console.log(`[REMINDER] Subscription expiring tomorrow for product: ${product.title}`);
-      console.log(`  - Vendor: ${vendor.email}`);
+      console.log(`  - Partner: ${partner.email}`);
       console.log(`  - Expires on: ${subscription.endDate}`);
       
       // TODO: Send reminder notification
