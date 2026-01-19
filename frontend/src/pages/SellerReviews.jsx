@@ -21,7 +21,7 @@ export default function SellerReviews() {
   const loadReviews = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/vendor/reviews', { params: { page, limit: 20 } });
+      const res = await api.get('/partner/reviews', { params: { page, limit: 20 } });
       setReviews(res.data.reviews || []);
       setTotal(res.data.total || 0);
     } catch (e) {
