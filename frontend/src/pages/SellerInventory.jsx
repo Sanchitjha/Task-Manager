@@ -13,7 +13,7 @@ export default function SellerInventory() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
 
-  if (!user || user.role !== 'vendor') {
+  if (!user || (user.role !== 'vendor' && user.role !== 'partner')) {
     return <div className="p-6 text-red-600">Vendor access required.</div>;
   }
 
