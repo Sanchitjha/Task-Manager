@@ -12,8 +12,8 @@ export default function Admin() {
 	useEffect(() => {
 		// Mock data for now
 		setUsers([
-			{ id: 1, name: 'John Doe', email: 'john@example.com', role: 'client', walletBalance: 100 },
-			{ id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'vendor', walletBalance: 50 },
+			{ id: 1, name: 'John Doe', email: 'john@example.com', role: 'user', walletBalance: 100 },
+			{ id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'partner', walletBalance: 50 },
 		]);
 		setVideos([
 			{ id: 1, title: 'Sample Video', url: 'https://youtube.com/watch?v=123', isActive: true },
@@ -71,16 +71,16 @@ export default function Admin() {
 				</button>
 
 				<button
-					onClick={() => navigate('/admin/vendors')}
+					onClick={() => navigate('/admin/partners')}
 					className="bg-white rounded-lg shadow-md p-8 text-left hover:shadow-lg transition group"
 				>
 					<div className="flex items-center justify-between">
 						<div>
 							<h2 className="text-2xl font-semibold mb-2 group-hover:text-orange-600">
-								🏪 Vendor Management
+								🏪 Partner Management
 							</h2>
 							<p className="text-gray-600">
-								Manage vendors, products, orders, and e-commerce activities
+								Manage partners, products, orders, and e-commerce activities
 							</p>
 						</div>
 						<div className="text-3xl group-hover:translate-x-2 transition-transform">
