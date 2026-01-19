@@ -45,7 +45,7 @@ export default function SubAdminDashboard() {
 			setSelectedClient(clientId);
 			setActiveTab('details');
 		} catch (error) {
-			showMessage('Failed to load client details', 'error');
+			showMessage('Failed to load user details', 'error');
 		}
 	};
 
@@ -53,12 +53,12 @@ export default function SubAdminDashboard() {
 		e.preventDefault();
 		try {
 			await api.post('/admin/clients', formData);
-			showMessage('Client added successfully', 'success');
+			showMessage('User added successfully', 'success');
 			setShowAddModal(false);
 			setFormData({ name: '', email: '', password: '' });
 			fetchDashboardData();
 		} catch (error) {
-			showMessage(error.response?.data?.message || 'Failed to add client', 'error');
+			showMessage(error.response?.data?.message || 'Failed to add user', 'error');
 		}
 	};
 
@@ -80,11 +80,11 @@ export default function SubAdminDashboard() {
 	};
 
 	const deleteClient = async (clientId) => {
-		if (!confirm('Are you sure you want to delete this client?')) return;
+		if (!confirm('Are you sure you want to delete this user?')) return;
 		
 		try {
 			await api.delete(`/admin/clients/${clientId}`);
-			showMessage('Client deleted successfully', 'success');
+			showMessage('User deleted successfully', 'success');
 			fetchDashboardData();
 			if (selectedClient === clientId) {
 				setSelectedClient(null);
@@ -92,7 +92,7 @@ export default function SubAdminDashboard() {
 				setActiveTab('list');
 			}
 		} catch (error) {
-			showMessage(error.response?.data?.message || 'Failed to delete client', 'error');
+			showMessage(error.response?.data?.message || 'Failed to delete user', 'error');
 		}
 	};
 
@@ -168,7 +168,7 @@ export default function SubAdminDashboard() {
 							onClick={() => setShowAddModal(true)}
 							className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium"
 						>
-							+ Add Client
+							+ Add User
 						</button>
 					</div>
 				</div>
@@ -187,11 +187,11 @@ export default function SubAdminDashboard() {
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
 						<div className="bg-white rounded-lg shadow p-6">
 							<div className="text-sm font-medium text-gray-500">Total Clients</div>
-							<div className="mt-2 text-3xl font-bold text-gray-900">{stats.clients.total}</div>
+							<div className="mt-2 text-3xl font-bold text-gray-900">{stats.users.total}</div>
 						</div>
 						<div className="bg-white rounded-lg shadow p-6">
 							<div className="text-sm font-medium text-gray-500">Active Clients</div>
-							<div className="mt-2 text-3xl font-bold text-green-600">{stats.clients.active}</div>
+							<div className="mt-2 text-3xl font-bold text-green-600">{stats.users.active}</div>
 							<div className="text-xs text-gray-500 mt-1">Clients with coins balance</div>
 						</div>
 					</div>
@@ -209,7 +209,7 @@ export default function SubAdminDashboard() {
 										: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 								}`}
 							>
-								📋 My Clients ({clients.length})
+								📋 My Clients ({users.length})
 							</button>
 							<button
 								onClick={() => setActiveTab('wallet')}
@@ -230,7 +230,7 @@ export default function SubAdminDashboard() {
 											: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
 									}`}
 								>
-									👤 Client Details
+									👤 User Details
 								</button>
 							)}
 						</nav>
@@ -240,14 +240,14 @@ export default function SubAdminDashboard() {
 						{/* Clients List Tab */}
 						{activeTab === 'list' && (
 							<div>
-								{clients.length === 0 ? (
+								{users.length === 0 ? (
 									<div className="text-center py-12 text-gray-500">
 										<p className="mb-4">No clients added yet</p>
 										<button
 											onClick={() => setShowAddModal(true)}
 											className="text-blue-600 hover:text-blue-800 font-medium"
 										>
-											Add your first client
+											Add your first user
 										</button>
 									</div>
 								) : (
@@ -264,32 +264,32 @@ export default function SubAdminDashboard() {
 												</tr>
 											</thead>
 											<tbody className="bg-white divide-y divide-gray-200">
-												{clients.map((client) => (
-													<tr key={client._id} className="hover:bg-gray-50">
+												{users.map((user) => (
+													<tr key={user._id} className="hover:bg-gray-50">
 														<td className="px-6 py-4 whitespace-nowrap">
-															<div className="font-medium text-gray-900">{client.name}</div>
+															<div className="font-medium text-gray-900">{user.name}</div>
 														</td>
 														<td className="px-6 py-4 whitespace-nowrap text-gray-600">
-															{client.email}
+															{user.email}
 														</td>
 														<td className="px-6 py-4 whitespace-nowrap">
-															{client.stats.videosWatched}
+															{user.stats.videosWatched}
 														</td>
 														<td className="px-6 py-4 whitespace-nowrap text-green-600">
-															{client.stats.totalEarnings} coins
+															{user.stats.totalEarnings} coins
 														</td>
 														<td className="px-6 py-4 whitespace-nowrap font-semibold">
-															{client.coinsBalance} coins
+															{user.coinsBalance} coins
 														</td>
 														<td className="px-6 py-4 whitespace-nowrap text-sm">
 															<button
-																onClick={() => fetchClientDetails(client._id)}
+																onClick={() => fetchClientDetails(user._id)}
 																className="text-blue-600 hover:text-blue-800 mr-3"
 															>
 																View Details
 															</button>
 															<button
-																onClick={() => deleteClient(client._id)}
+																onClick={() => deleteClient(user._id)}
 																className="text-red-600 hover:text-red-800"
 															>
 																Delete
@@ -304,7 +304,7 @@ export default function SubAdminDashboard() {
 							</div>
 						)}
 
-						{/* Client Details Tab */}
+						{/* User Details Tab */}
 						{activeTab === 'details' && clientDetails && (
 							<div>
 								<button
@@ -315,15 +315,15 @@ export default function SubAdminDashboard() {
 								</button>
 								
 								<div className="bg-white border rounded-lg p-6 mb-6">
-									<h3 className="text-xl font-bold mb-4">Client Information</h3>
+									<h3 className="text-xl font-bold mb-4">User Information</h3>
 									<div className="grid grid-cols-2 gap-4">
 										<div>
 											<p className="text-sm text-gray-500">Name</p>
-											<p className="font-semibold">{clientDetails.client.name}</p>
+											<p className="font-semibold">{clientDetails.user.name}</p>
 										</div>
 										<div>
 											<p className="text-sm text-gray-500">Email</p>
-											<p className="font-semibold">{clientDetails.client.email}</p>
+											<p className="font-semibold">{clientDetails.user.email}</p>
 										</div>
 										<div>
 											<p className="text-sm text-gray-500">Videos Watched</p>
@@ -464,7 +464,7 @@ export default function SubAdminDashboard() {
 											Monitor your transactions and distributions
 										</p>
 										<div className="bg-white rounded px-3 py-2 text-center">
-											<span className="text-2xl font-bold text-green-600">{clients.length}</span>
+											<span className="text-2xl font-bold text-green-600">{users.length}</span>
 											<div className="text-xs text-gray-500">Clients Managed</div>
 										</div>
 									</div>
@@ -478,7 +478,7 @@ export default function SubAdminDashboard() {
 										</div>
 										<h4 className="text-lg font-semibold text-gray-900 mb-2">Redeem Rewards</h4>
 										<p className="text-gray-600 text-sm mb-4">
-											Use coins to reward client performance
+											Use coins to reward user performance
 										</p>
 										<div className="bg-white rounded px-3 py-2 text-center">
 											<span className="text-2xl font-bold text-purple-600">{stats?.clients?.total || 0}</span>
@@ -497,7 +497,7 @@ export default function SubAdminDashboard() {
 											<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
 											</svg>
-											Distribute Coins to Client
+											Distribute Coins to User
 										</button>
 										<button
 											onClick={() => setActiveTab('list')}
@@ -520,11 +520,11 @@ export default function SubAdminDashboard() {
 			{showCoinModal && (
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
 					<div className="bg-white rounded-lg p-6 w-full max-w-md">
-						<h3 className="text-lg font-bold mb-4">Distribute Coins to Client</h3>
+						<h3 className="text-lg font-bold mb-4">Distribute Coins to User</h3>
 						<form onSubmit={handleCoinDistribution}>
 							<div className="mb-4">
 								<label className="block text-sm font-medium text-gray-700 mb-2">
-									Select Client
+									Select User
 								</label>
 								<select
 									value={coinFormData.clientEmail}
@@ -532,10 +532,10 @@ export default function SubAdminDashboard() {
 									className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
 									required
 								>
-									<option value="">Select a client...</option>
-									{clients.map((client) => (
-										<option key={client._id} value={client.email}>
-											{client.name} ({client.email}) - Balance: {client.coinsBalance} coins
+									<option value="">Select a user...</option>
+									{users.map((user) => (
+										<option key={user._id} value={user.email}>
+											{user.name} ({user.email}) - Balance: {user.coinsBalance} coins
 										</option>
 									))}
 								</select>
@@ -592,11 +592,11 @@ export default function SubAdminDashboard() {
 				</div>
 			)}
 
-			{/* Add Client Modal */}
+			{/* Add User Modal */}
 			{showAddModal && (
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
 					<div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-						<h2 className="text-2xl font-bold mb-4">Add New Client</h2>
+						<h2 className="text-2xl font-bold mb-4">Add New User</h2>
 						<form onSubmit={handleAddClient}>
 							<div className="mb-4">
 								<label className="block text-sm font-medium text-gray-700 mb-2">
@@ -640,7 +640,7 @@ export default function SubAdminDashboard() {
 									type="submit"
 									className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-medium"
 								>
-									Add Client
+									Add User
 								</button>
 								<button
 									type="button"
