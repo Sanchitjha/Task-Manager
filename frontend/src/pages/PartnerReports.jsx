@@ -87,7 +87,7 @@ const PartnerReports = () => {
 
   const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
-  if (!user || user.role !== 'Partner') {
+  if (!user || user.role !== 'partner') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
