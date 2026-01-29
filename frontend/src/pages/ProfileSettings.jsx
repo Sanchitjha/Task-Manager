@@ -88,7 +88,7 @@ const ProfileSettings = () => {
       };
 
       // Add partner-specific data if user is a partner
-      if (currentUser.role === 'Partner') {
+      if (currentUser.role === 'partner') {
         updateData.shopDetails = {
           shopName: formData.shopName,
           ownerName: formData.ownerName,
@@ -182,7 +182,7 @@ const ProfileSettings = () => {
                 </h1>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getRoleColor(currentUser.role)} flex items-center gap-2`}>
                   {getRoleIcon(currentUser.role)}
-                  {currentUser.role === 'Partner' ? 'Partner' : currentUser.role}
+                  {currentUser.role === 'partner' ? 'Partner' : currentUser.role}
                 </span>
               </div>
 
@@ -195,7 +195,7 @@ const ProfileSettings = () => {
                   <FaPhone className="text-sm" />
                   <span>{currentUser.phone}</span>
                 </div>
-                {currentUser.role === 'Partner' && currentUser.shopDetails?.shopName && (
+                {currentUser.role === 'partner' && currentUser.shopDetails?.shopName && (
                   <div className="flex items-center justify-center md:justify-start gap-2">
                     <FaStore className="text-sm" />
                     <span>{currentUser.shopDetails.shopName}</span>
@@ -278,7 +278,7 @@ const ProfileSettings = () => {
               </div>
 
               {/* Partner Specific Information */}
-              {currentUser.role === 'Partner' && (
+              {currentUser.role === 'partner' && (
                 <div>
                   <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b border-gray-200 pb-2">
                     Business Information
