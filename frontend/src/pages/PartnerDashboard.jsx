@@ -39,7 +39,7 @@ const PartnerDashboard = () => {
     );
   }
 
-  if (user.role !== 'Partner' && user.role !== 'admin') {
+  if (user.role !== 'partner' && user.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
