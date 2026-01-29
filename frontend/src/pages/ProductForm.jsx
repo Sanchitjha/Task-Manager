@@ -147,7 +147,7 @@ const ProductForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!user || user.role !== 'Partner') {
+    if (!user || user.role !== 'partner') {
       toast.error('Partner access required');
       return;
     }
