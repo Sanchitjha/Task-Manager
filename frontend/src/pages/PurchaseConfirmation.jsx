@@ -283,7 +283,7 @@ const PurchaseConfirmation = () => {
     }
   };
 
-  if (!user || user.role !== 'Partner') {
+  if (!user || user.role !== 'partner') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
