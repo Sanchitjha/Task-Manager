@@ -11,7 +11,7 @@ export default function SellerProfile() {
   const [success, setSuccess] = useState('');
   const [form, setForm] = useState({});
 
-  if (!user || (user.role !== 'partner' && user.role !== 'partner')) {
+  if (!user || user.role !== 'partner') {
     return <div className="p-6 text-red-600">Partner access required.</div>;
   }
 
