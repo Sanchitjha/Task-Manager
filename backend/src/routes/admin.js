@@ -439,7 +439,7 @@ router.get('/dashboard/subadmin-stats', auth, adminOrSubadmin, async (req, res, 
 // Get all Partners (admin only)
 router.get('/partners', auth, adminOnly, async (req, res, next) => {
 	try {
-		const partners = await User.find({ role: { $in: ['partner', 'partner'] } })
+		const partners = await User.find({ role: 'partner' })
 			.select('-password')
 			.sort({ createdAt: -1 });
 		
