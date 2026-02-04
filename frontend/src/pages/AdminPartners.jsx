@@ -360,7 +360,7 @@ export default function AdminPartners() {
                                   {product.images && product.images[0] ? (
                                     <img
                                       className="h-10 w-10 rounded-full object-cover"
-                                      src={`http://localhost:5000${product.images[0]}`}
+                                      src={product.images && product.images[0] ? api.getProfileImageUrl(product.images[0]) : null}
                                       alt={product.title}
                                     />
                                   ) : (
