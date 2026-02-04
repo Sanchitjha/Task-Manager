@@ -56,7 +56,7 @@ export default function SellerReviews() {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <img
-                      src={review.reviewer?.profileImage ? `http://localhost:5000${review.reviewer.profileImage}` : '/default-avatar.png'}
+                      src={review.reviewer?.profileImage ? api.getProfileImageUrl(review.reviewer.profileImage) : '/default-avatar.png'}
                       alt={review.reviewer?.name}
                       className="w-10 h-10 rounded-full object-cover"
                     />
@@ -92,7 +92,7 @@ export default function SellerReviews() {
                     {review.images.map((img, idx) => (
                       <img
                         key={idx}
-                        src={`http://localhost:5000${img}`}
+                        src={img ? api.getProfileImageUrl(img) : ''}
                         alt={`Review ${idx}`}
                         className="w-16 h-16 object-cover rounded"
                       />
