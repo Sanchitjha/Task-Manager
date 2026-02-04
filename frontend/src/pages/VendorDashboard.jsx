@@ -312,7 +312,7 @@ export default function PartnerDashboard() {
           <div key={p._id} className="border rounded-lg p-4 flex justify-between items-center hover:bg-gray-50">
             <div className="flex gap-4 flex-1">
               {p.images && p.images[0] && (
-                <img src={`http://localhost:5000${p.images[0]}`} alt={p.title} className="w-20 h-20 object-cover rounded" />
+                <img src={p.images && p.images[0] ? api.getProfileImageUrl(p.images[0]) : ''} alt={p.title} className="w-20 h-20 object-cover rounded" />
               )}
               <div>
                 <h3 className="font-semibold text-lg">{p.title}</h3>
