@@ -137,7 +137,7 @@ export default function Cart() {
                   <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                     {item.images && item.images[0] ? (
                       <img
-                        src={`http://localhost:5000${item.images[0]}`}
+                        src={item.images && item.images[0] ? api.getProfileImageUrl(item.images[0]) : ''}
                         alt={item.title}
                         className="w-full h-full object-cover"
                       />
