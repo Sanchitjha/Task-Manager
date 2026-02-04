@@ -112,7 +112,7 @@ export default function SellerInventory() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {p.images && p.images[0] ? (
-                          <img src={`http://localhost:5000${p.images[0]}`} alt={p.title} className="w-10 h-10 object-cover rounded" />
+                          <img src={p.images && p.images[0] ? api.getProfileImageUrl(p.images[0]) : ''} alt={p.title} className="w-10 h-10 object-cover rounded" />
                         ) : (
                           <div className="w-10 h-10 bg-gray-200 rounded"></div>
                         )}
