@@ -324,7 +324,7 @@ export default function Navbar() {
 									<div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl mb-3">
 										<div className="w-12 h-12 rounded-full overflow-hidden border-2 border-blue-400 shadow-md flex-shrink-0">
 											<img
-												src={user.profileImage ? `http://localhost:5000${user.profileImage}` : '/default-avatar.png'}
+													src={user.profileImage ? api.getProfileImageUrl(user.profileImage) : '/default-avatar.png'}
 												alt={user.name}
 												className="w-full h-full object-cover"
 												onError={(e) => {
