@@ -57,7 +57,7 @@ export default function Products() {
                     <div className="aspect-w-1 aspect-h-1">
                       {p.images && p.images[0] ? (
                         <img 
-                          src={`http://localhost:5000${p.images[0]}`} 
+                          src={p.images && p.images[0] ? api.getProfileImageUrl(p.images[0]) : ''} 
                           alt={p.title} 
                           className="w-full h-48 object-cover" 
                         />
