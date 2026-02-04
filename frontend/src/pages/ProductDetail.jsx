@@ -165,7 +165,7 @@ export default function ProductDetail() {
               <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
                 {product.images && product.images.length > 0 ? (
                   <img
-                    src={`http://localhost:5000${product.images[selectedImage]}`}
+                    src={product.images && product.images[selectedImage] ? api.getProfileImageUrl(product.images[selectedImage]) : ''}
                     alt={product.title}
                     className="w-full h-full object-cover"
                   />
@@ -188,7 +188,7 @@ export default function ProductDetail() {
                       }`}
                     >
                       <img
-                        src={`http://localhost:5000${image}`}
+                        src={image ? api.getProfileImageUrl(image) : ''}
                         alt={`${product.title} ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
