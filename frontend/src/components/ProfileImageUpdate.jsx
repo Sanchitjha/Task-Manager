@@ -37,7 +37,7 @@ const ProfileImageUpdate = ({
       if (user.profileImage.startsWith('http')) {
         return user.profileImage;
       }
-      return `http://localhost:5000${user.profileImage}`;
+      return `${api.getProfileImageUrl(user.profileImage)}${user?.profileImageVersion ? `?v=${user.profileImageVersion}` : ''}`;
     }
     return null;
   };
