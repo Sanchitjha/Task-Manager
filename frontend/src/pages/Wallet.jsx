@@ -34,8 +34,8 @@ export default function Wallet() {
 	const fetchWalletData = async () => {
 		try {
 			const [balanceRes, transactionsRes] = await Promise.all([
-				api.get('/api/wallet/balance'),
-				api.get('/api/wallet/transactions')
+				api.get('/wallet/balance'),
+				api.get('/wallet/transactions')
 			]);
 			
 			setCoinsBalance(balanceRes.data.coinsBalance || 0);
@@ -52,8 +52,8 @@ export default function Wallet() {
 	const fetchNewWalletData = async () => {
 		try {
 			const [walletRes, transactionsRes] = await Promise.all([
-				api.get('/api/wallet/'),
-				api.get('/api/wallet/transactions-history')
+				api.get('/wallet/'),
+				api.get('/wallet/transactions-history')
 			]);
 			
 			setNewWalletData(walletRes.data.wallet);
