@@ -121,14 +121,7 @@ export const AuthProvider = ({ children }) => {
 			// Call backend logout endpoint (optional but recommended)
 			const token = localStorage.getItem('token');
 			if (token) {
-				await fetch('http://localhost:5000/api/auth/logout', {
-					method: 'POST',
-					headers: {
-						'Authorization': `Bearer ${token}`,
-						'Content-Type': 'application/json'
-					},
-					credentials: 'include'
-				}).catch(err => console.error('Backend logout failed:', err));
+				await api.post('/auth/logout').catch(err => console.error('Backend logout failed:', err));
 			}
 		} finally {
 			// Always clear local state regardless of API call result
