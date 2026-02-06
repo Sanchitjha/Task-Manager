@@ -139,7 +139,7 @@ export default function Orders() {
                         <div className="w-16 h-16 bg-gray-200 rounded flex-shrink-0">
                           {item.productSnapshot?.images?.[0] ? (
                             <img 
-                              src={`http://localhost:5000${item.productSnapshot.images[0]}`}
+                              src={api.getProfileImageUrl(item.productSnapshot.images[0])}
                               alt={item.productSnapshot.title}
                               className="w-full h-full object-cover rounded"
                             />
