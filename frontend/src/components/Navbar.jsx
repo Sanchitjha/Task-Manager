@@ -44,6 +44,8 @@ export default function Navbar() {
 					<span className="text-2xl font-extrabold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
 						The MANAGER
 					</span>
+				</Link>
+
 					{/* Mobile Menu Button */}
 					<button 
 						onClick={() => setIsMenuOpen(!isMenuOpen)}
