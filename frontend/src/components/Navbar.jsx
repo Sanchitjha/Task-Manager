@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useState, useRef, useEffect } from 'react';
 
@@ -212,9 +213,9 @@ export default function Navbar() {
 									className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 rounded-xl p-2 transition-all duration-300"
 									onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
 								>
-									<div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 shadow-md">
+										<div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 shadow-md">
 										<img
-											src={user.profileImage ? `http://localhost:5000${user.profileImage}` : '/default-avatar.png'}
+											src={user.profileImage ? `${api.getProfileImageUrl(user.profileImage)}${user?.profileImageVersion ? `?v=${user.profileImageVersion}` : ''}` : '/default-avatar.png'}
 											alt={user.name}
 											className="w-full h-full object-cover"
 											onError={(e) => {
@@ -322,9 +323,9 @@ export default function Navbar() {
 							{user ? (
 								<div className="mt-4 pt-4 border-t border-gray-200">
 									<div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl mb-3">
-										<div className="w-12 h-12 rounded-full overflow-hidden border-2 border-blue-400 shadow-md flex-shrink-0">
+											<div className="w-12 h-12 rounded-full overflow-hidden border-2 border-blue-400 shadow-md flex-shrink-0">
 											<img
-													src={user.profileImage ? api.getProfileImageUrl(user.profileImage) : '/default-avatar.png'}
+													src={user.profileImage ? `${api.getProfileImageUrl(user.profileImage)}${user?.profileImageVersion ? `?v=${user.profileImageVersion}` : ''}` : '/default-avatar.png'}
 												alt={user.name}
 												className="w-full h-full object-cover"
 												onError={(e) => {
