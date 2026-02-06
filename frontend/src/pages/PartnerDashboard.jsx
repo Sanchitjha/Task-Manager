@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { 
   FaStore, FaUser, FaCoins, FaEye, FaPlus, FaBoxes, FaChartLine, 
   FaBell, FaUsers, FaWallet, FaMapMarkerAlt, FaClock, FaExclamationTriangle,
-  FaCheckCircle, FaTimesCircle, FaTrendingUp, FaShoppingCart, FaCamera,
+  FaCheckCircle, FaTimesCircle, FaChartBar, FaShoppingCart, FaCamera,
   FaStar, FaCalendarDay, FaArrowUp, FaArrowDown, FaEdit, FaCog
 } from 'react-icons/fa';
 
@@ -58,21 +58,21 @@ const PartnerDashboard = () => {
         setLoading(true);
         
         // Fetch partner stats
-        const statsResponse = await api.get('/api/partners/dashboard-stats');
+        const statsResponse = await api.get('/partners/dashboard-stats');
         setStats(statsResponse.data);
         
         // Fetch notifications
-        const notificationsResponse = await api.get('/api/partners/notifications');
+        const notificationsResponse = await api.get('/partners/notifications');
         setNotifications(notificationsResponse.data.slice(0, 5)); // Show latest 5
         
         // Fetch recent products
-        const productsResponse = await api.get('/api/products', { 
+        const productsResponse = await api.get('/products', { 
           params: { partner: user._id, limit: 5, sort: '-createdAt' }
         });
         setRecentProducts(productsResponse.data.products || []);
         
         // Fetch recent transactions
-        const transactionsResponse = await api.get('/api/partners/recent-transactions');
+        const transactionsResponse = await api.get('/partners/recent-transactions');
         setRecentTransactions(transactionsResponse.data.slice(0, 5));
         
       } catch (error) {
@@ -344,7 +344,7 @@ const PartnerDashboard = () => {
             {/* Quick Actions */}
             <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-white/20 p-6">
               <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
-                <FaTrendingUp className="mr-3 text-green-500" />
+                <FaChartBar className="mr-3 text-green-500" />
                 Quick Actions
               </h2>
               
