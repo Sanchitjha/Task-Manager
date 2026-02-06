@@ -27,7 +27,7 @@ export default function PartnerDashboard() {
 
   const loadDashboard = async () => {
     try {
-      const response = await api.get('/api/partners/shop-dashboard');
+      const response = await api.get('/partners/shop-dashboard');
       setDashboardData(response.data.dashboard);
     } catch (error) {
       console.error('Failed to load dashboard:', error);
@@ -181,7 +181,6 @@ export default function PartnerDashboard() {
             </Link>
           </div>
         </div>
-      )}
 
       {/* Purchase Confirmation Modal */}
       {showPurchaseModal && (
@@ -331,6 +330,7 @@ export default function PartnerDashboard() {
             </div>
           </div>
         ))}
+      </div>
       </div>
       </div>
     </div>
