@@ -27,11 +27,11 @@ const PublicStorePage = () => {
       setLoading(true);
       
       // Fetch store details
-      const storeResponse = await api.get(`/api/partners/${partnerId}/store`);
+      const storeResponse = await api.get(`/partners/${partnerId}/store`);
       setStore(storeResponse.data);
       
       // Fetch store products
-      const productsResponse = await api.get(`/api/products?partner=${partnerId}&status=active`);
+      const productsResponse = await api.get(`/products?partner=${partnerId}&status=active`);
       setProducts(productsResponse.data.products || []);
       
     } catch (error) {
