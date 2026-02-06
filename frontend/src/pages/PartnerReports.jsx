@@ -4,8 +4,8 @@ import api from '../lib/api';
 import { toast } from 'react-hot-toast';
 import { 
   FaChartLine, FaCoins, FaEye, FaShoppingCart, FaRupeeSign, 
-  FaCalendarAlt, FaDownload, FaFilter, FaSpinner, FaTrendingUp,
-  FaTrendingDown, FaEquals, FaBoxes, FaUsers, FaArrowUp, FaArrowDown
+  FaCalendarAlt, FaDownload, FaFilter, FaSpinner, FaChartBar,
+  FaEquals, FaBoxes, FaUsers, FaArrowUp, FaArrowDown
 } from 'react-icons/fa';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -43,7 +43,7 @@ const PartnerReports = () => {
     try {
       setLoading(true);
       
-      const response = await api.get(`/api/partners/reports?range=${dateRange}`);
+      const response = await api.get(`/partners/reports?range=${dateRange}`);
       setReportData(response.data);
       
     } catch (error) {
@@ -56,7 +56,7 @@ const PartnerReports = () => {
 
   const downloadReport = async (format) => {
     try {
-      const response = await api.get(`/api/partners/reports/download?range=${dateRange}&format=${format}`, {
+      const response = await api.get(`/partners/reports/download?range=${dateRange}&format=${format}`, {
         responseType: 'blob'
       });
       
@@ -336,7 +336,7 @@ const PartnerReports = () => {
           {/* Product Category Distribution */}
           <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-white/20 p-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-              <FaTrendingUp className="mr-3 text-purple-500" />
+              <FaChartBar className="mr-3 text-purple-500" />
               Category Distribution
             </h2>
             
