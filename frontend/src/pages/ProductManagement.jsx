@@ -54,13 +54,13 @@ const ProductManagement = () => {
       if (selectedCategory) params.category = selectedCategory;
       if (selectedStatus) params.status = selectedStatus;
       
-      const response = await api.get('/api/products', { params });
+      const response = await api.get('/products', { params });
       
       setProducts(response.data.products || []);
       setTotalPages(Math.ceil((response.data.total || 0) / itemsPerPage));
       
       // Fetch stats
-      const statsResponse = await api.get(`/api/products/stats?partner=${user._id}`);
+      const statsResponse = await api.get(`/products/stats?partner=${user._id}`);
       setStats(statsResponse.data);
       
     } catch (error) {
