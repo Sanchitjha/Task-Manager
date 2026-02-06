@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import TheManagerLogo from './TheManagerLogo';
 import { useState, useRef, useEffect } from 'react';
 
 export default function Navbar() {
@@ -37,14 +38,12 @@ export default function Navbar() {
 				<div className="flex justify-between items-center h-16">
 					{/* Logo with gradient */}
 					<Link to="/" className="group flex items-center gap-3">
-						<div className="text-3xl font-bold hover:scale-110 transition-transform duration-300">
-							⚡
-						</div>
-						<span className="text-2xl font-extrabold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
-							The MANAGER
-						</span>
-					</Link>
-
+					<div className="hover:scale-110 transition-transform duration-300">
+						<TheManagerLogo width={40} height={40} />
+					</div>
+					<span className="text-2xl font-extrabold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
+						The MANAGER
+					</span>
 					{/* Mobile Menu Button */}
 					<button 
 						onClick={() => setIsMenuOpen(!isMenuOpen)}
