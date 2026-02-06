@@ -87,8 +87,9 @@ const Profile = () => {
                 },
             });
 
-            // Update user context with new image
-            const updatedUser = { ...user, profileImage: response.data.profileImage };
+            // Update user context with new image and bump version to bypass cache
+            const newVersion = (user?.profileImageVersion || 0) + 1;
+            const updatedUser = { ...user, profileImage: response.data.profileImage, profileImageVersion: newVersion };
             setUser(updatedUser);
             setMessage({ type: 'success', text: 'Profile image updated successfully!' });
             
@@ -127,8 +128,7 @@ const Profile = () => {
                         <div className="relative">
                             <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-gradient-to-r from-blue-500 to-purple-500 shadow-lg">
                                 <img
-                                    key={user?.profileImage || 'default'}
-                                    src={user?.profileImage ? `${api.getProfileImageUrl(user.profileImage)}?t=${Date.now()}` : '/default-avatar.png'}
+                                    src={user?.profileImage ? `${api.getProfileImageUrl(user.profileImage)}${user?.profileImageVersion ? `?v=${user.profileImageVersion}` : ''}` : '/default-avatar.png'}
                                     alt="Profile"
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
