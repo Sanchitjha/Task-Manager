@@ -45,7 +45,7 @@ const ProductForm = () => {
   const loadProduct = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/products/${id}`);
+      const response = await api.get(`/products/${id}`);
       const product = response.data;
       
       setFormData({
