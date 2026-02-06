@@ -22,7 +22,7 @@ const PartnerShopsList = () => {
   const loadPartners = async () => {
     try {
       // Get all users with Partner role who have shop details
-      const response = await api.get('/api/users?role=partner&hasShop=true');
+      const response = await api.get('/users?role=partner&hasShop=true');
       const partnerUsers = response.data.users || [];
       
       // Filter partners who have shop details set up
