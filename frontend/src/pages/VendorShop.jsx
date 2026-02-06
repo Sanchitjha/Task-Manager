@@ -22,8 +22,8 @@ const VendorShop = () => {
     try {
       // Get vendor info and products
       const [vendorRes, productsRes] = await Promise.all([
-        api.get(`/api/users/${vendorId}`),
-        api.get(`/api/products?vendor=${vendorId}&published=true`)
+        api.get(`/users/${vendorId}`),
+        api.get(`/products?vendor=${vendorId}&published=true`)
       ]);
 
       setVendor(vendorRes.data.user);
@@ -42,7 +42,7 @@ const VendorShop = () => {
     }
 
     try {
-      const response = await api.get(`/api/wallet/check-discount/${productId}`);
+      const response = await api.get(`/wallet/check-discount/${productId}`);
       setDiscountInfo(response.data);
       setSelectedProduct(productId);
       setShowDiscountModal(true);
