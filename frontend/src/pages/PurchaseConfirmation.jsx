@@ -109,7 +109,7 @@ const PurchaseConfirmation = () => {
 
   const fetchUserData = async (userId) => {
     try {
-      const response = await api.get(`/api/users/${userId}`);
+      const response = await api.get(`/users/${userId}`);
       const userData = response.data;
       
       setPurchaseData(prev => ({
@@ -128,7 +128,7 @@ const PurchaseConfirmation = () => {
 
   const fetchProductData = async (productId) => {
     try {
-      const response = await api.get(`/api/products/${productId}`);
+      const response = await api.get(`/products/${productId}`);
       const productData = response.data;
       
       setPurchaseData(prev => ({
@@ -152,7 +152,7 @@ const PurchaseConfirmation = () => {
     }
     
     try {
-      const response = await api.get(`/api/users/search?q=${encodeURIComponent(query)}`);
+      const response = await api.get(`/users/search?q=${encodeURIComponent(query)}`);
       setSearchResults(prev => ({ ...prev, users: response.data.users || [] }));
     } catch (error) {
       console.error('Error searching users:', error);
@@ -166,7 +166,7 @@ const PurchaseConfirmation = () => {
     }
     
     try {
-      const response = await api.get(`/api/products/search?q=${encodeURIComponent(query)}&partner=${user._id}`);
+      const response = await api.get(`/products/search?q=${encodeURIComponent(query)}&partner=${user._id}`);
       setSearchResults(prev => ({ ...prev, products: response.data.products || [] }));
     } catch (error) {
       console.error('Error searching products:', error);
@@ -276,7 +276,7 @@ const PurchaseConfirmation = () => {
 
   const fetchRecentTransactions = async () => {
     try {
-      const response = await api.get(`/api/partners/transactions?limit=10`);
+      const response = await api.get(`/partners/transactions?limit=10`);
       setRecentTransactions(response.data.transactions || []);
     } catch (error) {
       console.error('Error fetching transactions:', error);
