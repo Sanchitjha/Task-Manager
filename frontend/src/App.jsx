@@ -207,7 +207,7 @@ function App() {
 						</ProtectedRoute>
 					} />
 					<Route path="/wallet" element={
-						<ProtectedRoute userOnly>
+						<ProtectedRoute>
 							<Wallet />
 						</ProtectedRoute>
 					} />
