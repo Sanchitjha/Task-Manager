@@ -196,7 +196,7 @@ export default function Register() {
 					>
 						<option value="">Select Category *</option>
 						<option value="user">User</option>
-						<option value="partner">Partner</option>
+						<option value="Partner">Partner</option>
 						<option value="subadmin">Sub-Admin</option>
 					</select>
 
