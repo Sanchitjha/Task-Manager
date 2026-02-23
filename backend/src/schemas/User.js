@@ -87,6 +87,11 @@ const userSchema = new Schema(
 		emailOtpExpiry: { type: Date },
 		emailOtpAttempts: { type: Number, default: 0 },
 		
+		// Password reset fields
+		resetPasswordOtp: { type: String },
+		resetPasswordOtpExpiry: { type: Date },
+		resetPasswordOtpAttempts: { type: Number, default: 0 },
+		
 		// Sub-admin specific fields
 		isApproved: { type: Boolean, default: true },
 		approvedBy: { type: Schema.Types.ObjectId, ref: 'User' },
