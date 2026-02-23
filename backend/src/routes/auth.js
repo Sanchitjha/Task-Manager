@@ -173,13 +173,16 @@ router.post('/register', async (req, res, next) => {
 			return res.status(400).json({ message: 'Name, email, password, phone, and role are required' });
 		}
 		
+		// Normalize role to handle case variations
+		const normalizedRole = role === 'partner' ? 'Partner' : role;
+		
 		// Validate role
-		if (!['user', 'Partner', 'subadmin'].includes(role)) {
+		if (!['user', 'Partner', 'subadmin'].includes(normalizedRole)) {
 			return res.status(400).json({ message: 'Invalid role. Must be user, Partner, or subadmin' });
 		}
 		
 		// Only allow user and Partner registration through public route
-		if (role && role !== 'user' && role !== 'Partner') {
+		if (normalizedRole && normalizedRole !== 'user' && normalizedRole !== 'Partner') {
 			return res.status(403).json({ message: 'Only users or Partners can register publicly' });
 		}
 		
@@ -194,8 +197,8 @@ router.post('/register', async (req, res, next) => {
 			email, 
 			password: hash,
 			phone,
-			role: role,
-			isApproved: role === 'subadmin' ? false : true  // Sub-admins need approval
+			role: normalizedRole,
+			isApproved: normalizedRole === 'subadmin' ? false : true  // Sub-admins need approval
 		});
 		
 		res.json({ id: user._id, message: 'Registration successful' });
