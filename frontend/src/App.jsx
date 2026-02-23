@@ -9,6 +9,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import Earn from './pages/Earn';
 import Wallet from './pages/Wallet';
 import Shop from './pages/Shop';
@@ -64,6 +65,11 @@ function App() {
 					<Route path="/register" element={
 						<ErrorBoundary>
 							<Register />
+						</ErrorBoundary>
+					} />
+					<Route path="/forgot-password" element={
+						<ErrorBoundary>
+							<ForgotPassword />
 						</ErrorBoundary>
 					} />
 					<Route path="/partner/register" element={
