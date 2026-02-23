@@ -179,6 +179,12 @@ export default function Login() {
 				</form>
 
 				<div style={styles.link}>
+					<a href="/forgot-password" style={{ color: '#dc3545', textDecoration: 'none' }}>
+						Forgot Password?
+					</a>
+				</div>
+
+				<div style={styles.link}>
 					<a href="/register" style={{ color: '#28a745', textDecoration: 'none' }}>
 						Don't have an account? Create one
 					</a>
