@@ -79,7 +79,7 @@ const userSchema = new Schema(
 			totalSpent: { type: Number, default: 0 }
 		},
 		
-		role: { type: String, enum: ['admin', 'subadmin', 'user', 'partner'], default: 'user' },
+		role: { type: String, enum: ['admin', 'subadmin', 'user', 'Partner'], default: 'user' },
 		
 		// Email verification fields
 		isEmailVerified: { type: Boolean, default: true },
