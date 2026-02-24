@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const { User } = require('../schemas/User');
 const { auth, adminOnly } = require('../middleware/auth');
 const { EmailOTPService } = require('../lib/emailOtpService');
+const { PhoneOTPService } = require('../lib/firebaseService');
 
 const router = express.Router();
 
@@ -505,6 +506,174 @@ router.post('/verify-partner-otp', async (req, res, next) => {
 		
 	} catch (error) {
 		console.error('Verify Partner Email OTP error:', error);
+		next(error);
+	}
+});
+
+// Send Phone OTP for registration
+router.post('/send-phone-otp', async (req, res, next) => {
+	try {
+		const { phone } = req.body;
+		
+		if (!phone) {
+			return res.status(400).json({ message: 'Phone number is required' });
+		}
+		
+		// Validate phone number format
+		const validPhone = PhoneOTPService.validatePhoneNumber(phone);
+		if (!validPhone) {
+			return res.status(400).json({ 
+				message: 'Invalid phone number format. Use international format: +919876543210' 
+			});
+		}
+		
+		// Check if phone already exists and is verified
+		const existingUser = await User.findOne({ phone: validPhone, isPhoneVerified: true });
+		if (existingUser) {
+			return res.status(400).json({ message: 'Phone number already registered and verified' });
+		}
+		
+		// Generate OTP
+		const otpCode = PhoneOTPService.generateOTP();
+		const otpExpiry = PhoneOTPService.generateOTPExpiry(10);
+		
+		// Find or create temporary user record for OTP
+		let tempUser = await User.findOne({ phone: validPhone, isPhoneVerified: false });
+		
+		if (tempUser) {
+			// Update existing temp record
+			tempUser.phoneOtpCode = otpCode;
+			tempUser.phoneOtpExpiry = otpExpiry;
+			tempUser.phoneOtpAttempts = 0;
+			await tempUser.save();
+		} else {
+			// Create new temp record
+			tempUser = await User.create({
+				name: 'Temp User',
+				email: `temp_${Date.now()}@temp.com`,
+				password: 'temp',
+				phone: validPhone,
+				isPhoneVerified: false,
+				isEmailVerified: false,
+				phoneOtpCode: otpCode,
+				phoneOtpExpiry: otpExpiry,
+				phoneOtpAttempts: 0
+			});
+		}
+		
+		// Send Phone OTP
+		const otpResult = await PhoneOTPService.sendPhoneOTP(validPhone, otpCode);
+		
+		if (otpResult.success) {
+			const response = {
+				success: true,
+				message: 'OTP sent successfully to your phone number',
+				phone: validPhone,
+				expiresIn: '10 minutes'
+			};
+			
+			// Include OTP in development mode
+			if (otpResult.developmentMode) {
+				response.developmentOTP = otpResult.otp;
+				response.developmentMessage = `Development Mode: Your OTP is ${otpResult.otp}`;
+			}
+			
+			res.json(response);
+		} else {
+			res.status(500).json({ 
+				success: false, 
+				message: 'Failed to send OTP. Please try again.' 
+			});
+		}
+		
+	} catch (error) {
+		console.error('Send Phone OTP error:', error);
+		next(error);
+	}
+});
+
+// Verify Phone OTP and complete registration
+router.post('/verify-phone-otp-register', async (req, res, next) => {
+	try {
+		const { phone, otp, name, email, password, role } = req.body;
+		
+		// Validate required fields
+		if (!phone || !otp || !name || !password) {
+			return res.status(400).json({ 
+				message: 'Phone, OTP, name, and password are required' 
+			});
+		}
+		
+		// Validate phone format
+		const validPhone = PhoneOTPService.validatePhoneNumber(phone);
+		if (!validPhone) {
+			return res.status(400).json({ 
+				message: 'Invalid phone number format' 
+			});
+		}
+		
+		// Only allow user or Partner registration through public route
+		if (role && role !== 'user' && role !== 'Partner') {
+			return res.status(403).json({ message: 'Only users or Partners can register publicly' });
+		}
+		
+		// Find user with this phone
+		const user = await User.findOne({ phone: validPhone, isPhoneVerified: false });
+		
+		if (!user) {
+			return res.status(400).json({ 
+				message: 'No OTP request found for this phone. Please request a new OTP.' 
+			});
+		}
+		
+		// Check if OTP expired
+		if (PhoneOTPService.isOTPExpired(user.phoneOtpExpiry)) {
+			return res.status(400).json({ 
+				message: 'OTP has expired. Please request a new OTP.' 
+			});
+		}
+		
+		// Check OTP attempts
+		if (user.phoneOtpAttempts >= 5) {
+			return res.status(400).json({ 
+				message: 'Too many failed attempts. Please request a new OTP.' 
+			});
+		}
+		
+		// Verify OTP
+		if (user.phoneOtpCode !== otp) {
+			user.phoneOtpAttempts += 1;
+			await user.save();
+			
+			return res.status(400).json({ 
+				message: `Invalid OTP. ${5 - user.phoneOtpAttempts} attempts remaining.` 
+			});
+		}
+		
+		// OTP verified! Complete the registration
+		const hash = await bcrypt.hash(password, 10);
+		
+		user.name = name;
+		user.email = email || `phone_${validPhone.replace('+', '')}@temp.com`;
+		user.password = hash;
+		user.role = role === 'Partner' ? 'Partner' : 'user';
+		user.isApproved = true;
+		user.isPhoneVerified = true;
+		user.isEmailVerified = !!email; // Only verified if email provided
+		user.phoneOtpCode = undefined;
+		user.phoneOtpExpiry = undefined;
+		user.phoneOtpAttempts = 0;
+		
+		await user.save();
+		
+		res.json({ 
+			success: true,
+			message: 'Registration completed successfully! Phone verified.',
+			userId: user._id 
+		});
+		
+	} catch (error) {
+		console.error('Verify Phone OTP error:', error);
 		next(error);
 	}
 });
