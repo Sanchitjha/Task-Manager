@@ -106,11 +106,40 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    chunkSizeWarningLimit: 1000,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      }
+    },
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
+        manualChunks: (id) => {
+          // Vendor chunks for core libraries
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('react-router')) {
+              return 'router-vendor';
+            }
+            // Group other node_modules into vendor chunk
+            return 'vendor';
+          }
+          // Admin pages chunk
+          if (id.includes('src/pages/Admin')) {
+            return 'admin';
+          }
+          // Seller/Partner pages chunk
+          if (id.includes('src/pages/Seller') || id.includes('src/pages/Partner') || id.includes('src/pages/Vendor')) {
+            return 'seller';
+          }
+          // Shop/Product pages chunk
+          if (id.includes('src/pages/Product') || id.includes('src/pages/Shop') || id.includes('src/pages/Cart') || id.includes('src/pages/Checkout') || id.includes('src/pages/Orders')) {
+            return 'shop';
+          }
         }
       }
     }
