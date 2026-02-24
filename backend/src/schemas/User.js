@@ -87,6 +87,12 @@ const userSchema = new Schema(
 		emailOtpExpiry: { type: Date },
 		emailOtpAttempts: { type: Number, default: 0 },
 		
+		// Phone verification fields
+		isPhoneVerified: { type: Boolean, default: false },
+		phoneOtpCode: { type: String },
+		phoneOtpExpiry: { type: Date },
+		phoneOtpAttempts: { type: Number, default: 0 },
+		
 		// Password reset fields
 		resetPasswordOtp: { type: String },
 		resetPasswordOtpExpiry: { type: Date },
