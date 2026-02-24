@@ -6,27 +6,6 @@ import { useState } from 'react';
 export default function Home() {
 	const { user } = useAuth();
 	const [activeTab, setActiveTab] = useState('about');
-	
-	const features = [
-		{
-			icon: '🏘️',
-			title: 'Society Management',
-			description: 'Streamline administrative coordination, process management, and compliance assistance',
-			gradient: 'from-blue-400 to-cyan-500'
-		},
-		{
-			icon: '👥',
-			title: 'Community Coordination',
-			description: 'Maintain discipline, coordination, and operational clarity in day-to-day activities',
-			gradient: 'from-green-400 to-emerald-500'
-		},
-		{
-			icon: '⚡',
-			title: 'Member Services',
-			description: 'Convenience-driven services and verified solutions that save time and reduce effort',
-			gradient: 'from-purple-400 to-pink-500'
-		}
-	];
 
 	const tabs = [
 		{ id: 'about', label: 'About Us', icon: '📖' },
@@ -362,97 +341,6 @@ export default function Home() {
 							</div>
 						</div>
 					)}
-				</div>
-			</section>
-
-			{/* Features Section */}
-			<section className="max-w-6xl mx-auto px-4 py-20">
-				<div className="text-center mb-12 animate-slide-up">
-					<h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-						Powerful Features
-					</h2>
-					<p className="text-lg text-gray-600">Everything you need in one platform</p>
-				</div>
-
-				<div className="grid md:grid-cols-3 gap-8">
-					{features.map((feature, index) => (
-						<div 
-							key={index}
-							className="card-gradient hover-lift group cursor-pointer"
-							style={{ animationDelay: `${index * 100}ms` }}
-						>
-							<div className={`text-6xl mb-4 group-hover:scale-110 transition-transform duration-300 inline-block group-hover:animate-bounce`}>
-								{feature.icon}
-							</div>
-							<h3 className="text-2xl font-bold mb-3 text-gray-800">
-								{feature.title}
-							</h3>
-							<p className="text-gray-600 leading-relaxed">
-								{feature.description}
-							</p>
-							<div className={`mt-4 h-1 bg-gradient-to-r ${feature.gradient} rounded-full transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500`}></div>
-						</div>
-					))}
-				</div>
-			</section>
-
-			{/* How It Works Section */}
-			<section className="max-w-6xl mx-auto px-4 py-20">
-				<div className="text-center mb-12">
-					<h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-						How It Works
-					</h2>
-					<p className="text-lg text-gray-600">Get started in 3 simple steps</p>
-				</div>
-
-				<div className="grid md:grid-cols-3 gap-8">
-					{[
-						{ step: '1', title: 'Register', description: 'Create your account as a society member or admin', icon: '✍️' },
-						{ step: '2', title: 'Connect', description: 'Link with your housing society and access services', icon: '🏘️' },
-						{ step: '3', title: 'Enjoy', description: 'Experience organized management and convenient lifestyle', icon: '✨' }
-					].map((item, index) => (
-						<div key={index} className="relative">
-							<div className="card-glass text-center hover-lift">
-								<div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-brand-500 to-accent-500 text-white text-2xl font-bold mb-4 shadow-glow">
-									{item.step}
-								</div>
-								<div className="text-4xl mb-3">{item.icon}</div>
-								<h3 className="text-xl font-bold mb-2 text-gray-800">{item.title}</h3>
-								<p className="text-gray-600">{item.description}</p>
-							</div>
-							{index < 2 && (
-								<div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 text-brand-300 text-4xl">
-									→
-								</div>
-							)}
-						</div>
-					))}
-				</div>
-			</section>
-
-			{/* CTA Section */}
-			<section className="max-w-4xl mx-auto px-4 py-20">
-				<div className="card-gradient text-center p-12 relative overflow-hidden">
-					{/* Background decoration */}
-					<div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-brand-200 to-accent-200 rounded-full blur-3xl opacity-30 animate-pulse-slow"></div>
-					<div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-accent-200 to-brand-200 rounded-full blur-3xl opacity-30 animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
-					
-					<div className="relative z-10">
-						<h2 className="text-4xl md:text-5xl font-bold mb-6">
-							<span className="text-gradient-hero">Ready to Transform Your Society?</span>
-						</h2>
-						<p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-							Join well-managed, reliable, and future-ready communities where operations are professionally handled
-						</p>
-						<div className="flex flex-col sm:flex-row gap-4 justify-center">
-							<Link to="/register" className="btn-primary text-lg px-8 py-4">
-								Get Started Free 🚀
-							</Link>
-							<Link to="/login" className="btn-secondary text-lg px-8 py-4">
-								Sign In
-							</Link>
-						</div>
-					</div>
 				</div>
 			</section>
 
