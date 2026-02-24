@@ -188,6 +188,47 @@ export default function Home() {
 					</div>
 				</div>
 			</section>
+
+			{/* Footer */}
+			<footer className="border-t border-gray-200 bg-white/50 backdrop-blur-sm mt-20">
+				<div className="max-w-6xl mx-auto px-4 py-12">
+					<div className="grid md:grid-cols-4 gap-8 mb-8">
+						<div>
+							<h3 className="font-bold text-xl text-gradient mb-4">The MANAGER</h3>
+							<p className="text-gray-600 text-sm">Your structured social management service</p>
+						</div>
+						<div>
+							<h4 className="font-semibold text-gray-800 mb-3">Quick Links</h4>
+							<ul className="space-y-2 text-sm text-gray-600">
+								<li><Link to="/login" className="hover:text-brand-600 transition">Sign In</Link></li>
+								<li><Link to="/register" className="hover:text-brand-600 transition">Register</Link></li>
+								<li><Link to="/contact" className="hover:text-brand-600 transition">Contact Us</Link></li>
+							</ul>
+						</div>
+						<div>
+							<h4 className="font-semibold text-gray-800 mb-3">Policies</h4>
+							<ul className="space-y-2 text-sm text-gray-600">
+								<li><Link to="/privacy" className="hover:text-brand-600 transition">Privacy Policy</Link></li>
+								<li><Link to="/terms" className="hover:text-brand-600 transition">Terms & Conditions</Link></li>
+								<li><Link to="/security" className="hover:text-brand-600 transition">Security Policy</Link></li>
+							</ul>
+						</div>
+						<div>
+							<h4 className="font-semibold text-gray-800 mb-3">Contact</h4>
+							<ul className="space-y-2 text-sm text-gray-600">
+								<li>Email: support@themanager.in</li>
+								<li>Phone: +91-9328961255</li>
+								<li>Mon-Sat: 10 AM - 6 PM</li>
+							</ul>
+						</div>
+					</div>
+					<div className="border-t border-gray-200 pt-8 text-center">
+						<p className="text-sm text-gray-600">
+							© {new Date().getFullYear()} The MANAGER. All rights reserved.
+						</p>
+					</div>
+				</div>
+			</footer>
 		</div>
 	);
 }
