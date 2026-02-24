@@ -439,7 +439,7 @@ router.get('/dashboard/subadmin-stats', auth, adminOrSubadmin, async (req, res, 
 // Get all Partners (admin only)
 router.get('/partners', auth, adminOnly, async (req, res, next) => {
 	try {
-		const partners = await User.find({ role: 'partner' })
+		const partners = await User.find({ role: 'Partner' })
 			.select('-password')
 			.sort({ createdAt: -1 });
 		
@@ -453,7 +453,7 @@ router.patch('/partners/:partnerId', auth, adminOnly, async (req, res, next) => 
 		const { isActive } = req.body;
 		
 		const partner = await User.findById(req.params.partnerId);
-		if (!partner || (partner.role !== 'partner' && partner.role !== 'partner')) {
+		if (!partner || partner.role !== 'Partner') {
 			return res.status(404).json({ error: 'Partner not found' });
 		}
 		
