@@ -33,7 +33,6 @@ const ProductDetail = lazy(() => import('./pages/ProductDetail'));
 const Cart = lazy(() => import('./pages/Cart'));
 const Checkout = lazy(() => import('./pages/Checkout'));
 const Orders = lazy(() => import('./pages/Orders'));
-const VendorDashboard = lazy(() => import('./pages/VendorDashboard'));
 const PartnerDashboard = lazy(() => import('./pages/PartnerDashboard'));
 const VendorShop = lazy(() => import('./pages/VendorShop'));
 const VendorShopsList = lazy(() => import('./pages/VendorShopsList'));
