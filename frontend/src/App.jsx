@@ -10,6 +10,10 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsConditions from './pages/TermsConditions';
+import SecurityPolicy from './pages/SecurityPolicy';
+import Contact from './pages/Contact';
 import Earn from './pages/Earn';
 import Wallet from './pages/Wallet';
 import Shop from './pages/Shop';
@@ -72,6 +76,10 @@ function App() {
 							<ForgotPassword />
 						</ErrorBoundary>
 					} />
+					<Route path="/privacy" element={<PrivacyPolicy />} />
+					<Route path="/terms" element={<TermsConditions />} />
+					<Route path="/security" element={<SecurityPolicy />} />
+					<Route path="/contact" element={<Contact />} />
 					<Route path="/partner/register" element={
 						<ErrorBoundary>
 							<PartnerRegister />
