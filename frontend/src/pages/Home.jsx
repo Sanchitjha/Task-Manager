@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import TheManagerLogo from '../components/TheManagerLogo';
 import { useAuth } from '../contexts/AuthContext';
+import { useState } from 'react';
 
 export default function Home() {
 	const { user } = useAuth();
+	const [activeTab, setActiveTab] = useState('about');
 	
 	const features = [
 		{
@@ -26,8 +28,16 @@ export default function Home() {
 		}
 	];
 
+	const tabs = [
+		{ id: 'about', label: 'About Us', icon: '📖' },
+		{ id: 'privacy', label: 'Privacy', icon: '🔒' },
+		{ id: 'terms', label: 'Terms', icon: '📜' },
+		{ id: 'security', label: 'Security', icon: '🛡️' },
+		{ id: 'contact', label: 'Contact', icon: '📞' }
+	];
+
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-brand-50 via-white to-accent-50 animate-fade-in">
+		<div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-accent-50 animate-fade-in">
 			{/* Logo and Title Section */}
 			<div className="flex flex-col items-center justify-center mt-12 mb-8">
 				<TheManagerLogo width={120} height={120} />
