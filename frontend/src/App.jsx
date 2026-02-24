@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import Navbar from './components/Navbar';
@@ -6,51 +7,61 @@ import ProtectedRoute from './components/ProtectedRoute';
 import InstallPrompt from './components/InstallPrompt';
 import OfflineIndicator from './components/OfflineIndicator';
 import ErrorBoundary from './components/ErrorBoundary';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ForgotPassword from './pages/ForgotPassword';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsConditions from './pages/TermsConditions';
-import SecurityPolicy from './pages/SecurityPolicy';
-import Contact from './pages/Contact';
-import Earn from './pages/Earn';
-import Wallet from './pages/Wallet';
-import Shop from './pages/Shop';
-import Admin from './pages/Admin';
-import AdminVideos from './pages/AdminVideos';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminPartners from './pages/AdminPartners';
-import SubAdminDashboard from './pages/SubAdminDashboard';
-import Profile from './pages/Profile';
-import Products from './pages/Products';
-import ProductCreate from './pages/ProductCreate';
-import ProductDetail from './pages/ProductDetail';
-import Cart from './pages/Cart';
-import Checkout from './pages/Checkout';
-import Orders from './pages/Orders';
-import VendorDashboard from './pages/VendorDashboard'; // PartnerDashboard
-import PartnerDashboard from './pages/PartnerDashboard';
-import VendorShop from './pages/VendorShop'; // PartnerShop
-import VendorShopsList from './pages/VendorShopsList'; // PartnerShopsList
-import VendorShopSetup from './components/VendorShopSetup'; // PartnerShopSetup
-import PartnerRegister from './pages/PartnerRegister';
-import ProductForm from './pages/ProductForm';
-import ProductManagement from './pages/ProductManagement';
-import PurchaseConfirmation from './pages/PurchaseConfirmation';
-import PublicStorePage from './pages/PublicStorePage';
-import PartnerReports from './pages/PartnerReports';
-import SellerDashboard from './pages/SellerDashboard';
-import SellerInventory from './pages/SellerInventory';
-import SellerOrders from './pages/SellerOrders';
-import SellerReviews from './pages/SellerReviews';
-import SellerProfile from './pages/SellerProfile';
-import SellerAnalytics from './pages/SellerAnalytics';
-import SellerWallet from './pages/SellerWallet';
-import ProductEdit from './pages/ProductEdit';
-import ProductSubscriptionPayment from './pages/ProductSubscriptionPayment';
-import AdminSubscriptions from './pages/AdminSubscriptions';
-import VendorSubscriptions from './pages/VendorSubscriptions';
+import { LoadingSpinner } from './components/LoadingSpinner';
+
+// Lazy load pages for better performance
+const Home = lazy(() => import('./pages/Home'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsConditions = lazy(() => import('./pages/TermsConditions'));
+const SecurityPolicy = lazy(() => import('./pages/SecurityPolicy'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Earn = lazy(() => import('./pages/Earn'));
+const Wallet = lazy(() => import('./pages/Wallet'));
+const Shop = lazy(() => import('./pages/Shop'));
+const Admin = lazy(() => import('./pages/Admin'));
+const AdminVideos = lazy(() => import('./pages/AdminVideos'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminPartners = lazy(() => import('./pages/AdminPartners'));
+const SubAdminDashboard = lazy(() => import('./pages/SubAdminDashboard'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Products = lazy(() => import('./pages/Products'));
+const ProductCreate = lazy(() => import('./pages/ProductCreate'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const Orders = lazy(() => import('./pages/Orders'));
+const VendorDashboard = lazy(() => import('./pages/VendorDashboard'));
+const PartnerDashboard = lazy(() => import('./pages/PartnerDashboard'));
+const VendorShop = lazy(() => import('./pages/VendorShop'));
+const VendorShopsList = lazy(() => import('./pages/VendorShopsList'));
+const VendorShopSetup = lazy(() => import('./components/VendorShopSetup'));
+const PartnerRegister = lazy(() => import('./pages/PartnerRegister'));
+const ProductForm = lazy(() => import('./pages/ProductForm'));
+const ProductManagement = lazy(() => import('./pages/ProductManagement'));
+const PurchaseConfirmation = lazy(() => import('./pages/PurchaseConfirmation'));
+const PublicStorePage = lazy(() => import('./pages/PublicStorePage'));
+const PartnerReports = lazy(() => import('./pages/PartnerReports'));
+const SellerDashboard = lazy(() => import('./pages/SellerDashboard'));
+const SellerInventory = lazy(() => import('./pages/SellerInventory'));
+const SellerOrders = lazy(() => import('./pages/SellerOrders'));
+const SellerReviews = lazy(() => import('./pages/SellerReviews'));
+const SellerProfile = lazy(() => import('./pages/SellerProfile'));
+const SellerAnalytics = lazy(() => import('./pages/SellerAnalytics'));
+const SellerWallet = lazy(() => import('./pages/SellerWallet'));
+const ProductEdit = lazy(() => import('./pages/ProductEdit'));
+const ProductSubscriptionPayment = lazy(() => import('./pages/ProductSubscriptionPayment'));
+const AdminSubscriptions = lazy(() => import('./pages/AdminSubscriptions'));
+const VendorSubscriptions = lazy(() => import('./pages/VendorSubscriptions'));
+
+// Loading fallback component
+const PageLoader = () => (
+	<div className="min-h-screen flex items-center justify-center">
+		<LoadingSpinner size="large" />
+	</div>
+);
 
 function App() {
 	return (
@@ -59,6 +70,7 @@ function App() {
 				<Router>
 					<OfflineIndicator />
 					<Navbar />
+					<Suspense fallback={<PageLoader />}>
 				<Routes>
 					<Route path="/" element={<Home />} />
 					<Route path="/login" element={
@@ -261,6 +273,7 @@ function App() {
 						</ProtectedRoute>
 					} />
 				</Routes>
+					</Suspense>
 					<InstallPrompt />
 				</Router>
 			</NotificationProvider>
