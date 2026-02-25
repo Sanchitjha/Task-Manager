@@ -21,23 +21,15 @@ const { initSubscriptionCron } = require('./lib/subscriptionCron');
 const app = express();
 
 app.use(cors({ 
-	origin: function(origin, callback) {
-		const allowedOrigins = [
-			'https://task-manager-frontend.vercel.app',
-			'https://www.showcaseretail.in', 
-			'https://showcaseretail.in',
-			'http://localhost:5175',
-			'http://localhost:5174',
-			'http://localhost:5173',
-			'http://localhost:3000'
-		];
-		// Allow all vercel.app subdomains
-		if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
-			callback(null, true);
-		} else {
-			callback(new Error('Not allowed by CORS'));
-		}
-	},
+	origin: [
+		'https://task-manager-frontend.vercel.app',
+		'https://www.showcaseretail.in', 
+		'https://showcaseretail.in',
+		'http://localhost:5175',
+		'http://localhost:5174',
+		'http://localhost:5173',
+		'http://localhost:3000'
+	], 
 	credentials: true 
 }));
 app.use(express.json());
