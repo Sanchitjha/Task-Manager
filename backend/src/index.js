@@ -25,6 +25,7 @@ app.use(cors({
 		'https://task-manager-frontend.vercel.app',
 		'https://www.showcaseretail.in', 
 		'https://showcaseretail.in',
+		'http://localhost:5175',
 		'http://localhost:5174',
 		'http://localhost:5173',
 		'http://localhost:3000'
