@@ -17,7 +17,7 @@ export default function Login() {
 	// Redirect if already logged in
 	useEffect(() => {
 		if (user) {
-			navigate('/', { replace: true });
+			navigate('/dashboard', { replace: true });
 		}
 	}, [user, navigate]);
 
@@ -30,12 +30,8 @@ export default function Login() {
 			// Use AuthContext login method
 			const result = await login(formData.email, formData.password);
 			if (result.success) {
-				// Redirect based on user role
-				if (result.user && result.user.role === 'admin') {
-					navigate('/admin');
-				} else {
-					navigate('/');
-				}
+				// Redirect all users to unified dashboard
+				navigate('/dashboard');
 			} else {
 				setError(result.error || 'Login failed');
 			}
