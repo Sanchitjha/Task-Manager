@@ -9,7 +9,6 @@ import OfflineIndicator from './components/OfflineIndicator';
 import ErrorBoundary from './components/ErrorBoundary';
 import { LoadingSpinner } from './components/LoadingSpinner';
 
-// Lazy load pages for better performance
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
@@ -52,191 +51,83 @@ const ProductSubscriptionPayment = lazy(() => import('./pages/ProductSubscriptio
 const AdminSubscriptions = lazy(() => import('./pages/AdminSubscriptions'));
 const VendorSubscriptions = lazy(() => import('./pages/VendorSubscriptions'));
 
-// Loading fallback component
 const PageLoader = () => (
-        <div className="min-h-screen flex items-center justify-center">
-                <LoadingSpinner size="large" />
-        </div>
+    <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="large" />
+    </div>
 );
 
 function App() {
-        return (
-                <AuthProvider>
-                        <NotificationProvider>
-                                <Router>
-                                        <OfflineIndicator />
-                                        <Navbar />
-                                        <Suspense fallback={<PageLoader />}>
-                                                <Routes>
-                                                <Route path="/" element={<Home />} />
-                                                        <Route path="/login" element={
-                                                                <ErrorBoundary>
-                                                                        <Login />
-                                                                </ErrorBoundary>
-                                                        } />
-                                                        <Route path="/register" element={
-                                                                <ErrorBoundary>
-                                                                        <Register />
-                                                                </ErrorBoundary>
-                                                        } />
-                                                        <Route path="/forgot-password" element={
-                                                                <ErrorBoundary>
-                                                                        <ForgotPassword />
-                                                                </ErrorBoundary>
-                                                        } />
-                                                        <Route path="/privacy" element={<PrivacyPolicy />} />
-                                                        <Route path="/terms" element={<TermsConditions />} />
-                                                        <Route path="/security" element={<SecurityPolicy />} />
-                                                        <Route path="/contact" element={<Contact />} />
-                                                        <Route path="/partner/register" element={
-                                                                <ErrorBoundary>
-                                                                        <PartnerRegister />
-                                                                </ErrorBoundary>
-                                                        } />
-                                                        <Route path="/products" element={<Products />} />
-                                                        <Route path="/shops" element={<VendorShopsList />} />
-                                                        <Route path="/products/create" element={
-                                                                <ProtectedRoute>
-                                                                        <ProductForm />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/products/edit/:id" element={
-                                                                <ProtectedRoute>
-                                                                        <ProductForm />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/partner/purchase-confirm" element={
-                                                                <ProtectedRoute>
-                                                                        <PurchaseConfirmation />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/partner/reports" element={
-                                                                <ProtectedRoute>
-                                                                        <PartnerReports />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/store/:partnerId" element={<PublicStorePage />} />
-                                                        <Route path="/shops" element={<VendorShopsList />} />
-                                                        <Route path="/partner/setup-shop" element={
-                                                                <ProtectedRoute>
-                                                                        <VendorShopSetup />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/partner/products/new" element={<ProductCreate />} />
-                                                        <Route path="/shop/:partnerId" element={<VendorShop />} />
+    return (
+        <AuthProvider>
+            <NotificationProvider>
+                <Router>
+                    <OfflineIndicator />
+                    <Navbar />
+                    <Suspense fallback={<PageLoader />}>
+                        <Routes>
+                            <Route path="/" element={<Home />} />
+                            <Route path="/login" element={<ErrorBoundary><Login /></ErrorBoundary>} />
+                            <Route path="/register" element={<ErrorBoundary><Register /></ErrorBoundary>} />
+                            <Route path="/forgot-password" element={<ErrorBoundary><ForgotPassword /></ErrorBoundary>} />
+                            <Route path="/privacy" element={<PrivacyPolicy />} />
+                            <Route path="/terms" element={<TermsConditions />} />
+                            <Route path="/security" element={<SecurityPolicy />} />
+                            <Route path="/contact" element={<Contact />} />
+                            <Route path="/partner/register" element={<ErrorBoundary><PartnerRegister /></ErrorBoundary>} />
+                            <Route path="/products" element={<Products />} />
+                            <Route path="/product/:id" element={<ProductDetail />} />
+                            <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+                            <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+                            <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+                            
+                            {/* Legacy Dashboard Routes - Redirect to Unified Dashboard */}
+                            <Route path="/partner/dashboard" element={<Navigate to="/dashboard" replace />} />
+                            <Route path="/seller" element={<Navigate to="/dashboard" replace />} />
+                            <Route path="/seller/dashboard" element={<Navigate to="/dashboard" replace />} />
+                            <Route path="/admin/dashboard" element={<Navigate to="/dashboard" replace />} />
+                            <Route path="/subadmin/dashboard" element={<Navigate to="/dashboard" replace />} />
+                            
+                            <Route path="/products" element={<ProtectedRoute><ProductManagement /></ProtectedRoute>} />
+                            <Route path="/products/create" element={<ProtectedRoute><ProductForm /></ProtectedRoute>} />
+                            <Route path="/products/edit/:id" element={<ProtectedRoute><ProductForm /></ProtectedRoute>} />
+                            <Route path="/partner/purchase-confirm" element={<ProtectedRoute><PurchaseConfirmation /></ProtectedRoute>} />
+                            <Route path="/partner/reports" element={<ProtectedRoute><PartnerReports /></ProtectedRoute>} />
+                            <Route path="/store/:partnerId" element={<PublicStorePage />} />
+                            <Route path="/shops" element={<VendorShopsList />} />
+                            <Route path="/partner/setup-shop" element={<ProtectedRoute><VendorShopSetup /></ProtectedRoute>} />
+                            <Route path="/partner/products/new" element={<ProductCreate />} />
+                            <Route path="/shop/:partnerId" element={<VendorShop />} />
 
-                                                        {/* Seller Portal Routes (non-dashboard) */}
-                                                        <Route path="/seller/inventory" element={
-                                                                <ProtectedRoute>
-                                                                        <SellerInventory />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/seller/products/new" element={
-                                                                <ProtectedRoute>
-                                                                        <ProductCreate />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/seller/orders" element={
-                                                                <ProtectedRoute>
-                                                                        <SellerOrders />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/seller/reviews" element={
-                                                                <ProtectedRoute>
-                                                                        <SellerReviews />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/seller/profile" element={
-                                                                <ProtectedRoute>
-                                                                        <SellerProfile />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/seller/subscriptions" element={
-                                                                <ProtectedRoute>
-                                                                        <VendorSubscriptions />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/seller/analytics" element={
-                                                                <ProtectedRoute>
-                                                                        <SellerAnalytics />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/seller/wallet" element={
-                                                                <ProtectedRoute>
-                                                                        <SellerWallet />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/seller/products/:id/edit" element={
-                                                                <ProtectedRoute>
-                                                                        <ProductEdit />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/partner/products/:id/edit" element={
-                                                                <ProtectedRoute>
-                                                                        <ProductEdit />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/subscription/payment/:productId" element={
-                                                                <ProtectedRoute>
-                                                                        <ProductSubscriptionPayment />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/admin/subscriptions" element={
-                                                                <ProtectedRoute adminOnly>
-                                                                        <AdminSubscriptions />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        
-                                                        {/* Protected Routes */}
-                                                        <Route path="/earn" element={
-                                                                <ProtectedRoute userOnly>
-                                                                        <Earn />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/wallet" element={
-                                                                <ProtectedRoute>
-                                                                        <Wallet />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/shop" element={
-                                                                <ProtectedRoute>
-                                                                        <Shop />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/admin" element={
-                                                                <ProtectedRoute adminOnly>
-                                                                        <Admin />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/admin/videos" element={
-                                                                <ProtectedRoute adminOnly>
-                                                                        <AdminVideos />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/admin/partners" element={
-                                                                <ProtectedRoute adminOnly>
-                                                                        <AdminPartners />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        <Route path="/profile" element={
-                                                                <ProtectedRoute>
-                                                                        <Profile />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                        
-                                                        {/* Unified Dashboard - All Roles */}
-                                                        <Route path="/dashboard" element={
-                                                                <ProtectedRoute>
-                                                                        <Dashboard />
-                                                                </ProtectedRoute>
-                                                        } />
-                                                </Routes>
-                                        </Suspense>
-                                        <InstallPrompt />
-                                </Router>
-                        </NotificationProvider>
-                </AuthProvider>
-        );
+                            <Route path="/seller/inventory" element={<ProtectedRoute><SellerInventory /></ProtectedRoute>} />
+                            <Route path="/seller/products/new" element={<ProtectedRoute><ProductCreate /></ProtectedRoute>} />
+                            <Route path="/seller/orders" element={<ProtectedRoute><SellerOrders /></ProtectedRoute>} />
+                            <Route path="/seller/reviews" element={<ProtectedRoute><SellerReviews /></ProtectedRoute>} />
+                            <Route path="/seller/profile" element={<ProtectedRoute><SellerProfile /></ProtectedRoute>} />
+                            <Route path="/seller/subscriptions" element={<ProtectedRoute><VendorSubscriptions /></ProtectedRoute>} />
+                            <Route path="/seller/analytics" element={<ProtectedRoute><SellerAnalytics /></ProtectedRoute>} />
+                            <Route path="/seller/wallet" element={<ProtectedRoute><SellerWallet /></ProtectedRoute>} />
+                            <Route path="/seller/products/:id/edit" element={<ProtectedRoute><ProductEdit /></ProtectedRoute>} />
+                            <Route path="/partner/products/:id/edit" element={<ProtectedRoute><ProductEdit /></ProtectedRoute>} />
+                            <Route path="/subscription/payment/:productId" element={<ProtectedRoute><ProductSubscriptionPayment /></ProtectedRoute>} />
+                            <Route path="/admin/subscriptions" element={<ProtectedRoute adminOnly><AdminSubscriptions /></ProtectedRoute>} />
+                            
+                            <Route path="/earn" element={<ProtectedRoute userOnly><Earn /></ProtectedRoute>} />
+                            <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
+                            <Route path="/shop" element={<ProtectedRoute><Shop /></ProtectedRoute>} />
+                            <Route path="/admin" element={<ProtectedRoute adminOnly><Admin /></ProtectedRoute>} />
+                            <Route path="/admin/videos" element={<ProtectedRoute adminOnly><AdminVideos /></ProtectedRoute>} />
+                            <Route path="/admin/partners" element={<ProtectedRoute adminOnly><AdminPartners /></ProtectedRoute>} />
+                            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                            
+                            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                        </Routes>
+                    </Suspense>
+                    <InstallPrompt />
+                </Router>
+            </NotificationProvider>
+        </AuthProvider>
+    );
 }
 
 export default App;
