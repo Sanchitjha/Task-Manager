@@ -70,17 +70,23 @@ app.use((err, _req, res, _next) => {
 });
 
 const port = process.env.PORT || 5000;
+
+// Connect to MongoDB (non-blocking - server starts even without DB)
 connectMongo()
 	.then(() => {
-		app.listen(port, () => {
-			console.log(`API listening on ${port}`);
-			// Initialize subscription cron jobs
-			initSubscriptionCron();
-		});
+		console.log('MongoDB connected');
 	})
 	.catch((error) => {
-		console.error('Mongo connection failed', error);
-		process.exit(1);
+		console.error('MongoDB connection failed (server will continue):', error.message);
 	});
+
+// Initialize subscription cron jobs (non-blocking)
+setTimeout(() => {
+	initSubscriptionCron().catch(err => console.log('Cron init skipped:', err.message));
+}, 5000);
+
+app.listen(port, () => {
+	console.log(`API listening on ${port}`);
+});
 
 module.exports = app;
