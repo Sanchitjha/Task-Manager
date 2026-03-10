@@ -83,12 +83,11 @@ function App() {
                             
                             {/* Legacy Dashboard Routes - Redirect to Unified Dashboard */}
                             <Route path="/partner/dashboard" element={<Navigate to="/dashboard" replace />} />
-                            <Route path="/seller" element={<Navigate to="/dashboard" replace />} />
                             <Route path="/seller/dashboard" element={<Navigate to="/dashboard" replace />} />
                             <Route path="/admin/dashboard" element={<Navigate to="/dashboard" replace />} />
                             <Route path="/subadmin/dashboard" element={<Navigate to="/dashboard" replace />} />
                             
-                            <Route path="/products" element={<ProtectedRoute><ProductManagement /></ProtectedRoute>} />
+                            <Route path="/products/manage" element={<ProtectedRoute><ProductManagement /></ProtectedRoute>} />
                             <Route path="/products/create" element={<ProtectedRoute><ProductForm /></ProtectedRoute>} />
                             <Route path="/products/edit/:id" element={<ProtectedRoute><ProductForm /></ProtectedRoute>} />
                             <Route path="/partner/purchase-confirm" element={<ProtectedRoute><PurchaseConfirmation /></ProtectedRoute>} />
