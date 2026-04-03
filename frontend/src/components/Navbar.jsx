@@ -351,9 +351,9 @@ export default function Navbar() {
 									</Link>
 									<button onClick={handleLogout} className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition">🚪 Logout</button>
 								</div>
-							) : (
-								{location.pathname !== '/' && <Link to="/login" onClick={() => setIsMenuOpen(false)} className="px-4 py-2 bg-gradient-to-r from-brand-600 to-brand-700 text-white rounded-xl font-semibold hover:from-brand-700 hover:to-brand-800 transition">🔑 Login</Link>}
-							)}
+							) : location.pathname !== '/' ? (
+								<Link to="/login" onClick={() => setIsMenuOpen(false)} className="px-4 py-2 bg-gradient-to-r from-brand-600 to-brand-700 text-white rounded-xl font-semibold hover:from-brand-700 hover:to-brand-800 transition">🔑 Login</Link>
+							) : null}
 						</div>
 					</div>
 				)}
