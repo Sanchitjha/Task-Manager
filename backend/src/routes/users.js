@@ -110,13 +110,13 @@ router.post('/:id/profile-image', auth, upload.single('profileImage'), async (re
             return res.status(403).json({ msg: 'Not authorized to update this profile' });
         }
 
-        // Update user profile image
-        user.profileImage = `/uploads/profiles/${req.file.filename}`;
+        // Update user profile image - Cloudinary returns full URL in req.file.path
+        user.profileImage = req.file.path;
         await user.save();
 
-        res.json({ 
+        res.json({
             msg: 'Profile image uploaded successfully',
-            profileImage: user.profileImage 
+            profileImage: user.profileImage
         });
     } catch (e) {
         next(e);
