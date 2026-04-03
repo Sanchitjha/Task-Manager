@@ -445,11 +445,7 @@ export default function Dashboard() {
               </button>
               
               {/* Dropdown Menu */}
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-zinc-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200" data-testid="profile-dropdown-menu">
-                <div className="p-4 border-b border-zinc-200">
-                  <p className="text-sm font-medium text-zinc-900">{user.name}</p>
-                  <p className="text-xs text-zinc-500">{user.email}</p>
-                </div>
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-zinc-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200" data-testid="profile-dropdown-menu">
                 <div className="py-2">
                   <button
                     onClick={() => navigate('/profile')}
