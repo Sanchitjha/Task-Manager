@@ -1,9 +1,21 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const dns = require('dns').promises;
 const { User } = require('../schemas/User');
 const { auth, adminOnly } = require('../middleware/auth');
 const { EmailOTPService } = require('../lib/emailOtpService');
+
+async function isEmailDomainValid(email) {
+	const domain = email.split('@')[1];
+	if (!domain) return false;
+	try {
+		const records = await dns.resolveMx(domain);
+		return records && records.length > 0;
+	} catch {
+		return false;
+	}
+}
 
 const router = express.Router();
 
@@ -20,7 +32,13 @@ router.post('/send-email-otp', async (req, res, next) => {
 		if (!EmailOTPService.isValidEmailFormat(email)) {
 			return res.status(400).json({ message: 'Invalid email address format' });
 		}
-		
+
+		// Validate email domain has real mail servers (MX records)
+		const domainValid = await isEmailDomainValid(email);
+		if (!domainValid) {
+			return res.status(400).json({ message: 'This email domain does not exist. Please use a valid email address.' });
+		}
+
 		// Check if email already exists and is verified
 		const existingUser = await User.findOne({ email, isEmailVerified: true });
 		if (existingUser) {
@@ -377,7 +395,12 @@ router.post('/send-partner-email-otp', async (req, res, next) => {
 		if (!emailRegex.test(email)) {
 			return res.status(400).json({ message: 'Invalid email format' });
 		}
-		
+
+		const domainValid = await isEmailDomainValid(email);
+		if (!domainValid) {
+			return res.status(400).json({ message: 'This email domain does not exist. Please use a valid email address.' });
+		}
+
 		// Check if user already exists
 		const existingUser = await User.findOne({ email });
 		if (existingUser) {
