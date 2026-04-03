@@ -5,8 +5,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://task-manager-x6vw.
 const API_HOST = API_BASE_URL.replace(/\/api\/?$/, '');
 
 // Helper function to get complete profile image URL
+// Cloudinary returns full URLs (https://res.cloudinary.com/...), no prefix needed
 const getProfileImageUrl = (path) => {
     if (!path) return '/default-avatar.png';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
     return `${API_HOST}${path}`;
 };
 
