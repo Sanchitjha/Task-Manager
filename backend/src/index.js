@@ -82,7 +82,11 @@ connectMongo()
 
 // Initialize subscription cron jobs (non-blocking)
 setTimeout(() => {
-	initSubscriptionCron().catch(err => console.log('Cron init skipped:', err.message));
+	try {
+		initSubscriptionCron();
+	} catch (err) {
+		console.log('Cron init skipped:', err.message);
+	}
 }, 5000);
 
 app.listen(port, () => {
