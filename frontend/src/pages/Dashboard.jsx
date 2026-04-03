@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { 
-  TrendingUp, Wallet, ShoppingBag, Package, Truck, 
-  Settings, LogOut, ChevronDown,
+import {
+  TrendingUp, Wallet, ShoppingBag, Package, Truck,
   Users, Video, DollarSign, Store, BarChart3, FileText
 } from "lucide-react";
 
@@ -392,20 +391,15 @@ const getDashboardBlocks = (role) => {
 };
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Get dashboard blocks based on user role
   const dashboardBlocks = getDashboardBlocks(user?.role);
 
   const handleCardClick = (block) => {
     if (block.route) {
       navigate(block.route);
     }
-  };
-
-  const handleLogout = async () => {
-    await logout();
   };
 
   // Redirect to login if not authenticated
@@ -427,46 +421,6 @@ export default function Dashboard() {
             <p className="text-xs text-zinc-500 capitalize">{user.role} Portal</p>
           </div>
 
-          {/* User Profile Section */}
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:block text-sm font-medium text-zinc-700" data-testid="user-name">
-              {user.name}
-            </span>
-            
-            <div className="relative group">
-              <button 
-                className="flex items-center gap-2 px-2 py-1.5 h-auto rounded-full hover:bg-zinc-100 transition-colors"
-                data-testid="profile-dropdown-trigger"
-              >
-                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm border-2 border-zinc-200">
-                  {user.name?.split(' ').map(n => n[0]).join('').toUpperCase()}
-                </div>
-                <ChevronDown className="h-4 w-4 text-zinc-500" />
-              </button>
-              
-              {/* Dropdown Menu */}
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-zinc-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200" data-testid="profile-dropdown-menu">
-                <div className="py-2">
-                  <button
-                    onClick={() => navigate('/profile')}
-                    className="w-full px-4 py-2 text-sm text-left hover:bg-zinc-100 flex items-center gap-2"
-                    data-testid="profile-settings-btn"
-                  >
-                    <Settings className="h-4 w-4" />
-                    Profile Settings
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full px-4 py-2 text-sm text-left hover:bg-red-50 text-red-600 flex items-center gap-2"
-                    data-testid="logout-btn"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Logout
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </header>
 
@@ -490,9 +444,11 @@ export default function Dashboard() {
               >
                 {/* Background image */}
                 {block.bgImage && (
-                  <img 
-                    src={block.bgImage} 
+                  <img
+                    src={block.bgImage}
                     alt={block.name}
+                    loading="lazy"
+                    decoding="async"
                     className="absolute right-0 bottom-0 h-full w-auto max-w-[65%] opacity-40 object-cover transition-transform duration-500 group-hover:scale-110 group-hover:opacity-50"
                   />
                 )}
