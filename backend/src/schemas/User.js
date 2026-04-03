@@ -5,7 +5,7 @@ const userSchema = new Schema(
 		name: { type: String, required: true },
 		email: { type: String, required: true, unique: true },
 		password: { type: String, required: true },
-		phone: { type: String, required: true },
+		phone: { type: String, default: null },
 		profileImage: { type: String, default: null },
 		
 		// Shop/Vendor Details for In-Store Model
