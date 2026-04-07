@@ -32,7 +32,7 @@ const TRUST_BADGES = [
 	{ Icon: Truck,          title: 'Fast Delivery',   desc: 'Quick delivery to your door' },
 	{ Icon: Shield,         title: 'Secure Payments', desc: 'Your data is always protected' },
 	{ Icon: RefreshCw,      title: 'Easy Returns',    desc: 'Hassle-free return process' },
-	{ Icon: HeadphonesIcon, title: '24/7 Support',    desc: 'We're here whenever you need us' },
+	{ Icon: HeadphonesIcon, title: '24/7 Support',    desc: "We're here whenever you need us" },
 ];
 
 function StarRating({ rating = 4.5, count = 0 }) {
