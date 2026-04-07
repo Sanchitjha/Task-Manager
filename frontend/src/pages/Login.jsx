@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import TheManagerLogo from '../components/TheManagerLogo';
+import { Eye, EyeOff, ArrowLeft, AlertCircle } from 'lucide-react';
 
 export default function Login() {
 	const [formData, setFormData] = useState({ email: '', password: '' });
@@ -27,7 +28,7 @@ export default function Login() {
 			} else {
 				setError(result.error || 'Login failed. Please check your credentials.');
 			}
-		} catch (err) {
+		} catch {
 			setError('Something went wrong. Please try again.');
 		} finally {
 			setLoading(false);
@@ -35,48 +36,53 @@ export default function Login() {
 	};
 
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 px-4 py-10">
-			<div className="w-full max-w-md">
+		<div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+			<div className="w-full max-w-sm">
 
-				{/* Logo + Title */}
+				{/* Logo */}
 				<div className="text-center mb-8">
-					<div className="flex justify-center mb-4">
-						<TheManagerLogo width={72} height={72} className="drop-shadow-lg" />
-					</div>
-					<h1 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-						Welcome Back
-					</h1>
+					<Link to="/" className="inline-flex justify-center mb-5">
+						<TheManagerLogo width={56} height={56} className="drop-shadow" />
+					</Link>
+					<h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
 					<p className="text-gray-500 mt-1 text-sm">Sign in to The MANAGER</p>
 				</div>
 
 				{/* Card */}
-				<div className="bg-white rounded-2xl shadow-xl p-8">
+				<div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-7">
 
 					{error && (
-						<div className="mb-5 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium flex items-start gap-2">
-							<span className="text-lg leading-none">✗</span>
-							<span>{error}</span>
+						<div className="mb-5 flex items-start gap-3 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700">
+							<AlertCircle size={16} className="shrink-0 mt-0.5" strokeWidth={2} />
+							<span className="text-sm font-medium">{error}</span>
 						</div>
 					)}
 
 					<form onSubmit={handleSubmit} className="space-y-5">
 						{/* Email */}
 						<div>
-							<label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+							<label className="block text-sm font-medium text-gray-700 mb-1.5">
+								Email address
+							</label>
 							<input
 								type="email"
 								value={formData.email}
 								onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-								placeholder="Enter your email"
+								placeholder="you@example.com"
 								required
 								autoComplete="email"
-								className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-400 transition text-gray-800 text-base"
+								className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
 							/>
 						</div>
 
 						{/* Password */}
 						<div>
-							<label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+							<div className="flex items-center justify-between mb-1.5">
+								<label className="block text-sm font-medium text-gray-700">Password</label>
+								<Link to="/forgot-password" className="text-xs font-medium text-brand-600 hover:text-brand-700 transition-colors">
+									Forgot password?
+								</Link>
+							</div>
 							<div className="relative">
 								<input
 									type={showPassword ? 'text' : 'password'}
@@ -85,51 +91,51 @@ export default function Login() {
 									placeholder="Enter your password"
 									required
 									autoComplete="current-password"
-									className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-400 transition text-gray-800 text-base pr-12"
+									className="w-full px-3.5 py-2.5 pr-10 border border-gray-300 rounded-xl text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
 								/>
 								<button
 									type="button"
 									onClick={() => setShowPassword(!showPassword)}
-									className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl"
+									className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+									aria-label={showPassword ? 'Hide password' : 'Show password'}
 								>
-									{showPassword ? '🙈' : '👁️'}
+									{showPassword ? <EyeOff size={16} strokeWidth={2} /> : <Eye size={16} strokeWidth={2} />}
 								</button>
 							</div>
-						</div>
-
-						{/* Forgot Password */}
-						<div className="text-right">
-							<Link to="/forgot-password" className="text-sm text-blue-600 font-semibold hover:underline">
-								Forgot Password?
-							</Link>
 						</div>
 
 						{/* Submit */}
 						<button
 							type="submit"
 							disabled={loading}
-							className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-bold text-base hover:from-blue-600 hover:to-purple-700 transition-all duration-300 disabled:opacity-60 shadow-lg hover:shadow-xl active:scale-95"
+							className="w-full py-2.5 px-4 bg-brand-600 text-white font-semibold rounded-xl text-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 shadow-sm flex items-center justify-center gap-2"
 						>
 							{loading ? (
-								<span className="flex items-center justify-center gap-2">
-									<svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-										<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-										<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+								<>
+									<svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+										<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+										<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
 									</svg>
-									Signing In...
-								</span>
-							) : 'Sign In →'}
+									Signing in…
+								</>
+							) : 'Sign In'}
 						</button>
 					</form>
 
-					{/* Register Link */}
-					<div className="mt-6 text-center space-y-2">
-						<p className="text-sm text-gray-500">
-							Don't have an account?{' '}
-							<Link to="/register" className="text-green-600 font-semibold hover:underline">Create Account</Link>
-						</p>
-						<Link to="/" className="text-xs text-gray-400 hover:text-gray-600 block">← Back to Home</Link>
-					</div>
+					<p className="mt-5 text-center text-sm text-gray-500">
+						Don't have an account?{' '}
+						<Link to="/register" className="font-semibold text-brand-600 hover:text-brand-700 transition-colors">
+							Create one
+						</Link>
+					</p>
+				</div>
+
+				{/* Back link */}
+				<div className="mt-6 text-center">
+					<Link to="/" className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors">
+						<ArrowLeft size={12} />
+						Back to home
+					</Link>
 				</div>
 			</div>
 		</div>
